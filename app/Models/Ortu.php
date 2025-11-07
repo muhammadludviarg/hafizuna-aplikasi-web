@@ -17,4 +17,12 @@ class Ortu extends Model
         'id_akun',
         'no_hp',
     ];
+
+    /**
+     * Mendapatkan data akun (User) yang terkait dengan Ortu.
+     */
+    public function akun()
+    {
+        return $this->belongsTo(User::class, 'id_akun', 'id_akun');
+    }
 }

@@ -18,4 +18,10 @@ class Siswa extends Model
         'kode_siswa',
         'id_kelas',
     ];
+
+    // Di dalam class Siswa
+    public function kelas()
+    {
+        return $this->belongsTo(Kelas::class, 'id_kelas');
+    }
 }
