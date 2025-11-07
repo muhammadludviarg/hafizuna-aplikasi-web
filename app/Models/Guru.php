@@ -17,4 +17,9 @@ class Guru extends Model
         'id_akun',
         'no_hp',
     ];
+
+    public function akun()
+    {
+        return $this->belongsTo(User::class, 'id_akun', 'id_akun');
+    }
 }
