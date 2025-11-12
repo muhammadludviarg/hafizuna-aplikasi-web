@@ -4,6 +4,7 @@ use App\Livewire\Guru\Dashboard as GuruDashboard;
 use App\Livewire\Guru\InputNilai;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Livewire\Admin\PengaturanNilai;
 
 // --- Impor Semua Komponen Livewire Anda di Sini ---
 
@@ -81,6 +82,13 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
 
         // (Kita akan buat ulang semua file ini satu per satu)
+        Route::get('/dashboard', function () {
+            return view('dashboard'); 
+        })->name('dashboard');
+
+        // Pengaturan Nilai
+        Route::get('/pengaturan-nilai', App\Livewire\Admin\PengaturanNilai::class)
+            ->name('pengaturan-nilai');
 
     });
 
