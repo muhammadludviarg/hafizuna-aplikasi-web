@@ -60,20 +60,20 @@ class InputNilai extends Component
         if (!Auth::check()) {
             $this->guru = Guru::first();
             if (!$this->guru) {
-                 session()->flash('error', 'MODE DEVELOPMENT: Tabel guru kosong, tidak bisa mengambil data tes.');
-                 return;
+                session()->flash('error', 'MODE DEVELOPMENT: Tabel guru kosong, tidak bisa mengambil data tes.');
+                return;
             }
         } else {
              $this->guru = Auth::user()->guru; 
              if (!$this->guru) {
-                 session()->flash('error', 'Akun Anda tidak terdaftar sebagai guru.');
-                 return redirect()->route('dashboard');
+                session()->flash('error', 'Akun Anda tidak terdaftar sebagai guru.');
+                return redirect()->route('dashboard');
              }
         }
 
         $this->daftarKelompok = Kelompok::where('id_guru', $this->guru->id_guru)
-                                        ->with('kelas')
-                                        ->get();
+                                            ->with('kelas')
+                                            ->get();
         $this->daftarSurah = Surah::orderBy('nomor_surah')->get();
     }
 
@@ -118,9 +118,9 @@ class InputNilai extends Component
         $this->validate(); 
 
         $this->ayatsToReview = Ayat::where('id_surah', $this->id_surah)
-              ->whereBetween('nomor_ayat', [$this->ayat_mulai, $this->ayat_selesai])
-              ->orderBy('nomor_ayat')
-              ->get();
+             ->whereBetween('nomor_ayat', [$this->ayat_mulai, $this->ayat_selesai])
+             ->orderBy('nomor_ayat')
+             ->get();
 
         if ($this->ayatsToReview->isEmpty()) {
             session()->flash('error', 'Ayat tidak ditemukan. Periksa kembali rentang yang Anda masukkan.');
@@ -188,12 +188,17 @@ class InputNilai extends Component
         ];
     }
 
-    /** STEP 4: Simpan Sesi **/
+    /** * STEP 4: Simpan Sesi
+     * LOGIKA INI SUDAH BENAR!
+     */
     public function simpanSesi($kirimNotifikasi = false)
     {
         $statistik = $this->statistik();
         $sesi = null; 
 
+        // 1. Jalankan Transaksi Database
+        // Ini akan menyimpan SesiHafalan dan Koreksi.
+        // Jika salah satu gagal, keduanya akan di-rollback. Ini SUDAH BENAR.
         DB::transaction(function () use (&$sesi, $statistik) {
             $sesi = SesiHafalan::create([
                 'id_siswa' => $this->selectedSiswaId,
@@ -229,14 +234,16 @@ class InputNilai extends Component
             }
         });
 
+        // 2. Coba Kirim Notifikasi (HANYA JIKA 'kirimNotifikasi' true DAN $sesi berhasil dibuat)
         if ($kirimNotifikasi && $sesi) {
             try {
-                // PANGGIL JOB-NYA (MASUKKAN KE ANTRIAN)
+                // 3. Dispatch ke Antrean (Queue)
                 SendNotifikasiOrtuJob::dispatch($sesi); 
                 
                 session()->flash('message', 'Sesi berhasil disimpan. Nilai Akhir: ' . $statistik['nilaiAkhir'] . '. Notifikasi sedang dikirim.');
+            
             } catch (\Exception $e) {
-                // Catat error ke log
+                
                 Log::error('Gagal dispatch SendNotifikasiOrtuJob: ' . $e->getMessage());
                 session()->flash('error', 'Sesi disimpan, TAPI gagal mengirim notifikasi. Cek log.');
             }
