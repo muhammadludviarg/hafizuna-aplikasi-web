@@ -36,6 +36,7 @@ class SistemPenilaianSeeder extends Seeder
             DB::table('sistem_penilaian')->insert([
                 'aspek' => $item['aspek'],
                 'grade' => $item['grade'],
+                // <-- DIPERBAIKI: Menyesuaikan nama kolom dengan migration
                 'proporsi_kesalahan_min' => $item['proporsi_min'],
                 'proporsi_kesalahan_max' => $item['proporsi_max'],
                 'created_at' => now(),
