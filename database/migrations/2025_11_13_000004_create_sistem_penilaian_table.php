@@ -1,5 +1,5 @@
 <?php
-// database/migrations/2025_01_XX_XXXXXX_create_sistem_penilaian_table.php
+// database/migrations/2025_11_13_000004_create_sistem_penilaian_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -9,8 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Saya ubah $table->id() menjadi $table->increments() 
+        // agar konsisten dengan int(11) di file SQL Anda
         Schema::create('sistem_penilaian', function (Blueprint $table) {
-            $table->id('id_penilaian');
+            $table->increments('id_penilaian'); 
             $table->enum('aspek', ['tajwid', 'makhroj', 'kelancaran']);
             $table->enum('grade', ['A', 'B', 'C']);
             $table->float('proporsi_kesalahan_min')->comment('Proporsi minimal dalam %');

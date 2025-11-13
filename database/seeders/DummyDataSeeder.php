@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\User;
+use App\Models\User; // Pastikan ini adalah model Anda untuk tabel 'akun'
 use App\Models\Guru;
 use App\Models\OrangTua;
 use App\Models\Kelas;
@@ -30,8 +30,8 @@ class DummyDataSeeder extends Seeder
         Kelompok::truncate();
         Kelas::truncate();
         Guru::truncate();
-        User::truncate();
-        // Jangan hapus 'akun' jika sudah ada admin
+        // User::truncate(); // <-- DIHAPUS! Jangan hapus tabel 'akun' agar admin tidak ikut terhapus
+        // Admin::truncate(); // <-- Jangan hapus tabel admin juga
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
 
@@ -62,12 +62,12 @@ class DummyDataSeeder extends Seeder
         // 4. Buat 1 Kelas
         $kelas = Kelas::create([
             'nama_kelas' => '5 Firdaus',
-            'tahun_ajaran' => '2024'
+            'tahun_ajaran' => '2024' 
         ]);
 
         // 5. Buat 1 Kelompok (diajar oleh guru di atas, di kelas di atas)
         $kelompok = Kelompok::create([
-            'tahun_ajaran' => '2024/2025',
+            'tahun_ajaran' => '2024/2025', 
             'id_kelas' => $kelas->id_kelas,
             'id_guru' => $guru->id_guru,
         ]);
@@ -114,6 +114,6 @@ class DummyDataSeeder extends Seeder
 
         $this->command->info('Data dummy berhasil dibuat.');
         $this->command->info('Akun Guru: guru.dummy@hafizuna.com / password');
-        $this->command->info('Akun Ortu: ortu.dummy@hafizuna.com / password');
+        $this->command->info('Akun Ortu: muhammadludvi468@gmail.com / password');
     }
 }

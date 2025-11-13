@@ -39,7 +39,7 @@ class QuranSeeder extends Seeder
             $surah = Surah::create([
                 'id_surah' => $surahData['id'], // Gunakan id dari API
                 'nomor_surah' => $surahData['id'],
-                'nama_surah' => $surahData['name_simple'],
+                'nama_surah' => $surahData['name_simple'], // Pastikan kolom 'nama_surah' cukup besar (misal varchar 100)
                 'jumlah_ayat' => $surahData['verses_count'],
             ]);
 
@@ -62,7 +62,7 @@ class QuranSeeder extends Seeder
                     'id_surah' => $surah->id_surah,
                     'nomor_ayat' => $nomorAyat,
                     'teks_arab' => $teksArab,
-                    'terjemahan' => '', // API ini tidak menyertakan terjemahan di endpoint ini
+                    //'terjemahan' => '', // API ini tidak menyertakan terjemahan di endpoint ini
                     'jumlah_kata' => count(explode(' ', $teksArab)), // Hitung jumlah kata
                 ]);
             }
