@@ -5,6 +5,7 @@ use App\Livewire\Guru\InputNilai;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Admin\PengaturanNilai;
+use App\Livewire\Admin\TargetHafalan;
 
 // --- Impor Semua Komponen Livewire Anda di Sini ---
 
@@ -90,11 +91,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengaturan-nilai', App\Livewire\Admin\PengaturanNilai::class)
             ->name('pengaturan-nilai');
 
+        // Target Hafalan
+        Route::get('/target-hafalan', App\Livewire\Admin\TargetHafalan::class)
+            ->name('target-hafalan');
+
     });
 
     // --- GRUP GURU ---
     Route::prefix('guru')->name('guru.')->group(function () {
         // (Nanti rute guru di sini)
+    
     });
 
     // --- GRUP ORTU ---

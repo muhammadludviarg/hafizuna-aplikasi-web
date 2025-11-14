@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('kelompok', function (Blueprint $table) {
             $table->increments('id_kelompok');
-            $table->string('tahun_ajaran', 50)->comment('nama_kelompok'); // Sesuai SQL
+            $table->string('nama_kelompok', 50)->comment('nama_kelompok'); // Sesuai SQL
             $table->unsignedInteger('id_kelas');
             $table->unsignedInteger('id_guru');
 

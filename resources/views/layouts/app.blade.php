@@ -74,12 +74,15 @@
                     </li>
 
                     <li class="relative px-6 py-3">
-                        <a class="inline-flex items-center w-full text-sm font-medium text-green-300 hover:text-white transition-colors duration-150"
-                            href="#">
+                        @php $isActive = request()->routeIs('admin.target-hafalan'); @endphp
+                        <span class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
+                            aria-hidden="true"></span>
+                        <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 {{ $isActive ? 'text-white' : 'text-green-300 hover:text-white' }}"
+                            href="{{ route('admin.target-hafalan') }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
                                 </path>
                             </svg>
                             <span class="ml-4">Target Hafalan</span>
@@ -127,6 +130,7 @@
                             <span class="ml-4">Pengaturan Nilai</span>
                         </a>
                     </li>
+
                 </ul>
 
                 <div class="absolute bottom-0 w-full px-6 my-6">

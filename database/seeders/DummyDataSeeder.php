@@ -3,15 +3,15 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\User; // Pastikan ini adalah model Anda untuk tabel 'akun'
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use App\Models\Guru;
 use App\Models\OrangTua;
 use App\Models\Kelas;
 use App\Models\Kelompok;
 use App\Models\Siswa;
 use App\Models\SiswaKelompok;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 
 class DummyDataSeeder extends Seeder
 {
@@ -22,7 +22,7 @@ class DummyDataSeeder extends Seeder
     {
         $this->command->info('Membuat data dummy untuk Guru, Siswa, dan Kelompok...');
 
-        // 1. Bersihkan tabel terkait (hati-hati di produksi!)
+        // 1. Bersihkan tabel terkait
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         SiswaKelompok::truncate();
         Siswa::truncate();
@@ -30,49 +30,92 @@ class DummyDataSeeder extends Seeder
         Kelompok::truncate();
         Kelas::truncate();
         Guru::truncate();
-        // User::truncate(); // <-- DIHAPUS! Jangan hapus tabel 'akun' agar admin tidak ikut terhapus
-        // Admin::truncate(); // <-- Jangan hapus tabel admin juga
+        
+        // Hapus akun guru & ortu sebelumnya
+        User::where('email', 'like', 'guru%@hafizuna.com')->delete();
+        User::where('email', 'muhammadludvi468@gmail.com')->delete();
+        
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
+        $this->command->info('Membuat 3 data dummy Guru...');
+        $tahunAjaran = '2024/2025';
 
-        // 2. Buat 1 Akun Guru
-        $akunGuru = User::create([
-            'email' => 'guru.dummy@hafizuna.com',
+        // 2. Buat Guru 1
+        $akunGuru1 = User::create([
+            'email' => 'guru1@hafizuna.com',
             'sandi_hash' => Hash::make('password'),
-            'nama_lengkap' => 'Ustadz Ahmad Fauzi',
+            'nama_lengkap' => 'Ustadz Budi Santoso',
             'status' => true,
         ]);
-        $guru = Guru::create([
-            'id_akun' => $akunGuru->id_akun,
-            'no_hp' => '08123456789'
+        $guru1 = Guru::create([
+            'id_akun' => $akunGuru1->id_akun,
+            'no_hp' => '081234567890'
         ]);
 
-        // 3. Buat 1 Akun Ortu (MENGGUNAKAN EMAIL ASLI ANDA)
+        // 3. Buat Guru 2
+        $akunGuru2 = User::create([
+            'email' => 'guru2@hafizuna.com',
+            'sandi_hash' => Hash::make('password'),
+            'nama_lengkap' => 'Ustadzah Citra Lestari',
+            'status' => true,
+        ]);
+        $guru2 = Guru::create([
+            'id_akun' => $akunGuru2->id_akun,
+            'no_hp' => '081234567891'
+        ]);
+
+        // 4. Buat Guru 3
+        $akunGuru3 = User::create([
+            'email' => 'guru3@hafizuna.com',
+            'sandi_hash' => Hash::make('password'),
+            'nama_lengkap' => 'Ustadz Doni Saputra',
+            'status' => true,
+        ]);
+        $guru3 = Guru::create([
+            'id_akun' => $akunGuru3->id_akun,
+            'no_hp' => '081234567892'
+        ]);
+
+        // 5. Buat 1 Kelas
+        $this->command->info('Membuat 1 data dummy Kelas...');
+        $kelas = Kelas::create([
+            'nama_kelas' => '5 Firdaus',
+            'tahun_ajaran' => $tahunAjaran,
+        ]);
+
+        // 6. Buat 3 Kelompok (WAJIB DIBUAT SEBELUM SISWA)
+        $this->command->info('Membuat 3 data dummy Kelompok...');
+        $kelompokA = Kelompok::create([
+            'id_kelas' => $kelas->id_kelas,
+            'id_guru' => $guru1->id_guru,
+            'nama_kelompok' => '5 Firdaus A',
+        ]);
+        $kelompokB = Kelompok::create([
+            'id_kelas' => $kelas->id_kelas,
+            'id_guru' => $guru2->id_guru,
+            'nama_kelompok' => '5 Firdaus B',
+        ]);
+        $kelompokC = Kelompok::create([
+            'id_kelas' => $kelas->id_kelas,
+            'id_guru' => $guru3->id_guru,
+            'nama_kelompok' => '5 Firdaus C',
+        ]);
+
+        // 7. Buat 1 Akun Ortu (Email Asli Anda)
+        $this->command->info('Membuat 1 data dummy Ortu...');
         $akunOrtu = User::create([
-            'email' => 'muhammadludvi468@gmail.com', // <-- EMAIL ASLI ANDA
+            'email' => 'muhammadludvi468@gmail.com',
             'sandi_hash' => Hash::make('password'),
             'nama_lengkap' => 'Bapak Ludvi (Wali Murid)',
             'status' => true,
         ]);
         $ortu = OrangTua::create([
             'id_akun' => $akunOrtu->id_akun,
-            'no_hp' => '081234567890'
+            'no_hp' => '081234567899'
         ]);
 
-        // 4. Buat 1 Kelas
-        $kelas = Kelas::create([
-            'nama_kelas' => '5 Firdaus',
-            'tahun_ajaran' => '2024' 
-        ]);
-
-        // 5. Buat 1 Kelompok (diajar oleh guru di atas, di kelas di atas)
-        $kelompok = Kelompok::create([
-            'tahun_ajaran' => '2024/2025', 
-            'id_kelas' => $kelas->id_kelas,
-            'id_guru' => $guru->id_guru,
-        ]);
-
-        // 6. Buat 3 Siswa (anak dari ortu di atas, di kelas di atas)
+        // 8. Buat 3 Siswa
+        $this->command->info('Membuat 3 data dummy Siswa...');
         $siswa1 = Siswa::create([
             'nama_siswa' => 'Muhammad Ayub',
             'kode_siswa' => 'S-001',
@@ -92,28 +135,29 @@ class DummyDataSeeder extends Seeder
             'id_ortu' => $ortu->id_ortu,
         ]);
 
-        // 7. Masukkan 3 Siswa itu ke Kelompok
+        // 9. Masukkan Siswa ke Kelompok
+        $this->command->info('Memasukkan siswa ke kelompok...');
         SiswaKelompok::create([
             'id_siswa' => $siswa1->id_siswa,
-            'id_kelompok' => $kelompok->id_kelompok,
+            'id_kelompok' => $kelompokA->id_kelompok, // Siswa 1 ke Kelompok A
             'tgl_mulai' => now(),
-            'tgl_selesai' => now()->addYear(),
+            'tgl_selesai' => now()->addYear(), // <-- INI PERBAIKANNYA
         ]);
         SiswaKelompok::create([
             'id_siswa' => $siswa2->id_siswa,
-            'id_kelompok' => $kelompok->id_kelompok,
+            'id_kelompok' => $kelompokB->id_kelompok, // Siswa 2 ke Kelompok B
             'tgl_mulai' => now(),
-            'tgl_selesai' => now()->addYear(),
+            'tgl_selesai' => now()->addYear(), // <-- INI PERBAIKANNYA
         ]);
         SiswaKelompok::create([
             'id_siswa' => $siswa3->id_siswa,
-            'id_kelompok' => $kelompok->id_kelompok,
+            'id_kelompok' => $kelompokC->id_kelompok, // Siswa 3 ke Kelompok C
             'tgl_mulai' => now(),
-            'tgl_selesai' => now()->addYear(),
+            'tgl_selesai' => now()->addYear(), // <-- INI PERBAIKANNYA
         ]);
 
         $this->command->info('Data dummy berhasil dibuat.');
-        $this->command->info('Akun Guru: guru.dummy@hafizuna.com / password');
+        $this->command->info('Akun Guru: guru1@hafizuna.com / password');
         $this->command->info('Akun Ortu: muhammadludvi468@gmail.com / password');
     }
 }
