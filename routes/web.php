@@ -3,6 +3,9 @@
 use App\Livewire\Guru\Dashboard as GuruDashboard;
 use App\Livewire\Guru\InputNilai;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GuruController;
+use App\Http\Controllers\OrangTuaController;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Admin\PengaturanNilai;
 use App\Livewire\Admin\TargetHafalan;
@@ -39,13 +42,11 @@ Route::get('/dashboard', function () {
     }
 
     if ($user->hasRole('guru')) {
-        return redirect()->route('guru.dashboard'); // (Aktifkan nanti)
-        //return view('dashboard'); // (Sementara)
+        return redirect()->route('guru.dashboard');
     }
 
     if ($user->hasRole('ortu')) {
-        // return redirect()->route('ortu.dashboard'); // (Aktifkan nanti)
-        return view('dashboard'); // (Sementara)
+        return redirect()->route('ortu.dashboard');
     }
 
     // Fallback jika user tidak punya role
@@ -77,35 +78,39 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-
     // --- GRUP ADMIN ---
     // (Awalan URL: /admin/... , Awalan Nama: admin. ...)
     Route::prefix('admin')->name('admin.')->group(function () {
 
-        // (Kita akan buat ulang semua file ini satu per satu)
-        Route::get('/dashboard', function () {
-            return view('dashboard'); 
-        })->name('dashboard');
-
-        // Pengaturan Nilai
-        Route::get('/pengaturan-nilai', App\Livewire\Admin\PengaturanNilai::class)
-            ->name('pengaturan-nilai');
-
-        // Target Hafalan
-        Route::get('/target-hafalan', App\Livewire\Admin\TargetHafalan::class)
-            ->name('target-hafalan');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        
+        Route::get('/data-master', function () {
+            return view('admin.data-master');
+        })->name('data-master');
+        
+        Route::get('/target-hafalan', function () {
+            return view('admin.target-hafalan');
+        })->name('target-hafalan');
+        
+        Route::get('/kelas-kelompok', function () {
+            return view('admin.kelas-kelompok');
+        })->name('kelas-kelompok');
+        
+        Route::get('/laporan', function () {
+            return view('admin.laporan');
+        })->name('laporan');
 
     });
 
     // --- GRUP GURU ---
     Route::prefix('guru')->name('guru.')->group(function () {
-        // (Nanti rute guru di sini)
-    
+        Route::get('/dashboard', [GuruController::class, 'dashboard'])->name('dashboard');
     });
 
     // --- GRUP ORTU ---
     Route::prefix('ortu')->name('ortu.')->group(function () {
-        // (Nanti rute ortu di sini)
+        Route::get('/dashboard', [OrangTuaController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard/child/{childId}', [OrangTuaController::class, 'viewChild'])->name('view-child');
     });
 
 });
