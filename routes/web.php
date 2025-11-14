@@ -1,10 +1,14 @@
 <?php
 
+use App\Livewire\Guru\Dashboard as GuruDashboard;
+use App\Livewire\Guru\InputNilai;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuruController;
 use App\Http\Controllers\OrangTuaController;
 use Illuminate\Support\Facades\Route;
+use App\Livewire\Admin\PengaturanNilai;
+use App\Livewire\Admin\TargetHafalan;
 
 // --- Impor Semua Komponen Livewire Anda di Sini ---
 
@@ -49,6 +53,17 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+// --- GRUP GURU ---
+// --- GRUP GURU (YANG WAJIB LOGIN) ---
+Route::prefix('guru')->middleware(['auth'])->name('guru.')->group(function () {
+    Route::get('/dashboard', GuruDashboard::class)->name('dashboard');
+    // Pindahkan rute input-nilai dari sini
+});
+
+// --- RUTE DEVELOPMENT (TIDAK PERLU LOGIN) ---
+// Pindahkan rute input-nilai ke sini untuk tes
+Route::get('/guru/input-nilai-dev', InputNilai::class)->name('guru.input-nilai');
 
 
 /*
@@ -99,6 +114,7 @@ Route::middleware('auth')->group(function () {
     });
 
 });
+
 
 
 // Rute Autentikasi Bawaan Breeze

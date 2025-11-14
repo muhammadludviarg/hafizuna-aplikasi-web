@@ -24,11 +24,19 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            // Ganti 'name' menjadi 'nama_lengkap'
+            'nama_lengkap' => fake()->name(), 
+            
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            
+            // Ganti 'password' menjadi 'sandi_hash'
+            'sandi_hash' => static::$password ??= Hash::make('password'), 
+            
             'remember_token' => Str::random(10),
+            
+            // Tambahkan kolom 'status' (sesuai Model User) jika perlu
+            'status' => true, 
         ];
     }
 
@@ -39,6 +47,8 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+            // Ganti 'password' menjadi 'sandi_hash' di state unverified
+            'sandi_hash' => Hash::make('unverified_password'), 
         ]);
     }
 }
