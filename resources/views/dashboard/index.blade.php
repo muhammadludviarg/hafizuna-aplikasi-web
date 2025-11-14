@@ -2,21 +2,17 @@
 
 @section('content')
 <div class="flex-1 overflow-auto bg-gray-50">
-    <!-- Header Section -->
     <div class="bg-white border-b border-gray-200 px-8 py-4">
         <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
     </div>
 
     <div class="p-8">
-        <!-- Page Title & Subtitle -->
         <div class="mb-8">
             <h2 class="text-2xl font-bold text-gray-900">Dashboard Statistik</h2>
             <p class="text-gray-600 text-sm mt-1">Overview sistem dan performa hafalan</p>
         </div>
 
-        <!-- 4 Stat Cards in single row with colored borders -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Total Guru Card -->
             <div class="bg-white rounded-lg p-6 shadow-sm border-l-4 border-blue-400">
                 <div class="flex items-start justify-between">
                     <div>
@@ -32,7 +28,6 @@
                 </div>
             </div>
 
-            <!-- Total Siswa Card -->
             <div class="bg-white rounded-lg p-6 shadow-sm border-l-4 border-green-400">
                 <div class="flex items-start justify-between">
                     <div>
@@ -48,7 +43,6 @@
                 </div>
             </div>
 
-            <!-- Total Kelas Card -->
             <div class="bg-white rounded-lg p-6 shadow-sm border-l-4 border-purple-400">
                 <div class="flex items-start justify-between">
                     <div>
@@ -64,7 +58,6 @@
                 </div>
             </div>
 
-            <!-- Rata-rata Nilai Card -->
             <div class="bg-white rounded-lg p-6 shadow-sm border-l-4 border-orange-400">
                 <div class="flex items-start justify-between">
                     <div>
@@ -81,9 +74,7 @@
             </div>
         </div>
 
-        <!-- 4 Charts Grid in 2x2 layout -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <!-- Statistik Per Kelas -->
             <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
                 <h3 class="text-base font-semibold text-gray-900 mb-1">Statistik Per Kelas</h3>
                 <p class="text-sm text-gray-500 mb-6">Jumlah siswa dan rata-rata nilai per kelas</p>
@@ -99,7 +90,6 @@
                 </div>
             </div>
 
-            <!-- Tren Aktivitas Bulanan -->
             <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
                 <h3 class="text-base font-semibold text-gray-900 mb-1">Tren Aktivitas Bulanan</h3>
                 <p class="text-sm text-gray-500 mb-6">Perkembangan sesi hafalan dan partisipasi siswa</p>
@@ -115,13 +105,11 @@
                 </div>
             </div>
 
-            <!-- Analisis Aspek Penilaian -->
             <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
                 <h3 class="text-base font-semibold text-gray-900 mb-1">Analisis Aspek Penilaian</h3>
                 <p class="text-sm text-gray-500 mb-6">Perbandingan nilai aktual vs target</p>
                 <div class="flex justify-center items-center h-64">
                     <svg viewBox="0 0 200 200" class="w-48 h-48">
-                        <!-- Pentagon/Radar chart -->
                         <polygon points="100,20 180,68 147,170 53,170 20,68" fill="rgba(167, 139, 250, 0.1)" stroke="rgba(168, 85, 247, 0.3)" stroke-width="1"/>
                         <polygon points="100,40 160,71 138,155 62,155 40,71" fill="rgba(236, 72, 153, 0.1)" stroke="rgba(236, 72, 153, 0.3)" stroke-width="1"/>
                         <polygon points="100,50 150,75 135,150 65,150 50,75" fill="rgba(251, 146, 60, 0.2)" stroke="rgba(251, 146, 60, 0.5)" stroke-width="2"/>
@@ -143,7 +131,6 @@
                 </div>
             </div>
 
-            <!-- Performa Guru -->
             <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
                 <h3 class="text-base font-semibold text-gray-900 mb-1">Performa Guru</h3>
                 <p class="text-sm text-gray-500 mb-6">Kelas, sesi, dan rata-rata nilai per guru</p>
@@ -160,7 +147,6 @@
             </div>
         </div>
 
-        <!-- Aktivitas Terbaru Section -->
         <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
             <h3 class="text-base font-semibold text-gray-900 mb-2">Aktivitas Terbaru</h3>
             <p class="text-sm text-gray-500 mb-6">5 sesi hafalan terakhir di semua kelas</p>
@@ -168,19 +154,20 @@
             <div class="space-y-4">
                 @forelse($aktivitasTerbaru as $index => $aktivitas)
                     <div class="flex items-start gap-4 pb-4 border-b border-gray-100 last:border-b-0">
-                        <!-- Avatar -->
                         <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-white font-semibold text-sm" style="background: @if($index % 3 === 0)#3B82F6 @elseif($index % 3 === 1)#10B981 @else#A855F7 @endif">
                             {{ substr($aktivitas->nama_lengkap ?? $aktivitas->nama_siswa ?? 'U', 0, 1) }}
                         </div>
                         
-                        <!-- Content -->
                         <div class="flex-1">
                             <p class="text-sm font-semibold text-gray-900">{{ $aktivitas->nama_lengkap ?? $aktivitas->nama_siswa ?? 'Siswa' }}</p>
                             <p class="text-xs text-gray-500 mt-1">{{ $aktivitas->aktivitas ?? 'Sesi hafalan' }} • Ustadz Ahmad Fauzi</p>
-                            <p class="text-xs text-gray-400 mt-1">{{ $aktivitas->timestamp ? $aktivitas->timestamp->format('d F Y') : date('d F Y') }}</p>
+                            
+                            {{-- ================================================= --}}
+                            {{-- INI ADALAH BARIS YANG DIPERBAIKI (Baris 180) --}}
+                            {{-- ================================================= --}}
+                            <p class="text-xs text-gray-400 mt-1">{{ $aktivitas->tanggal_setor ? \Carbon\Carbon::parse($aktivitas->tanggal_setor)->format('d F Y') : date('d F Y') }}</p>
                         </div>
                         
-                        <!-- Score Badge -->
                         <div class="bg-green-100 text-green-800 font-semibold px-3 py-1 rounded text-sm flex-shrink-0">
                             {{ round($aktivitas->nilai ?? 0) }}
                         </div>

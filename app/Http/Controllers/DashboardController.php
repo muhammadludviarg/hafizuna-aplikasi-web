@@ -92,7 +92,17 @@ class DashboardController extends Controller
                 ->join('siswa', 'sesi_hafalan.id_siswa', '=', 'siswa.id_siswa')
                 ->join('guru', 'sesi_hafalan.id_guru', '=', 'guru.id_guru')
                 ->join('akun', 'guru.id_akun', '=', 'akun.id_akun')
-                ->select('akun.nama_lengkap', 'siswa.nama_siswa', 'sesi_hafalan.tanggal_setor')
+                
+                // ==========================================================
+                // PERBAIKAN: Tambahkan 'nilai_rata' sebagai 'nilai'
+                // ==========================================================
+                ->select(
+                    'akun.nama_lengkap', 
+                    'siswa.nama_siswa', 
+                    'sesi_hafalan.tanggal_setor',
+                    'sesi_hafalan.nilai_rata as nilai'
+                )
+                
                 ->orderBy('sesi_hafalan.tanggal_setor', 'desc')
                 ->limit(5)
                 ->get();
