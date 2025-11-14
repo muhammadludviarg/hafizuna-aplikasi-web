@@ -86,9 +86,6 @@ class PengaturanNilai extends Component
                 }
             }
         }
-        // =======================================================
-        // ▲▲▲ AKHIR DARI LOGIKA PENGECEKAN BENTROK ▲▲▲
-        // =======================================================
 
         // Simpan ke database
         foreach ($this->settings as $aspek => $grades) {

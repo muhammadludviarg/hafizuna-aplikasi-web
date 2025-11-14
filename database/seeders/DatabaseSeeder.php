@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             QuranSeeder::class,
             SistemPenilaianSeeder::class,
             
-            // 2. Buat akun admin SEBELUM data dummy
+            // // 2. Buat akun admin SEBELUM data dummy
             AdminUserSeeder::class, 
 
             // 3. Seed data dummy transaksional

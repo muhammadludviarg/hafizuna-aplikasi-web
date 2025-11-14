@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('kelas', function (Blueprint $table) {
             $table->increments('id_kelas');
             $table->string('nama_kelas', 10);
-            $table->string('tahun_ajaran', 4);
+            $table->string('tahun_ajaran', 10);
         });
     }
 
