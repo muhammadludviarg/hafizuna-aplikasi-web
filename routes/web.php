@@ -44,8 +44,8 @@ Route::get('/dashboard', function () {
     }
 
     if ($user->hasRole('ortu')) {
-        // return redirect()->route('ortu.dashboard'); // (Aktifkan nanti)
-        return view('dashboard'); // (Sementara)
+        return redirect()->route('ortu.dashboard'); // (Aktifkan nanti)
+        // return view('dashboard'); // (Sementara)
     }
 
     // Fallback jika user tidak punya role
@@ -63,7 +63,6 @@ Route::prefix('guru')->middleware(['auth'])->name('guru.')->group(function () {
 // --- RUTE DEVELOPMENT (TIDAK PERLU LOGIN) ---
 // Pindahkan rute input-nilai ke sini untuk tes
 Route::get('/guru/input-nilai-dev', InputNilai::class)->name('guru.input-nilai');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -95,17 +94,24 @@ Route::middleware('auth')->group(function () {
         Route::get('/target-hafalan', App\Livewire\Admin\TargetHafalan::class)
             ->name('target-hafalan');
 
+        // routes/web.php - dalam grup admin
+        Route::get('/ganti-password', App\Livewire\Admin\GantiPassword::class)
+            ->name('ganti-password');
+
     });
 
     // --- GRUP GURU ---
     Route::prefix('guru')->name('guru.')->group(function () {
-        // (Nanti rute guru di sini)
+
+        // Route::get('/ganti-password', App\Livewire\Guru\GantiPassword::class)
+        //     ->name('ganti-password');
     
     });
 
     // --- GRUP ORTU ---
     Route::prefix('ortu')->name('ortu.')->group(function () {
-        // (Nanti rute ortu di sini)
+        // Route::get('/ganti-password', App\Livewire\Guru\GantiPassword::class)
+        //     ->name('ganti-password');
     });
 
 });
