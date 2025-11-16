@@ -1,60 +1,116 @@
-<x-guest-layout>
-    <div class="flex h-screen bg-white">
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
-        <div
-            class="w-1/2 bg-gradient-to-b from-green-400 to-green-600 flex flex-col justify-center items-center p-12 text-white">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-            <div class="bg-white bg-opacity-30 p-4 rounded-lg">
-                <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+    <title>{{ config('app.name', 'Hafizuna') }} - Login</title>
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+
+<body class="font-sans text-gray-900 antialiased">
+    <div class="min-h-screen flex">
+
+        {{--
+        BAGIAN KIRI (WARNA SOLID)
+        PERBAIKAN: Menghapus <img> dan menggantinya dengan bg-green-700
+        --}}
+        <div class="hidden lg:block lg:w-1/2 bg-green-700 relative">
+
+            {{-- Teks di atas Latar (Sesuai Figma 3c9b2c.png) --}}
+            <div class="absolute inset-0 flex flex-col justify-center items-center p-12 text-white">
+
+                {{-- Logo (dari x-application-logo) --}}
+                <svg class="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18s-3.332.477-4.5 1.253">
                     </path>
                 </svg>
-            </div>
 
-            <h1 class="text-4xl font-bold mt-4">HAFIZUNA</h1>
-            <p class="text-lg mt-2">Sistem Manajemen Hafalan Al-Qur'an</p>
-
-            <div class="bg-white bg-opacity-30 p-4 rounded-lg mt-8 text-center">
-                <p class="text-xl font-semibold">SD ISLAM AL-AZHAR 27</p>
-                <p class="text-md">Cibinong, Bogor</p>
+                <h1 class="text-5xl font-bold text-center mt-4">HAFIZUNA</h1>
+                <p class="mt-2 text-xl text-green-200 text-center">
+                    Manajemen Hafalan Terpadu
+                </p>
             </div>
         </div>
 
-        <div class="w-1/2 flex justify-center items-center p-12">
-            <div class="w-full max-w-md">
-                <h2 class="text-3xl font-bold mb-2">Selamat Datang</h2>
-                <p class="text-gray-600 mb-8">Silakan masuk dengan akun Anda</p>
+        {{--
+        BAGIAN KANAN (FORM LOGIN)
+        --}}
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 bg-white">
+            <div class="max-w-md w-full">
 
-                <x-auth-session-status class="mb-4" :status="session('status')" />
+                {{-- Logo (Sesuai Figma 3c9b2c.png) --}}
+                <div class="flex justify-center mb-6">
+                    <a href="/" class="flex flex-col items-center text-center">
+                        {{-- Ganti warna logo default (gray) menjadi hijau --}}
+                        <x-application-logo class="w-20 h-20 fill-current text-green-700" />
+                        <span class="mt-2 text-3xl font-bold text-green-800">HAFIZUNA</span>
+                    </a>
+                </div>
 
-                <form method="POST" action="{{ route('login') }}">
-                    @csrf <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input id="email"
-                            class="block w-full mt-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                            type="email" name="email" :value="old('email')" required autofocus />
+                <h2 class="text-2xl font-bold text-center text-gray-900">
+                    Masuk ke Akun Anda
+                </h2>
+                <p class="text-center text-gray-600 mt-2">
+                    Selamat datang kembali! Silakan masukkan data Anda.
+                </p>
+
+                <x-auth-session-status class="my-4" :status="session('status')" />
+
+                <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-6">
+                    @csrf
+
+                    <div>
+                        <x-input-label for="email" value="Email" />
+                        <x-text-input id="email" class="block mt-1 w-full" type="email" name="email"
+                            :value="old('email')" required autofocus autocomplete="username" />
                         <x-input-error :messages="$errors->get('email')" class="mt-2" />
                     </div>
 
                     <div class="mt-4">
-                        <label for="password" class="block text-sm font-medium text-gray-700">Kata Sandi</label>
-                        <input id="password"
-                            class="block w-full mt-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                            type="password" name="password" required />
+                        <x-input-label for="password" value="Password" />
+                        <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required
+                            autocomplete="current-password" />
                         <x-input-error :messages="$errors->get('password')" class="mt-2" />
                     </div>
 
-                    <div class="mt-8">
-                        <button type="submit"
-                            class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition duration-300">
-                            Masuk
-                        </button>
+                    <div class="flex items-center justify-between mt-4">
+                        <label for="remember_me" class="inline-flex items-center">
+                            <input id="remember_me" type="checkbox"
+                                class="rounded border-gray-300 text-green-600 shadow-sm focus:ring-green-500"
+                                name="remember">
+                            <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
+                        </label>
+
+                        @if (Route::has('password.request'))
+                            <a class="text-sm text-green-600 hover:text-green-800 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                href="{{ route('password.request') }}">
+                                {{ __('Lupa password?') }}
+                            </a>
+                        @endif
                     </div>
 
+                    {{-- Tombol Login Hijau --}}
+                    <div class="flex items-center justify-end mt-4">
+                        <x-primary-button class="w-full justify-center text-lg py-3 
+                                                    bg-green-700 hover:bg-green-800 
+                                                    focus:bg-green-700 active:bg-green-900 
+                                                    focus:ring-green-500">
+                            {{ __('Masuk') }}
+                        </x-primary-button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
-</x-guest-layout>
+</body>
+
+</html>

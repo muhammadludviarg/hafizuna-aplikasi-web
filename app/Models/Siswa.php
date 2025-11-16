@@ -10,14 +10,20 @@ class Siswa extends Model {
     protected $fillable = ['nama_siswa', 'kode_siswa', 'id_kelas', 'id_ortu'];
     public function kelas() { return $this->belongsTo(Kelas::class, 'id_kelas'); }
     public function ortu() { return $this->belongsTo(OrangTua::class, 'id_ortu'); }
-    // Di dalam class Siswa (app/Models/Siswa.php)
 
     /**
-     * Mendapatkan data riwayat kelompok siswa.
+     * Relasi ke Kelompok (Many-to-Many)
+     */
+    public function kelompok()
+    {
+        return $this->belongsToMany(Kelompok::class, 'siswa_kelompok', 'id_siswa', 'id_kelompok');
+    }
+
+    /**
+     * Relasi ke Model Pivot SiswaKelompok (HASMANY) - Digunakan oleh InputNilai.php
      */
     public function siswaKelompok()
-    {
-        // Satu Siswa bisa memiliki banyak riwayat di SiswaKelompok
+        {
         return $this->hasMany(SiswaKelompok::class, 'id_siswa', 'id_siswa');
     }
 }

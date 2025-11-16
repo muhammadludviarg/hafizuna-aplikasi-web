@@ -4,10 +4,20 @@ use App\Livewire\Guru\Dashboard as GuruDashboard;
 use App\Livewire\Guru\InputNilai;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+// ADMIN COMPONENTS
+use App\Livewire\Admin\DataAdmin;
+use App\Livewire\Admin\KelolaGuru;
+use App\Livewire\Admin\KelolaSiswa;
+use App\Livewire\Admin\KelolaKelas;
+use App\Livewire\Admin\KelolaKelompok as AdminKelolaKelompok;
 use App\Livewire\Admin\PengaturanNilai;
 use App\Livewire\Admin\TargetHafalan;
-
-// --- Impor Semua Komponen Livewire Anda di Sini ---
+use App\Livewire\Admin\GantiPassword as AdminGantiPassword;
+// GURU COMPONENTS
+use App\Livewire\Guru\ManajemenKelompok;
+use App\Livewire\Guru\DetailKelompok;
+use App\Livewire\Guru\LaporanHafalan;
+use App\Livewire\Guru\GantiPassword;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,54 +25,9 @@ use App\Livewire\Admin\TargetHafalan;
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
-
-/*
-|--------------------------------------------------------------------------
-| Rute Dashboard "Pintar" (Smart Redirect)
-|--------------------------------------------------------------------------
-| Ini adalah rute utama setelah login.
-| Rute ini akan mengecek role pengguna (via Model User) dan
-| mengarahkan mereka ke dashboard yang sesuai.
-*/
-Route::get('/dashboard', function () {
-    if (!auth()->check()) {
-        return redirect()->route('login');
-    }
-
-    // Gunakan fungsi hasRole() yang sudah kita buat di app/Models/User.php
-    $user = auth()->user();
-
-    if ($user->hasRole('admin')) {
-        return redirect()->route('admin.dashboard');
-    }
-
-    if ($user->hasRole('guru')) {
-        return redirect()->route('guru.dashboard'); // (Aktifkan nanti)
-        //return view('dashboard'); // (Sementara)
-    }
-
-    if ($user->hasRole('ortu')) {
-        // return redirect()->route('ortu.dashboard'); // (Aktifkan nanti)
-        return view('dashboard'); // (Sementara)
-    }
-
-    // Fallback jika user tidak punya role
-    return view('dashboard');
-
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-// --- GRUP GURU ---
-// --- GRUP GURU (YANG WAJIB LOGIN) ---
-Route::prefix('guru')->middleware(['auth'])->name('guru.')->group(function () {
-    Route::get('/dashboard', GuruDashboard::class)->name('dashboard');
-    // Pindahkan rute input-nilai dari sini
-});
-
-// --- RUTE DEVELOPMENT (TIDAK PERLU LOGIN) ---
-// Pindahkan rute input-nilai ke sini untuk tes
-Route::get('/guru/input-nilai-dev', InputNilai::class)->name('guru.input-nilai');
+require __DIR__ . '/auth.php';
 
 
 /*
@@ -70,47 +35,69 @@ Route::get('/guru/input-nilai-dev', InputNilai::class)->name('guru.input-nilai')
 | Grup Rute yang Dilindungi (Wajib Login)
 |--------------------------------------------------------------------------
 */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
+
+    // Rute Dashboard "Pintar"
+    Route::get('/dashboard', function () {
+        $user = auth()->user();
+        if ($user->hasRole('admin')) {
+            return redirect()->route('admin.dashboard');
+        }
+        if ($user->hasRole('guru')) {
+            return redirect()->route('guru.dashboard');
+        }
+        return view('dashboard');
+    })->name('dashboard');
 
     // Rute Profil Bawaan Breeze
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-
-    // --- GRUP ADMIN ---
-    // (Awalan URL: /admin/... , Awalan Nama: admin. ...)
-    Route::prefix('admin')->name('admin.')->group(function () {
-
-        // (Kita akan buat ulang semua file ini satu per satu)
-        Route::get('/dashboard', function () {
-            return view('dashboard'); 
-        })->name('dashboard');
-
-        // Pengaturan Nilai
-        Route::get('/pengaturan-nilai', App\Livewire\Admin\PengaturanNilai::class)
-            ->name('pengaturan-nilai');
-
-        // Target Hafalan
-        Route::get('/target-hafalan', App\Livewire\Admin\TargetHafalan::class)
-            ->name('target-hafalan');
-
-    });
-
-    // --- GRUP GURU ---
-    Route::prefix('guru')->name('guru.')->group(function () {
-        // (Nanti rute guru di sini)
-    
-    });
-
-    // --- GRUP ORTU ---
-    Route::prefix('ortu')->name('ortu.')->group(function () {
-        // (Nanti rute ortu di sini)
-    });
-
 });
 
 
+// --- GRUP ADMIN (Dilindungi) ---
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(function () {
 
-// Rute Autentikasi Bawaan Breeze
-require __DIR__ . '/auth.php';
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
+    // Rute Fitur Admin
+    Route::get('/data-admin', DataAdmin::class)->name('data-admin');
+    Route::get('/kelola-guru', KelolaGuru::class)->name('kelola-guru');
+    Route::get('/kelola-siswa', KelolaSiswa::class)->name('kelola-siswa');
+    Route::get('/kelola-kelas', KelolaKelas::class)->name('kelola-kelas');
+    Route::get('/kelola-kelompok', AdminKelolaKelompok::class)->name('kelola-kelompok');
+
+    // Rute Fitur Lama
+    Route::get('/pengaturan-nilai', PengaturanNilai::class)->name('pengaturan-nilai');
+    Route::get('/target-hafalan', TargetHafalan::class)->name('target-hafalan');
+
+    Route::get('/ganti-password', AdminGantiPassword::class)->name('ganti-password');
+});
+
+
+// --- GRUP GURU (Dilindungi) ---
+Route::prefix('guru')->name('guru.')->middleware(['auth', 'verified'])->group(function () {
+
+    Route::get('/dashboard', GuruDashboard::class)->name('dashboard');
+
+    // Rute Fitur Guru
+    Route::get('/input-nilai', InputNilai::class)->name('input-nilai');
+    Route::get('/laporan-hafalan', LaporanHafalan::class)->name('laporan-hafalan');
+
+    // Rute Kelola Kelompok
+    Route::get('kelompok', ManajemenKelompok::class)->name('kelompok.index');
+    Route::get('kelompok/{id}', DetailKelompok::class)->name('kelompok.detail');
+
+    // Rute Ganti Password
+    Route::get('/ganti-password', GantiPassword::class)->name('ganti-password');
+});
+
+
+// --- GRUP ORTU (Dilindungi) ---
+Route::prefix('ortu')->name('ortu.')->middleware(['auth', 'verified'])->group(function () {
+    // (Rute ortu)
+});
