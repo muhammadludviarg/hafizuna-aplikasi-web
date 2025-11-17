@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Auth;
 
 class GantiPassword extends Component
 {
-    // ... (properti dan rules sama seperti sebelumnya) ...
     public $password_lama = '';
     public $password_baru = '';
     public $password_baru_confirmation = '';
@@ -41,7 +40,6 @@ class GantiPassword extends Component
         ];
     }
 
-    // ... (messages dan updatedPasswordBaru sama) ...
     protected $messages = [
         'password_lama.required' => 'Password lama wajib diisi',
         'password_baru.required' => 'Password baru wajib diisi',
@@ -77,10 +75,10 @@ class GantiPassword extends Component
         $user->sandi_hash = Hash::make($this->password_baru);
         $user->save();
 
-        // --- TAMBAHKAN LOGOUT OTOMATIS DI SINI ---
-        Auth::logout();     // Logout user
-        session()->invalidate();    // Hapus sesi
-        session()->regenerateToken(); // Regenerasi token CSRF
+        // Logout otomatis setelah ganti password
+        Auth::logout();
+        session()->invalidate();
+        session()->regenerateToken();
 
         // Redirect ke halaman login dengan pesan sukses
         return redirect('/login')->with('status', 'Password berhasil diubah! Silakan login kembali dengan password baru Anda.');
@@ -88,7 +86,9 @@ class GantiPassword extends Component
 
     public function render()
     {
-        return view('livewire.admin.ganti-password')
-            ->layout('layouts.app');
+        return view('livewire.guru.ganti-password', [
+            'user' => Auth::user()
+        ])
+            ->layout('layouts.guru');
     }
 }

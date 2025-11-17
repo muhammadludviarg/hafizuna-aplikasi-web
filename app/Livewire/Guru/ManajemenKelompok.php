@@ -4,11 +4,11 @@ namespace App\Livewire\Guru;
 
 use Livewire\Component;
 
-class Dashboard extends Component
+class ManajemenKelompok extends Component
 {
     public function render()
     {
-        return view('livewire.guru.dashboard')
+        return view('livewire.guru.manajemen-kelompok')
         ->layout('layouts.guru');
     }
 }

@@ -131,10 +131,13 @@
                         </a>
                     </li>
 
+                    {{-- LINK GANTI PASSWORD (ADMIN) - Gabungan dari kedua versi --}}
+                    @php $isActive = request()->routeIs('admin.ganti-password'); @endphp
                     <li class="relative px-6 py-1.5">
-                        <a href="{{ route('admin.ganti-password') }}"
-                        class="inline-flex items-center w-full text-sm font-semibold {{ request()->routeIs('admin.ganti-password') ? 'text-white' : 'text-green-300 hover:text-white' }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <span class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}" aria-hidden="true"></span>
+                        <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 {{ $isActive ? 'text-white' : 'text-green-300 hover:text-white' }}"
+                            href="{{ route('admin.ganti-password') }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
                             </svg>
                             <span class="ml-4">Ganti Password</span>
