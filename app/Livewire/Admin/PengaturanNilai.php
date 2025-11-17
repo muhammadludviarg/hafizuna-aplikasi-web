@@ -144,6 +144,6 @@ class PengaturanNilai extends Component
     public function render()
     {
         return view('livewire.admin.pengaturan-nilai')
-            ->layout('layouts.admin'); 
+            ->layout('layouts.app'); 
     }
 }
