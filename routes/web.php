@@ -1,7 +1,5 @@
 <?php
 
-use App\Livewire\Guru\Dashboard as GuruDashboard;
-use App\Livewire\Guru\InputNilai;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,10 +15,18 @@ use App\Livewire\Admin\TargetHafalan;
 use App\Livewire\Admin\GantiPassword as AdminGantiPassword;
 
 // GURU COMPONENTS
+use App\Livewire\Guru\Dashboard as GuruDashboard;
+use App\Livewire\Guru\InputNilai;
 use App\Livewire\Guru\ManajemenKelompok;
 use App\Livewire\Guru\DetailKelompok;
 use App\Livewire\Guru\LaporanHafalan;
 use App\Livewire\Guru\GantiPassword;
+
+// (BARU) ORTU COMPONENTS
+use App\Livewire\OrangTua\Dashboard as OrtuDashboard;
+use App\Livewire\OrangTua\LaporanHafalan as OrtuLaporanHafalan;
+use App\Livewire\OrangTua\GantiPassword as OrtuGantiPassword;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -53,9 +59,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
 
-        if ($user->hasRole('admin')) {
-            return redirect()->route('admin.dashboard');
-        }
+        // (PERBAIKAN URUTAN)
+        // Cek peran spesifik (Guru/Ortu) SEBELUM peran umum (Admin)
+        // Ini akan memperbaiki error redirect Anda
 
         if ($user->hasRole('guru')) {
             return redirect()->route('guru.dashboard');
@@ -65,6 +71,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return redirect()->route('ortu.dashboard');
         }
 
+        if ($user->hasRole('admin')) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        // Fallback jika tidak punya peran
         return view('dashboard');
     })->name('dashboard');
 
@@ -114,9 +125,12 @@ Route::prefix('guru')->name('guru.')->middleware(['auth', 'verified'])->group(fu
 |--------------------------------------------------------------------------
 */
 Route::prefix('ortu')->name('ortu.')->middleware(['auth', 'verified'])->group(function () {
-    
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+
+    // (PERBAIKAN) 
+    // Hubungkan rute ke komponen Livewire Orang Tua yang benar
+
+    Route::get('/dashboard', OrtuDashboard::class)->name('dashboard');
+    Route::get('/laporan', OrtuLaporanHafalan::class)->name('laporan');
+    Route::get('/ganti-password', OrtuGantiPassword::class)->name('ganti-password');
 
 });
