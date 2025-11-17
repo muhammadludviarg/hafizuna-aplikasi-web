@@ -109,7 +109,7 @@
                         </a>
                     </li>
 
-                    <li class="relative px-6 py-3">
+                    <!-- <li class="relative px-6 py-3">
                         <a href="{{ route('guru.ganti-password') }}"
                         class="inline-flex items-center w-full text-sm font-semibold {{ request()->routeIs('guru.ganti-password') ? 'text-white' : 'text-green-300 hover:text-white' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,7 +117,7 @@
                             </svg>
                             <span class="ml-4">Ganti Password</span>
                         </a>
-                    </li>
+                    </li> -->
                 </ul>
 
                 {{-- --- TOMBOL KELUAR (SESUAI ADMIN & DIPOSISIKAN DENGAN BENAR) --- --}}

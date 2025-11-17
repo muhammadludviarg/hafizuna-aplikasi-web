@@ -196,6 +196,6 @@ class TargetHafalan extends Component
     public function render()
     {
         return view('livewire.admin.target-hafalan')
-            ->layout('layouts.admin');
+            ->layout('layouts.app');
     }    
 }
