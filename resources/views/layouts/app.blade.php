@@ -54,7 +54,7 @@
                                     d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6-4h.01M12 12h.01M15 12h.01M12 9h.01M15 9h.01M9 9h.01">
                                 </path>
                             </svg>
-                            <span class="ml-4">Statistik</span>
+                            <span class="ml-4">Dashboard</span>
                         </a>
                     </li>
 
