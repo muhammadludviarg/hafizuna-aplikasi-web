@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Guru;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class KelolaGuru extends Component
 {
@@ -23,21 +24,20 @@ class KelolaGuru extends Component
     // Field untuk akun (jika create new)
     public $nama_lengkap;
     public $email;
-    public $username;
 
     protected function rules()
     {
         $rules = [
             'no_hp' => 'required|string|max:20',
+            'nama_lengkap' => 'required|min:3',
         ];
 
         if ($this->editMode) {
-            $rules['id_akun'] = 'required|exists:akun,id';
+            // Edit mode - validasi unique kecuali record ini
+            $rules['email'] = 'required|email|unique:akun,email,' . $this->id_akun . ',id_akun';
         } else {
-            // Untuk tambah baru, butuh data akun
-            $rules['nama_lengkap'] = 'required|min:3';
+            // Create mode - validasi unique total
             $rules['email'] = 'required|email|unique:akun,email';
-            $rules['username'] = 'required|unique:akun,username';
         }
 
         return $rules;
@@ -67,7 +67,6 @@ class KelolaGuru extends Component
         $this->no_hp = '';
         $this->nama_lengkap = '';
         $this->email = '';
-        $this->username = '';
         $this->editMode = false;
         $this->resetErrorBag();
         $this->resetValidation();
@@ -78,25 +77,29 @@ class KelolaGuru extends Component
         $this->validate();
 
         try {
-            // Buat akun dulu
+            DB::beginTransaction();
+
+            // Buat akun dulu (sesuai struktur tabel akun yang ada)
             $akun = User::create([
                 'nama_lengkap' => $this->nama_lengkap,
                 'email' => $this->email,
-                'username' => $this->username,
-                'password' => bcrypt('password123'), // Default password
-                'role' => 'guru',
+                'sandi_hash' => bcrypt('password123'), // Kolom password di tabel Anda namanya sandi_hash
+                'status' => 1, // Aktif
             ]);
 
             // Buat guru
             Guru::create([
-                'id_akun' => $akun->id,
+                'id_akun' => $akun->id_akun, // Primary key tabel akun adalah id_akun
                 'no_hp' => $this->no_hp,
             ]);
+
+            DB::commit();
 
             session()->flash('message', 'Data guru berhasil ditambahkan. Password default: password123');
             $this->closeModal();
             $this->resetPage();
         } catch (\Exception $e) {
+            DB::rollBack();
             session()->flash('error', 'Gagal menambahkan data: ' . $e->getMessage());
         }
     }
@@ -114,7 +117,6 @@ class KelolaGuru extends Component
             if ($guru->akun) {
                 $this->nama_lengkap = $guru->akun->nama_lengkap;
                 $this->email = $guru->akun->email;
-                $this->username = $guru->akun->username;
             }
             
             $this->editMode = true;
@@ -126,14 +128,11 @@ class KelolaGuru extends Component
 
     public function update()
     {
-        $this->validate([
-            'no_hp' => 'required|string|max:20',
-            'nama_lengkap' => 'required|min:3',
-            'email' => 'required|email|unique:akun,email,' . $this->id_akun,
-            'username' => 'required|unique:akun,username,' . $this->id_akun,
-        ]);
+        $this->validate();
 
         try {
+            DB::beginTransaction();
+
             $guru = Guru::findOrFail($this->guruId);
 
             // Update guru
@@ -146,14 +145,16 @@ class KelolaGuru extends Component
                 $guru->akun->update([
                     'nama_lengkap' => $this->nama_lengkap,
                     'email' => $this->email,
-                    'username' => $this->username,
                 ]);
             }
+
+            DB::commit();
 
             session()->flash('message', 'Data guru berhasil diperbarui.');
             $this->closeModal();
             $this->resetPage();
         } catch (\Exception $e) {
+            DB::rollBack();
             session()->flash('error', 'Gagal memperbarui data: ' . $e->getMessage());
         }
     }
@@ -161,15 +162,27 @@ class KelolaGuru extends Component
     public function delete($id)
     {
         try {
-            $guru = Guru::findOrFail($id);
+            DB::beginTransaction();
+
+            $guru = Guru::with('akun')->findOrFail($id);
             
-            // Hapus akun juga (optional, tergantung kebutuhan)
-            // $guru->akun->delete();
+            // Simpan ID akun sebelum hapus guru
+            $id_akun = $guru->id_akun;
             
+            // Hapus data guru dulu
             $guru->delete();
-            session()->flash('message', 'Data guru berhasil dihapus.');
+            
+            // Hapus akun juga (CASCADE DELETE)
+            if ($id_akun) {
+                User::where('id_akun', $id_akun)->delete();
+            }
+
+            DB::commit();
+
+            session()->flash('message', 'Data guru dan akun berhasil dihapus.');
             $this->resetPage();
         } catch (\Exception $e) {
+            DB::rollBack();
             session()->flash('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }
@@ -177,11 +190,13 @@ class KelolaGuru extends Component
     public function render()
     {
         $guru = Guru::with('akun')
-            ->whereHas('akun', function($query) {
-                $query->where('nama_lengkap', 'like', '%' . $this->search . '%')
-                      ->orWhere('email', 'like', '%' . $this->search . '%');
+            ->when($this->search, function($query) {
+                $query->where('no_hp', 'like', '%' . $this->search . '%')
+                    ->orWhereHas('akun', function($q) {
+                        $q->where('nama_lengkap', 'like', '%' . $this->search . '%')
+                          ->orWhere('email', 'like', '%' . $this->search . '%');
+                    });
             })
-            ->orWhere('no_hp', 'like', '%' . $this->search . '%')
             ->paginate(10);
 
         return view('livewire.admin.kelola-guru', [

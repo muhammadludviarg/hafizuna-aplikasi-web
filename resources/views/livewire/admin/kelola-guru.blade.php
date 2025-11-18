@@ -63,7 +63,7 @@
                                         {{ $guru->akun->nama_lengkap ?? '-' }}
                                     </div>
                                     <div class="text-xs text-gray-500">
-                                        {{ $guru->akun->username ?? '-' }}
+                                        ID: {{ $guru->id_guru }}
                                     </div>
                                 </div>
                             </div>
@@ -137,21 +137,6 @@
                                 @error('nama_lengkap') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                             </div>
 
-                            @if(!$editMode)
-                            <!-- Username (hanya untuk tambah baru) -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">
-                                    Username <span class="text-red-500">*</span>
-                                </label>
-                                <input 
-                                    type="text" 
-                                    wire:model="username" 
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 @error('username') border-red-500 @enderror"
-                                    placeholder="Username untuk login">
-                                @error('username') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-                            </div>
-                            @endif
-
                             <!-- Email -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">
@@ -160,7 +145,8 @@
                                 <input 
                                     type="email" 
                                     wire:model="email" 
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 @error('email') border-red-500 @enderror">
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 @error('email') border-red-500 @enderror"
+                                    placeholder="guru@example.com">
                                 @error('email') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                             </div>
 
@@ -180,7 +166,7 @@
                             @if(!$editMode)
                             <div class="bg-blue-50 border border-blue-200 rounded p-3">
                                 <p class="text-xs text-blue-700">
-                                    <strong>Info:</strong> Password default akan di-set ke: <code class="bg-blue-100 px-1 rounded">password123</code>
+                                    <strong>Info:</strong> Password default akan di-set ke: <code class="bg-blue-100 px-1 rounded">password123</code><br>
                                 </p>
                             </div>
                             @endif

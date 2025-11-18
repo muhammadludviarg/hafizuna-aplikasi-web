@@ -13,7 +13,7 @@
         </button>
     </div>
 
-    <!-- Flash Messages -->
+    <!-- Flash Messages (diluar modal) -->
     @if (session()->has('message'))
         <div class="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center justify-between">
             <span>{{ session('message') }}</span>
@@ -64,7 +64,7 @@
                                         {{ $ortu->akun->nama_lengkap ?? '-' }}
                                     </div>
                                     <div class="text-xs text-gray-500">
-                                        {{ $ortu->akun->username ?? '-' }}
+                                        ID: {{ $ortu->id_ortu }}
                                     </div>
                                 </div>
                             </div>
@@ -87,7 +87,7 @@
                                 </svg>
                             </button>
                             <button wire:click="delete({{ $ortu->id_ortu }})" 
-                                    wire:confirm="Yakin ingin menghapus data {{ $ortu->akun->nama_lengkap ?? 'orang tua ini' }}?"
+                                    wire:confirm="Yakin ingin menghapus data {{ $ortu->akun->nama_lengkap ?? 'orang tua ini' }}? Data akun juga akan terhapus."
                                     class="text-red-600 hover:text-red-900" title="Hapus">
                                 <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -130,6 +130,20 @@
                             <button wire:click="closeModal" class="text-gray-400 hover:text-gray-500">✕</button>
                         </div>
 
+                        <!-- Error Message INSIDE Modal -->
+                        @if($modalError)
+                            <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                                <div class="flex">
+                                    <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium">{{ $modalError }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <form class="space-y-4">
                             <!-- Nama Lengkap -->
                             <div>
@@ -151,7 +165,8 @@
                                 <input 
                                     type="email" 
                                     wire:model="email" 
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 @error('email') border-red-500 @enderror">
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 @error('email') border-red-500 @enderror"
+                                    placeholder="orangtua@example.com">
                                 @error('email') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                             </div>
 
@@ -171,7 +186,7 @@
                             @if(!$editMode)
                             <div class="bg-blue-50 border border-blue-200 rounded p-3">
                                 <p class="text-xs text-blue-700">
-                                    <strong>Info:</strong> Password default akan di-set ke: <code class="bg-blue-100 px-1 rounded">password123</code>
+                                    <strong>Info:</strong> Password default akan di-set ke: <code class="bg-blue-100 px-1 rounded">password123</code><br>
                                 </p>
                             </div>
                             @endif
