@@ -14,6 +14,7 @@ use App\Livewire\Admin\KelolaKelompok as AdminKelolaKelompok;
 use App\Livewire\Admin\PengaturanNilai;
 use App\Livewire\Admin\TargetHafalan;
 use App\Livewire\Admin\GantiPassword as AdminGantiPassword;
+use App\Livewire\Admin\DataMaster;
 
 // GURU COMPONENTS
 use App\Livewire\Guru\ManajemenKelompok;
@@ -92,6 +93,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
 
     // Rute Fitur Admin
     Route::get('/data-admin', DataAdmin::class)->name('data-admin');
+    Route::get('/data-master', DataMaster::class)->name('data-master');
     Route::get('/kelola-guru', KelolaGuru::class)->name('kelola-guru');
     Route::get('/kelola-siswa', KelolaSiswa::class)->name('kelola-siswa');
     Route::get('/kelola-kelas', KelolaKelas::class)->name('kelola-kelas');

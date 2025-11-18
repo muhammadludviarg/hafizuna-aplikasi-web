@@ -2,14 +2,14 @@
     <!-- Header Section -->
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h3 class="text-lg font-semibold text-gray-700">Data Kelas</h3>
-            <p class="text-sm text-gray-500">Kelola data kelas</p>
+            <h3 class="text-lg font-semibold text-gray-700">Data Orang Tua</h3>
+            <p class="text-sm text-gray-500">Kelola data orang tua siswa</p>
         </div>
         <button wire:click="openModal" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
-            <span>Tambah Kelas</span>
+            <span>Tambah Orang Tua</span>
         </button>
     </div>
 
@@ -33,7 +33,7 @@
         <input 
             type="text" 
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" 
-            placeholder="Cari nama kelas atau tahun ajaran..."
+            placeholder="Cari nama, email, atau no HP..."
             wire:model.live="search">
     </div>
 
@@ -43,42 +43,51 @@
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kelas</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahun Ajaran</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No HP</th>
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Siswa</th>
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-                @forelse($kelasList as $kelas)
+                @forelse($orangTuaList as $ortu)
                     <tr class="hover:bg-gray-50 transition-colors duration-150">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $kelas->id_kelas }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $ortu->id_ortu }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
-                                <div class="h-10 w-10 rounded-lg bg-purple-600 text-white flex items-center justify-center mr-3 font-semibold">
-                                    {{ strtoupper(substr($kelas->nama_kelas, 0, 1)) }}
+                                <div class="h-10 w-10 rounded-full bg-orange-600 text-white flex items-center justify-center mr-3 font-semibold">
+                                    {{ $ortu->akun ? strtoupper(substr($ortu->akun->nama_lengkap, 0, 1)) : 'O' }}
                                 </div>
-                                <div class="text-sm font-medium text-gray-900">{{ $kelas->nama_kelas }}</div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ $ortu->akun->nama_lengkap ?? '-' }}
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ $ortu->akun->username ?? '-' }}
+                                    </div>
+                                </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-3 py-1 text-xs font-semibold text-indigo-800 bg-indigo-100 rounded-full">
-                                {{ $kelas->tahun_ajaran }}
-                            </span>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $ortu->akun->email ?? '-' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ $ortu->no_hp }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                {{ $kelas->siswa_count }} siswa
+                                {{ $ortu->siswa->count() }} siswa
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
-                            <button wire:click="edit({{ $kelas->id_kelas }})" class="text-blue-600 hover:text-blue-900 mr-3" title="Edit">
+                            <button wire:click="edit({{ $ortu->id_ortu }})" class="text-blue-600 hover:text-blue-900 mr-3" title="Edit">
                                 <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                 </svg>
                             </button>
-                            <button wire:click="delete({{ $kelas->id_kelas }})" 
-                                    wire:confirm="Yakin ingin menghapus kelas {{ $kelas->nama_kelas }}?"
+                            <button wire:click="delete({{ $ortu->id_ortu }})" 
+                                    wire:confirm="Yakin ingin menghapus data {{ $ortu->akun->nama_lengkap ?? 'orang tua ini' }}?"
                                     class="text-red-600 hover:text-red-900" title="Hapus">
                                 <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -88,11 +97,11 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center">
+                        <td colspan="6" class="px-6 py-12 text-center">
                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                             </svg>
-                            <p class="mt-2 text-sm text-gray-500">Tidak ada data kelas</p>
+                            <p class="mt-2 text-sm text-gray-500">Tidak ada data orang tua</p>
                         </td>
                     </tr>
                 @endforelse
@@ -102,7 +111,7 @@
 
     <!-- Pagination -->
     <div class="mt-4">
-        {{ $kelasList->links() }}
+        {{ $orangTuaList->links() }}
     </div>
 
     <!-- Modal Form -->
@@ -116,37 +125,56 @@
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-medium text-gray-900">
-                                {{ $editMode ? 'Edit Kelas' : 'Tambah Kelas' }}
+                                {{ $editMode ? 'Edit Orang Tua' : 'Tambah Orang Tua' }}
                             </h3>
                             <button wire:click="closeModal" class="text-gray-400 hover:text-gray-500">✕</button>
                         </div>
 
                         <form class="space-y-4">
-                            <!-- Nama Kelas -->
+                            <!-- Nama Lengkap -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">
-                                    Nama Kelas <span class="text-red-500">*</span>
+                                    Nama Lengkap <span class="text-red-500">*</span>
                                 </label>
                                 <input 
                                     type="text" 
-                                    wire:model="nama_kelas" 
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 @error('nama_kelas') border-red-500 @enderror"
-                                    placeholder="Contoh: 5 Firdaus">
-                                @error('nama_kelas') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                    wire:model="nama_lengkap" 
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 @error('nama_lengkap') border-red-500 @enderror">
+                                @error('nama_lengkap') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                             </div>
 
-                            <!-- Tahun Ajaran -->
+                            <!-- Email -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">
-                                    Tahun Ajaran <span class="text-red-500">*</span>
+                                    Email <span class="text-red-500">*</span>
+                                </label>
+                                <input 
+                                    type="email" 
+                                    wire:model="email" 
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 @error('email') border-red-500 @enderror">
+                                @error('email') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                            </div>
+
+                            <!-- No HP -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">
+                                    No HP <span class="text-red-500">*</span>
                                 </label>
                                 <input 
                                     type="text" 
-                                    wire:model="tahun_ajaran" 
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 @error('tahun_ajaran') border-red-500 @enderror"
-                                    placeholder="Contoh: 2024/2025">
-                                @error('tahun_ajaran') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                    wire:model="no_hp" 
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 @error('no_hp') border-red-500 @enderror"
+                                    placeholder="08123456789">
+                                @error('no_hp') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                             </div>
+
+                            @if(!$editMode)
+                            <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                                <p class="text-xs text-blue-700">
+                                    <strong>Info:</strong> Password default akan di-set ke: <code class="bg-blue-100 px-1 rounded">password123</code>
+                                </p>
+                            </div>
+                            @endif
                         </form>
                     </div>
 

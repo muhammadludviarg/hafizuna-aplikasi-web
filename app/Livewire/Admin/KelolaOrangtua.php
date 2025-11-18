@@ -4,10 +4,10 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Guru;
+use App\Models\OrangTua;
 use App\Models\User;
 
-class KelolaGuru extends Component
+class KelolaOrangTua extends Component
 {
     use WithPagination;
 
@@ -16,14 +16,13 @@ class KelolaGuru extends Component
     public $editMode = false;
     
     // Form fields
-    public $guruId;
+    public $ortuId;
     public $id_akun;
     public $no_hp;
     
     // Field untuk akun (jika create new)
     public $nama_lengkap;
     public $email;
-    public $username;
 
     protected function rules()
     {
@@ -37,7 +36,6 @@ class KelolaGuru extends Component
             // Untuk tambah baru, butuh data akun
             $rules['nama_lengkap'] = 'required|min:3';
             $rules['email'] = 'required|email|unique:akun,email';
-            $rules['username'] = 'required|unique:akun,username';
         }
 
         return $rules;
@@ -62,12 +60,11 @@ class KelolaGuru extends Component
 
     public function resetForm()
     {
-        $this->guruId = null;
+        $this->ortuId = null;
         $this->id_akun = '';
         $this->no_hp = '';
         $this->nama_lengkap = '';
         $this->email = '';
-        $this->username = '';
         $this->editMode = false;
         $this->resetErrorBag();
         $this->resetValidation();
@@ -82,18 +79,17 @@ class KelolaGuru extends Component
             $akun = User::create([
                 'nama_lengkap' => $this->nama_lengkap,
                 'email' => $this->email,
-                'username' => $this->username,
                 'password' => bcrypt('password123'), // Default password
-                'role' => 'guru',
+                'role' => 'ortu',
             ]);
 
-            // Buat guru
-            Guru::create([
+            // Buat orang tua
+            OrangTua::create([
                 'id_akun' => $akun->id,
                 'no_hp' => $this->no_hp,
             ]);
 
-            session()->flash('message', 'Data guru berhasil ditambahkan. Password default: password123');
+            session()->flash('message', 'Data orang tua berhasil ditambahkan. Password default: password123');
             $this->closeModal();
             $this->resetPage();
         } catch (\Exception $e) {
@@ -104,17 +100,16 @@ class KelolaGuru extends Component
     public function edit($id)
     {
         try {
-            $guru = Guru::with('akun')->findOrFail($id);
+            $ortu = OrangTua::with('akun')->findOrFail($id);
             
-            $this->guruId = $guru->id_guru;
-            $this->id_akun = $guru->id_akun;
-            $this->no_hp = $guru->no_hp;
+            $this->ortuId = $ortu->id_ortu;
+            $this->id_akun = $ortu->id_akun;
+            $this->no_hp = $ortu->no_hp;
             
             // Load data akun
-            if ($guru->akun) {
-                $this->nama_lengkap = $guru->akun->nama_lengkap;
-                $this->email = $guru->akun->email;
-                $this->username = $guru->akun->username;
+            if ($ortu->akun) {
+                $this->nama_lengkap = $ortu->akun->nama_lengkap;
+                $this->email = $ortu->akun->email;
             }
             
             $this->editMode = true;
@@ -130,27 +125,25 @@ class KelolaGuru extends Component
             'no_hp' => 'required|string|max:20',
             'nama_lengkap' => 'required|min:3',
             'email' => 'required|email|unique:akun,email,' . $this->id_akun,
-            'username' => 'required|unique:akun,username,' . $this->id_akun,
         ]);
 
         try {
-            $guru = Guru::findOrFail($this->guruId);
+            $ortu = OrangTua::findOrFail($this->ortuId);
 
-            // Update guru
-            $guru->update([
+            // Update orang tua
+            $ortu->update([
                 'no_hp' => $this->no_hp,
             ]);
 
             // Update akun
-            if ($guru->akun) {
-                $guru->akun->update([
+            if ($ortu->akun) {
+                $ortu->akun->update([
                     'nama_lengkap' => $this->nama_lengkap,
                     'email' => $this->email,
-                    'username' => $this->username,
                 ]);
             }
 
-            session()->flash('message', 'Data guru berhasil diperbarui.');
+            session()->flash('message', 'Data orang tua berhasil diperbarui.');
             $this->closeModal();
             $this->resetPage();
         } catch (\Exception $e) {
@@ -161,13 +154,16 @@ class KelolaGuru extends Component
     public function delete($id)
     {
         try {
-            $guru = Guru::findOrFail($id);
+            $ortu = OrangTua::findOrFail($id);
             
-            // Hapus akun juga (optional, tergantung kebutuhan)
-            // $guru->akun->delete();
+            // Check apakah masih punya siswa
+            if ($ortu->siswa && $ortu->siswa->count() > 0) {
+                session()->flash('error', 'Tidak dapat menghapus orang tua yang masih memiliki siswa terdaftar.');
+                return;
+            }
             
-            $guru->delete();
-            session()->flash('message', 'Data guru berhasil dihapus.');
+            $ortu->delete();
+            session()->flash('message', 'Data orang tua berhasil dihapus.');
             $this->resetPage();
         } catch (\Exception $e) {
             session()->flash('error', 'Gagal menghapus data: ' . $e->getMessage());
@@ -176,7 +172,7 @@ class KelolaGuru extends Component
 
     public function render()
     {
-        $guru = Guru::with('akun')
+        $orangTua = OrangTua::with(['akun', 'siswa'])
             ->whereHas('akun', function($query) {
                 $query->where('nama_lengkap', 'like', '%' . $this->search . '%')
                       ->orWhere('email', 'like', '%' . $this->search . '%');
@@ -184,8 +180,8 @@ class KelolaGuru extends Component
             ->orWhere('no_hp', 'like', '%' . $this->search . '%')
             ->paginate(10);
 
-        return view('livewire.admin.kelola-guru', [
-            'guruList' => $guru,
+        return view('livewire.admin.kelola-orang-tua', [
+            'orangTuaList' => $orangTua,
         ])->layout('layouts.app');
     }
 }
