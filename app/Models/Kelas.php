@@ -10,13 +10,8 @@ class Kelas extends Model
     protected $table = 'kelas';
     protected $primaryKey = 'id_kelas';
     public $timestamps = false;
+    protected $fillable = ['nama_kelas', 'tahun_ajaran'];
     
-    protected $fillable = [
-        'nama_kelas', 
-        'tahun_ajaran'
-    ];
-
-    // ✅ TAMBAHKAN RELASI INI
     public function siswa()
     {
         return $this->hasMany(Siswa::class, 'id_kelas', 'id_kelas');

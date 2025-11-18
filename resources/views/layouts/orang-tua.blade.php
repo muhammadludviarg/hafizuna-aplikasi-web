@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'Hafizuna') }} - Guru</title>
+    <title>{{ config('app.name', 'Hafizuna') }} - Wali Murid</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
@@ -20,34 +20,35 @@
 
                 {{-- Logo --}}
                 <a class="flex items-center justify-center text-lg font-bold text-white"
-                    href="{{ route('guru.dashboard') }}">
+                    href="{{ route('ortu.dashboard') }}">
                     <svg class="w-8 h-8 mr-2 bg-white text-green-800 p-1 rounded" fill="none" stroke="currentColor"
                         viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18s-3.332.477-4.5 1.253">
                         </path>
                     </svg>
-                    <span>HAFIZUNA</span>
+                    <span>HAFIZUNA (ORTU)</span>
                 </a>
 
                 {{-- Info Pengguna --}}
                 <div class="flex flex-col items-center mt-6">
                     <span
-                        class="mt-2 text-md font-semibold text-white">{{ Auth::user()->nama_lengkap ?? 'Guru' }}</span>
-                    <span class="text-xs text-green-300">Guru</span>
+                        class="mt-2 text-md font-semibold text-white">{{ Auth::user()->nama_lengkap ?? 'Wali Murid' }}</span>
+                    <span class="text-xs text-green-300">Wali Murid</span>
                 </div>
 
                 {{-- Daftar Menu (flex-grow untuk mendorong Logout ke bawah) --}}
                 <ul class="mt-8 space-y-2 flex-grow">
-                    {{-- LINK DASHBOARD --}}
-                    @php $isActive = request()->routeIs('guru.dashboard'); @endphp
+
+                    {{-- 1. LINK DASHBOARD --}}
+                    @php $isActive = request()->routeIs('ortu.dashboard'); @endphp
                     <li class="relative px-6 py-3">
                         <span
                             class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
                             aria-hidden="true"></span>
                         <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 
                                 {{ $isActive ? 'text-white' : 'text-gray-200 hover:text-white' }}"
-                            href="{{ route('guru.dashboard') }}">
+                            href="{{ route('ortu.dashboard') }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -57,51 +58,15 @@
                         </a>
                     </li>
 
-                    {{-- LINK INPUT NILAI --}}
-                    @php $isActive = request()->routeIs('guru.input-nilai'); @endphp
+                    {{-- 2. LINK LAPORAN HAFALAN --}}
+                    @php $isActive = request()->routeIs('ortu.laporan'); @endphp
                     <li class="relative px-6 py-3">
                         <span
                             class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
                             aria-hidden="true"></span>
                         <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 
                                 {{ $isActive ? 'text-white' : 'text-gray-200 hover:text-white' }}"
-                            href="{{ route('guru.input-nilai') }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            <span class="ml-4">Input Nilai Hafalan</span>
-                        </a>
-                    </li>
-
-                    {{-- LINK KELOLA SISWA DAN KELOMPOK --}}
-                    @php $isActive = request()->routeIs('guru.kelompok.*'); @endphp
-                    <li class="relative px-6 py-3">
-                        <span
-                            class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
-                            aria-hidden="true"></span>
-                        <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 
-                                {{ $isActive ? 'text-white' : 'text-gray-200 hover:text-white' }}"
-                            href="{{ route('guru.kelompok.index') }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 20h-4a2 2 0 01-2-2V8a2 2 0 012-2h4a2 2 0 012 2v10a2 2 0 01-2 2zM7 20h2a2 2 0 002-2v-4a2 2 0 00-2-2H7a2 2 0 00-2 2v4a2 2 0 002 2z" />
-                            </svg>
-                            <span class="ml-4">Kelola Siswa dan Kelompok</span>
-                        </a>
-                    </li>
-
-                    {{-- LINK LAPORAN HAFALAN --}}
-                    @php $isActive = request()->routeIs('guru.laporan-hafalan'); @endphp
-                    <li class="relative px-6 py-3">
-                        <span
-                            class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
-                            aria-hidden="true"></span>
-                        <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 
-                                {{ $isActive ? 'text-white' : 'text-gray-200 hover:text-white' }}"
-                            href="{{ route('guru.laporan-hafalan') }}">
+                            href="{{ route('ortu.laporan') }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -111,15 +76,15 @@
                         </a>
                     </li>
 
-                    {{-- LINK GANTI PASSWORD (PERBAIKAN: Menghapus duplikat) --}}
-                    @php $isActive = request()->routeIs('guru.ganti-password'); @endphp
+                    {{-- 3. LINK GANTI PASSWORD --}}
+                    @php $isActive = request()->routeIs('ortu.ganti-password'); @endphp
                     <li class="relative px-6 py-3">
                         <span
                             class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
                             aria-hidden="true"></span>
                         <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 
                                 {{ $isActive ? 'text-white' : 'text-gray-200 hover:text-white' }}"
-                            href="{{ route('guru.ganti-password') }}">
+                            href="{{ route('ortu.ganti-password') }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -128,10 +93,9 @@
                             <span class="ml-4">Ganti Password</span>
                         </a>
                     </li>
-
                 </ul>
 
-                {{-- --- TOMBOL KELUAR (SESUAI ADMIN & DIPOSISIKAN DENGAN BENAR) --- --}}
+                {{-- 4. TOMBOL KELUAR (Diposisikan di bawah oleh flex-grow di atas) --}}
                 <div class="px-6 my-6">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -154,7 +118,7 @@
         <div class="flex flex-col flex-1 w-full">
             <header class="z-10 py-4 bg-white shadow-md">
                 <div class="container flex items-center justify-end h-full px-6 mx-auto text-green-600">
-                    {{-- Header konten (kosong sesuai layout guru sebelumnya) --}}
+                    {{-- Header konten (kosong sesuai layout guru) --}}
                 </div>
             </header>
             <main class="h-full overflow-y-auto">

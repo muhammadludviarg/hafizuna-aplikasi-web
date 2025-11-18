@@ -15,6 +15,22 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    
+                    <!-- Added admin menu links for dashboard navigation -->
+                    @if(auth()->user() && auth()->user()->hasRole('admin'))
+                        <x-nav-link :href="route('admin.kelola-guru')" :active="request()->routeIs('admin.kelola-guru')">
+                            {{ __('Kelola Guru') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.kelola-siswa')" :active="request()->routeIs('admin.kelola-siswa')">
+                            {{ __('Kelola Siswa') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.kelola-kelas')" :active="request()->routeIs('admin.kelola-kelas')">
+                            {{ __('Kelola Kelas') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.data-admin')" :active="request()->routeIs('admin.data-admin')">
+                            {{ __('Data Admin') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -37,6 +53,13 @@
                         <x-dropdown-link :href="route('profile.edit')">
                             {{ __('Profile') }}
                         </x-dropdown-link>
+
+                        <!-- Added Ganti Password link for admin -->
+                        @if(auth()->user() && auth()->user()->hasRole('admin'))
+                            <x-dropdown-link :href="route('admin.ganti-password')">
+                                {{ __('Ganti Password') }}
+                            </x-dropdown-link>
+                        @endif
 
                         <!-- Authentication -->
                         <form method="POST" action="{{ route('logout') }}">
@@ -70,6 +93,22 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            <!-- Added responsive admin menu links -->
+            @if(auth()->user() && auth()->user()->hasRole('admin'))
+                <x-responsive-nav-link :href="route('admin.kelola-guru')" :active="request()->routeIs('admin.kelola-guru')">
+                    {{ __('Kelola Guru') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.kelola-siswa')" :active="request()->routeIs('admin.kelola-siswa')">
+                    {{ __('Kelola Siswa') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.kelola-kelas')" :active="request()->routeIs('admin.kelola-kelas')">
+                    {{ __('Kelola Kelas') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.data-admin')" :active="request()->routeIs('admin.data-admin')">
+                    {{ __('Data Admin') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
@@ -83,6 +122,13 @@
                 <x-responsive-nav-link :href="route('profile.edit')">
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
+
+                <!-- Added responsive Ganti Password link -->
+                @if(auth()->user() && auth()->user()->hasRole('admin'))
+                    <x-responsive-nav-link :href="route('admin.ganti-password')">
+                        {{ __('Ganti Password') }}
+                    </x-responsive-nav-link>
+                @endif
 
                 <!-- Authentication -->
                 <form method="POST" action="{{ route('logout') }}">

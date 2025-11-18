@@ -12,11 +12,11 @@ class GantiPassword extends Component
     public $password_lama = '';
     public $password_baru = '';
     public $password_baru_confirmation = '';
-    
+
     public $showPasswordLama = false;
     public $showPasswordBaru = false;
     public $showPasswordKonfirmasi = false;
-    
+
     public $showPasswordStrength = false;
     public $passwordStrength = [
         'length' => false,
@@ -54,7 +54,7 @@ class GantiPassword extends Component
     public function updatedPasswordBaru($value)
     {
         $this->showPasswordStrength = !empty($value);
-        
+
         $this->passwordStrength['length'] = strlen($value) >= 8;
         $this->passwordStrength['uppercase'] = preg_match('/[A-Z]/', $value);
         $this->passwordStrength['number'] = preg_match('/[0-9]/', $value);
@@ -89,6 +89,6 @@ class GantiPassword extends Component
     public function render()
     {
         return view('livewire.admin.ganti-password')
-            ->layout('layouts.app');
+            ->layout('layouts.orang-tua');
     }
 }
