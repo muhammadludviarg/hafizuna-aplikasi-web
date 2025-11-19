@@ -134,6 +134,24 @@ class DummyDataSeeder extends Seeder
             'id_kelas' => $kelas->id_kelas,
             'id_ortu' => $ortu->id_ortu,
         ]);
+        $siswa4 = Siswa::create([
+            'nama_siswa' => 'Aisyah muhammad',
+            'kode_siswa' => 'S-004',
+            'id_kelas' => $kelas->id_kelas,
+            'id_ortu' => $ortu->id_ortu,
+        ]);
+        $siswa5 = Siswa::create([
+            'nama_siswa' => 'Aisyah muhammad abc',
+            'kode_siswa' => 'S-005',
+            'id_kelas' => $kelas->id_kelas,
+            'id_ortu' => $ortu->id_ortu,
+        ]);
+        $siswa6 = Siswa::create([
+            'nama_siswa' => 'Muhammad abc',
+            'kode_siswa' => 'S-006',
+            'id_kelas' => $kelas->id_kelas,
+            'id_ortu' => $ortu->id_ortu,
+        ]);
 
         // 9. Masukkan Siswa ke Kelompok
         $this->command->info('Memasukkan siswa ke kelompok...');
@@ -152,6 +170,24 @@ class DummyDataSeeder extends Seeder
         SiswaKelompok::create([
             'id_siswa' => $siswa3->id_siswa,
             'id_kelompok' => $kelompokC->id_kelompok, // Siswa 3 ke Kelompok C
+            'tgl_mulai' => now(),
+            'tgl_selesai' => now()->addYear(), // <-- INI PERBAIKANNYA
+        ]);
+        SiswaKelompok::create([
+            'id_siswa' => $siswa4->id_siswa,
+            'id_kelompok' => $kelompokA->id_kelompok, // Siswa 4 ke Kelompok A
+            'tgl_mulai' => now(),
+            'tgl_selesai' => now()->addYear(), // <-- INI PERBAIKANNYA
+        ]);
+        SiswaKelompok::create([
+            'id_siswa' => $siswa5->id_siswa,
+            'id_kelompok' => $kelompokC->id_kelompok, // Siswa 5 ke Kelompok B
+            'tgl_mulai' => now(),
+            'tgl_selesai' => now()->addYear(), // <-- INI PERBAIKANNYA
+        ]);
+        SiswaKelompok::create([
+            'id_siswa' => $siswa6->id_siswa,
+            'id_kelompok' => $kelompokC->id_kelompok, // Siswa 6 ke Kelompok C
             'tgl_mulai' => now(),
             'tgl_selesai' => now()->addYear(), // <-- INI PERBAIKANNYA
         ]);

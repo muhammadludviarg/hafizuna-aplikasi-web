@@ -10,7 +10,7 @@ use App\Livewire\Admin\DataAdmin;
 use App\Livewire\Admin\KelolaGuru;
 use App\Livewire\Admin\KelolaSiswa;
 use App\Livewire\Admin\KelolaKelas;
-use App\Livewire\Admin\KelolaKelompok as AdminKelolaKelompok;
+use App\Livewire\Admin\KelolaKelompok;           // ✅ TAMBAHKAN INI
 use App\Livewire\Admin\PengaturanNilai;
 use App\Livewire\Admin\TargetHafalan;
 use App\Livewire\Admin\GantiPassword as AdminGantiPassword;
@@ -48,9 +48,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     | Rute Dashboard "Pintar" (Smart Redirect)
     |--------------------------------------------------------------------------
-    | Ini adalah rute utama setelah login.
-    | Rute ini akan mengecek role pengguna (via Model User) dan
-    | mengarahkan mereka ke dashboard yang sesuai.
     */
     Route::get('/dashboard', function () {
         $user = auth()->user();
@@ -67,7 +64,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return redirect()->route('ortu.dashboard');
         }
 
-        // Fallback jika user tidak punya role
         return view('dashboard');
     })->name('dashboard');
 
@@ -95,7 +91,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::get('/kelola-guru', KelolaGuru::class)->name('kelola-guru');
     Route::get('/kelola-siswa', KelolaSiswa::class)->name('kelola-siswa');
     Route::get('/kelola-kelas', KelolaKelas::class)->name('kelola-kelas');
-    Route::get('/kelola-kelompok', AdminKelolaKelompok::class)->name('kelola-kelompok');
+    Route::get('/kelola-kelompok', KelolaKelompok::class)->name('kelola-kelompok'); // ✅ PAKAI INI
 
     // Rute Fitur Lama
     Route::get('/pengaturan-nilai', PengaturanNilai::class)->name('pengaturan-nilai');
@@ -136,7 +132,7 @@ Route::prefix('ortu')->name('ortu.')->middleware(['auth', 'verified'])->group(fu
     
     // Dashboard Ortu (belum dibuat)
     Route::get('/dashboard', function () {
-        return view('dashboard'); // Sementara
+        return view('dashboard');
     })->name('dashboard');
 
     // Rute fitur ortu akan ditambahkan di sini

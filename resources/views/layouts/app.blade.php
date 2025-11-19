@@ -91,7 +91,7 @@
 
                     <li class="relative px-6 py-1.5">
                         <a class="inline-flex items-center w-full text-sm font-medium text-green-300 hover:text-white transition-colors duration-150"
-                            href="#">
+                            href="{{ route('admin.kelola-kelompok') }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

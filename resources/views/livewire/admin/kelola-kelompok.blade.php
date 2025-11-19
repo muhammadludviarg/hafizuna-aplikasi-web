@@ -1,3 +1,251 @@
 <div>
-    {{-- Be like water. --}}
+    {{-- Header --}}
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Kelompok Setoran</h1>
+        <p class="text-gray-600 mt-1">Kelola kelompok setoran hafalan untuk efisiensi penilaian</p>
+    </div>
+
+    {{-- Flash Messages --}}
+    @if (session()->has('success'))
+        <div class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-start">
+            <svg class="w-5 h-5 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start">
+            <svg class="w-5 h-5 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+            </svg>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
+
+    {{-- Main Content --}}
+    <div class="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+        {{-- Header Table --}}
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-800">Daftar Kelompok Hafalan</h2>
+                <p class="text-sm text-gray-600 mt-1">Atur kelompok untuk efisiensi setoran hafalan</p>
+            </div>
+            <button wire:click="buatKelompok" 
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Buat Kelompok
+            </button>
+        </div>
+
+        {{-- Table --}}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Kelompok</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kelas</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guru Pembimbing</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah Anggota</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($kelompok as $item)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ $item->nama_kelompok }}</div>
+                                <div class="text-xs text-gray-500">{{ $item->tahun_ajaran }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ $item->kelas->nama_kelas ?? '-' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-sm font-semibold mr-2">
+                                        {{ strtoupper(substr($item->guru->akun->nama_lengkap ?? 'G', 0, 1)) }}
+                                    </div>
+                                    <div class="text-sm text-gray-900">{{ $item->guru->akun->nama_lengkap ?? '-' }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    {{ $item->siswa->count() }} siswa
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                <button wire:click="editKelompok({{ $item->id_kelompok }})" 
+                                        class="text-yellow-600 hover:text-yellow-900 p-2 rounded-lg hover:bg-yellow-50 transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button wire:click="hapusKelompok({{ $item->id_kelompok }})" 
+                                        wire:confirm="Apakah Anda yakin ingin menghapus kelompok ini?"
+                                        class="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center justify-center text-gray-400">
+                                    <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.084-1.284-.24-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.084-1.284.24-1.857m0 0a5.002 5.002 0 019.52 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    <p class="text-lg font-medium">Belum ada kelompok</p>
+                                    <p class="text-sm mt-1">Klik "Buat Kelompok" untuk menambah</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- Modal Form --}}
+    @if($isModalOpen)
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" wire:click="closeModal">
+            <div class="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-lg bg-white" wire:click.stop>
+                {{-- Modal Header --}}
+                <div class="flex items-center justify-between pb-4 border-b">
+                    <h3 class="text-xl font-semibold text-gray-900">
+                        {{ $isEditMode ? 'Edit Kelompok' : 'Buat Kelompok Baru' }}
+                    </h3>
+                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Form --}}
+                <form wire:submit.prevent="simpanKelompok" class="mt-4 space-y-4">
+                    {{-- Nama Kelompok --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nama Kelompok</label>
+                        <input type="text" wire:model="nama_kelompok" 
+                               placeholder="Contoh: 5 Firdaus A"
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 @error('nama_kelompok') border-red-400 @enderror">
+                        @error('nama_kelompok') 
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Pilih Kelas --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Kelas</label>
+                        <select wire:model.live="id_kelas" 
+                                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 @error('id_kelas') border-red-400 @enderror">
+                            <option value="">Pilih kelas</option>
+                            @foreach($daftar_kelas as $kelas)
+                                <option value="{{ $kelas->id_kelas }}">{{ $kelas->nama_kelas }} - {{ $kelas->tahun_ajaran }}</option>
+                            @endforeach
+                        </select>
+                        @error('id_kelas') 
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Guru Pembimbing --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Guru Pembimbing</label>
+                        <select wire:model="id_guru" 
+                                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 @error('id_guru') border-red-400 @enderror">
+                            <option value="">Pilih guru</option>
+                            @foreach($daftar_guru as $guru)
+                                <option value="{{ $guru->id_guru }}">{{ $guru->akun->nama_lengkap ?? 'Guru' }}</option>
+                            @endforeach
+                        </select>
+                        @error('id_guru') 
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- ✅ TAMBAHKAN SECTION INI --}}
+                    {{-- Periode Kelompok --}}
+                    <div class="grid grid-cols-2 gap-4">
+                        {{-- Tanggal Mulai --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai</label>
+                            <input type="date" wire:model="tgl_mulai" 
+                                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 @error('tgl_mulai') border-red-400 @enderror">
+                            @error('tgl_mulai') 
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Tanggal Selesai --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Selesai</label>
+                            <input type="date" wire:model="tgl_selesai" 
+                                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 @error('tgl_selesai') border-red-400 @enderror">
+                            @error('tgl_selesai') 
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                        <p class="text-xs text-blue-800">
+                            <strong>Info:</strong> Tanggal ini berlaku untuk semua siswa yang dipilih. Jika siswa bergabung di waktu berbeda, edit kelompok dan atur ulang tanggalnya.
+                        </p>
+                    </div>
+                    {{-- ✅ AKHIR SECTION TAMBAHAN --}}
+
+                    {{-- Pilih Siswa --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Siswa</label>
+                        
+                        @if(count($daftar_siswa) > 0)
+                            <div class="border rounded-lg max-h-60 overflow-y-auto p-3 space-y-2 @error('siswa_dipilih') border-red-400 @enderror">
+                                @foreach($daftar_siswa as $siswa)
+                                    <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                        <input type="checkbox" wire:model="siswa_dipilih" value="{{ $siswa->id_siswa }}" 
+                                               class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                                        <span class="ml-3 text-sm text-gray-700">{{ $siswa->nama_siswa }} ({{ $siswa->kode_siswa }})</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            <p class="mt-2 text-xs text-gray-500">{{ count($siswa_dipilih) }} siswa dipilih</p>
+                        @else
+                            <div class="border rounded-lg p-4 text-center text-gray-500">
+                                @if($id_kelas)
+                                    <p class="text-sm">Tidak ada siswa tersedia</p>
+                                @else
+                                    <p class="text-sm">Pilih kelas terlebih dahulu</p>
+                                @endif
+                            </div>
+                        @endif
+                        
+                        @error('siswa_dipilih') 
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Buttons --}}
+                    <div class="flex justify-end gap-3 pt-4 border-t">
+                        <button type="button" wire:click="closeModal" 
+                                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                            Batal
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Simpan Kelompok
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 </div>
