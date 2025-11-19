@@ -9,7 +9,7 @@ use App\Livewire\Admin\DataAdmin;
 use App\Livewire\Admin\KelolaGuru;
 use App\Livewire\Admin\KelolaSiswa;
 use App\Livewire\Admin\KelolaKelas;
-use App\Livewire\Admin\KelolaKelompok as AdminKelolaKelompok;
+use App\Livewire\Admin\KelolaKelompok;
 use App\Livewire\Admin\PengaturanNilai;
 use App\Livewire\Admin\TargetHafalan;
 use App\Livewire\Admin\GantiPassword as AdminGantiPassword;
@@ -23,11 +23,10 @@ use App\Livewire\Guru\DetailKelompok;
 use App\Livewire\Guru\LaporanHafalan;
 use App\Livewire\Guru\GantiPassword;
 
-// (BARU) ORTU COMPONENTS
+// ORTU COMPONENTS
 use App\Livewire\OrangTua\Dashboard as OrtuDashboard;
 use App\Livewire\OrangTua\LaporanHafalan as OrtuLaporanHafalan;
 use App\Livewire\OrangTua\GantiPassword as OrtuGantiPassword;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -59,10 +58,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
     Route::get('/dashboard', function () {
         $user = auth()->user();
-
-        // (PERBAIKAN URUTAN)
-        // Cek peran spesifik (Guru/Ortu) SEBELUM peran umum (Admin)
-        // Ini akan memperbaiki error redirect Anda
 
         if ($user->hasRole('guru')) {
             return redirect()->route('guru.dashboard');
@@ -100,7 +95,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::get('/kelola-guru', KelolaGuru::class)->name('kelola-guru');
     Route::get('/kelola-siswa', KelolaSiswa::class)->name('kelola-siswa');
     Route::get('/kelola-kelas', KelolaKelas::class)->name('kelola-kelas');
-    Route::get('/kelola-kelompok', AdminKelolaKelompok::class)->name('kelola-kelompok');
+    Route::get('/kelola-kelompok', KelolaKelompok::class)->name('kelola-kelompok');
+
     Route::get('/pengaturan-nilai', PengaturanNilai::class)->name('pengaturan-nilai');
     Route::get('/target-hafalan', TargetHafalan::class)->name('target-hafalan');
     Route::get('/ganti-password', AdminGantiPassword::class)->name('ganti-password');
@@ -127,9 +123,6 @@ Route::prefix('guru')->name('guru.')->middleware(['auth', 'verified'])->group(fu
 |--------------------------------------------------------------------------
 */
 Route::prefix('ortu')->name('ortu.')->middleware(['auth', 'verified'])->group(function () {
-
-    // (PERBAIKAN) 
-    // Hubungkan rute ke komponen Livewire Orang Tua yang benar
 
     Route::get('/dashboard', OrtuDashboard::class)->name('dashboard');
     Route::get('/laporan', OrtuLaporanHafalan::class)->name('laporan');

@@ -205,6 +205,24 @@ class DummyDataSeeder extends Seeder
             'id_kelas' => $kelas->id_kelas,
             'id_ortu' => $ortu4->id_ortu, // Anak Ortu 4
         ]);
+        $siswa4 = Siswa::create([
+            'nama_siswa' => 'Aisyah muhammad',
+            'kode_siswa' => 'S-004',
+            'id_kelas' => $kelas->id_kelas,
+            'id_ortu' => $ortu->id_ortu,
+        ]);
+        $siswa5 = Siswa::create([
+            'nama_siswa' => 'Aisyah muhammad abc',
+            'kode_siswa' => 'S-005',
+            'id_kelas' => $kelas->id_kelas,
+            'id_ortu' => $ortu->id_ortu,
+        ]);
+        $siswa6 = Siswa::create([
+            'nama_siswa' => 'Muhammad abc',
+            'kode_siswa' => 'S-006',
+            'id_kelas' => $kelas->id_kelas,
+            'id_ortu' => $ortu->id_ortu,
+        ]);
 
         // 9. Masukkan Siswa ke Kelompok
         $this->command->info('Memasukkan siswa ke kelompok...');
