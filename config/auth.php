@@ -90,10 +90,15 @@ return [
     |
     */
 
-    'password_resets' => [
+    'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table' => 'password_resets', // <-- SESUAIKAN DENGAN NAMA TABEL ANDA
+            
+            // PERBAIKAN KRUSIAL DI SINI:
+            // Ganti 'password_reset_tokens' (default)
+            // menjadi 'password_resets' (yang Anda buat di migrasi).
+            'table' => 'password_resets', 
+            
             'expire' => 60,
             'throttle' => 60,
         ],

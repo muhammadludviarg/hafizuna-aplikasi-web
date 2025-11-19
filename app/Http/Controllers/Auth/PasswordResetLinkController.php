@@ -7,6 +7,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 
 class PasswordResetLinkController extends Controller
 {
@@ -27,7 +29,20 @@ class PasswordResetLinkController extends Controller
     {
         $request->validate([
             'email' => ['required', 'email'],
+        ], [
+            'email.required' => 'Email wajib diisi',
+            'email.email' => 'Format email tidak valid'
         ]);
+
+        $key = 'password-reset:' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            $seconds = RateLimiter::availableIn($key);
+
+            throw ValidationException::withMessages([
+                'email' => "Terlalu banyak percobaan. Silakan coba lagi dalam " . ceil($seconds / 60) . " menit."
+            ]);
+        }
 
         // We will send the password reset link to this user. Once we have attempted
         // to send the link, we will examine the response then see the message we
@@ -35,10 +50,11 @@ class PasswordResetLinkController extends Controller
         $status = Password::sendResetLink(
             $request->only('email')
         );
+        RateLimiter::hit($key, 900); //15 minutes
 
         return $status == Password::RESET_LINK_SENT
-                    ? back()->with('status', __($status))
-                    : back()->withInput($request->only('email'))
-                        ->withErrors(['email' => __($status)]);
+            ? back()->with('status', '✅ Link reset password telah dikirim ke email Anda. Silakan cek inbox atau folder spam.')
+            : back()->withInput($request->only('email'))
+                ->withErrors(['email' => '❌ Email tidak ditemukan dalam sistem kami.']);
     }
 }
