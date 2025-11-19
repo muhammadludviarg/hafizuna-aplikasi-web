@@ -12,13 +12,15 @@ use Illuminate\Support\Facades\DB;
 
 class KelolaKelompok extends Component
 {
+    public $search = '';
+
     // Form fields
     public $nama_kelompok;
     public $id_kelas;
     public $id_guru;
     public $siswa_dipilih = [];
-    public $tgl_mulai;      // ✅ TAMBAHKAN
-    public $tgl_selesai;    // ✅ TAMBAHKAN
+    public $tgl_mulai;      
+    public $tgl_selesai;    
 
     // State management
     public $isModalOpen = false;
@@ -77,12 +79,14 @@ class KelolaKelompok extends Component
     public function updatedIdKelas($value)
     {
         if ($value) {
+            // ✅ Load SEMUA siswa di kelas ini (dengan info kelompok mereka)
             $this->daftar_siswa = Siswa::where('id_kelas', $value)
-                ->whereDoesntHave('kelompok', function ($query) {
+                ->with(['kelompok' => function($query) {
+                    // Load kelompok aktif (yang bukan kelompok yang sedang diedit)
                     if ($this->isEditMode && $this->kelompok_id) {
                         $query->where('siswa_kelompok.id_kelompok', '!=', $this->kelompok_id);
                     }
-                })
+                }])
                 ->orderBy('nama_siswa')
                 ->get();
         } else {
@@ -142,15 +146,8 @@ class KelolaKelompok extends Component
                     'id_guru' => $this->id_guru,
                 ]);
 
-                // ✅ Sync siswa dengan tanggal dari input admin
-                $syncData = [];
-                foreach ($this->siswa_dipilih as $id_siswa) {
-                    $syncData[$id_siswa] = [
-                        'tgl_mulai' => $this->tgl_mulai,
-                        'tgl_selesai' => $this->tgl_selesai,
-                    ];
-                }
-                $kelompok->siswa()->sync($syncData);
+                // ✅ PINDAHKAN SISWA: Detach dari kelompok lain, attach ke kelompok ini
+                $this->pindahkanSiswa($kelompok);
 
                 session()->flash('success', 'Kelompok berhasil diperbarui!');
                 
@@ -162,15 +159,8 @@ class KelolaKelompok extends Component
                     'id_guru' => $this->id_guru,
                 ]);
 
-                // ✅ Attach siswa dengan tanggal dari input admin
-                $attachData = [];
-                foreach ($this->siswa_dipilih as $id_siswa) {
-                    $attachData[$id_siswa] = [
-                        'tgl_mulai' => $this->tgl_mulai,
-                        'tgl_selesai' => $this->tgl_selesai,
-                    ];
-                }
-                $kelompok->siswa()->attach($attachData);
+                // ✅ PINDAHKAN SISWA: Detach dari kelompok lain, attach ke kelompok baru
+                $this->pindahkanSiswa($kelompok);
 
                 session()->flash('success', 'Kelompok berhasil dibuat!');
             }
@@ -182,6 +172,28 @@ class KelolaKelompok extends Component
             DB::rollBack();
             session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    private function pindahkanSiswa($kelompok)
+    {
+        $attachData = [];
+        
+        foreach ($this->siswa_dipilih as $id_siswa) {
+            // ✅ Detach siswa dari SEMUA kelompok lain terlebih dahulu
+            DB::table('siswa_kelompok')
+                ->where('id_siswa', $id_siswa)
+                ->where('id_kelompok', '!=', $kelompok->id_kelompok)
+                ->delete();
+            
+            // Siapkan data untuk attach dengan tanggal
+            $attachData[$id_siswa] = [
+                'tgl_mulai' => $this->tgl_mulai,
+                'tgl_selesai' => $this->tgl_selesai,
+            ];
+        }
+        
+        // ✅ Sync siswa ke kelompok ini
+        $kelompok->siswa()->sync($attachData);
     }
 
     public function hapusKelompok($id)
@@ -221,11 +233,35 @@ class KelolaKelompok extends Component
         $this->tgl_selesai = now()->addYear()->format('Y-m-d');
     }
 
+    public function resetFilter()
+    {
+        $this->search = '';
+        $this->filterKelas = '';
+        $this->filterGuru = '';
+    }
+
     public function render()
     {
-        $kelompok = Kelompok::with(['kelas', 'guru.akun', 'siswa'])
-            ->orderBy('nama_kelompok')
-            ->get();
+        $query = Kelompok::with(['kelas', 'guru.akun', 'siswa'])
+            ->orderBy('nama_kelompok');
+
+        // ✅ Search universal: nama kelompok, kelas, atau guru
+        if ($this->search) {
+            $query->where(function($q) {
+                // Cari di nama kelompok
+                $q->where('nama_kelompok', 'like', '%' . $this->search . '%')
+                // Cari di nama kelas
+                ->orWhereHas('kelas', function($subQuery) {
+                    $subQuery->where('nama_kelas', 'like', '%' . $this->search . '%');
+                })
+                // Cari di nama guru (dari tabel akun)
+                ->orWhereHas('guru.akun', function($subQuery) {
+                    $subQuery->where('nama_lengkap', 'like', '%' . $this->search . '%');
+                });
+            });
+        }
+
+        $kelompok = $query->get();
 
         return view('livewire.admin.kelola-kelompok', [
             'kelompok' => $kelompok

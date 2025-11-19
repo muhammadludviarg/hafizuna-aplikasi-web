@@ -1,8 +1,8 @@
 <div>
     {{-- Header --}}
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Kelompok Setoran</h1>
-        <p class="text-gray-600 mt-1">Kelola kelompok setoran hafalan untuk efisiensi penilaian</p>
+        <h1 class="text-2xl font-bold text-gray-800">Kelola Siswa dan Kelompok</h1>
+        <p class="text-gray-600 mt-1">Kelola siswa dan kelompok setoran hafalan</p>
     </div>
 
     {{-- Flash Messages --}}
@@ -26,7 +26,7 @@
 
     {{-- Main Content --}}
     <div class="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-        {{-- Header Table --}}
+        {{-- Header --}}
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h2 class="text-lg font-semibold text-gray-800">Daftar Kelompok Hafalan</h2>
@@ -40,6 +40,22 @@
                 Buat Kelompok
             </button>
         </div>
+
+        {{-- SEARCH BAR UNIVERSAL --}}
+        <div class="mb-6">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+                <input type="text" 
+                    wire:model.live="search" 
+                    placeholder="Cari nama kelompok, kelas, atau guru pembimbing..."
+                    class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
+            </div>
+        </div>
+        {{-- END SEARCH BAR --}}
 
         {{-- Table --}}
         <div class="overflow-x-auto">
@@ -169,7 +185,6 @@
                         @enderror
                     </div>
 
-                    {{-- ✅ TAMBAHKAN SECTION INI --}}
                     {{-- Periode Kelompok --}}
                     <div class="grid grid-cols-2 gap-4">
                         {{-- Tanggal Mulai --}}
@@ -193,12 +208,12 @@
                         </div>
                     </div>
 
-                    <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                    <!-- <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
                         <p class="text-xs text-blue-800">
                             <strong>Info:</strong> Tanggal ini berlaku untuk semua siswa yang dipilih. Jika siswa bergabung di waktu berbeda, edit kelompok dan atur ulang tanggalnya.
                         </p>
-                    </div>
-                    {{-- ✅ AKHIR SECTION TAMBAHAN --}}
+                    </div> -->
+    
 
                     {{-- Pilih Siswa --}}
                     <div>
@@ -207,18 +222,50 @@
                         @if(count($daftar_siswa) > 0)
                             <div class="border rounded-lg max-h-60 overflow-y-auto p-3 space-y-2 @error('siswa_dipilih') border-red-400 @enderror">
                                 @foreach($daftar_siswa as $siswa)
-                                    <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
-                                        <input type="checkbox" wire:model="siswa_dipilih" value="{{ $siswa->id_siswa }}" 
-                                               class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
-                                        <span class="ml-3 text-sm text-gray-700">{{ $siswa->nama_siswa }} ({{ $siswa->kode_siswa }})</span>
+                                    @php
+                                        // Cek apakah siswa sudah punya kelompok lain
+                                        $kelompokLain = $siswa->kelompok->first();
+                                        $sudahPunyaKelompok = $kelompokLain !== null;
+                                    @endphp
+                                    
+                                    <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer 
+                                                {{ $sudahPunyaKelompok ? 'bg-yellow-50 border border-yellow-200' : '' }}">
+                                        <input type="checkbox" 
+                                            wire:model="siswa_dipilih" 
+                                            value="{{ $siswa->id_siswa }}" 
+                                            class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                                        
+                                        <span class="ml-3 flex-1">
+                                            <span class="text-sm text-gray-700">{{ $siswa->nama_siswa }} ({{ $siswa->kode_siswa }})</span>
+                                            
+                                            {{-- Indikator siswa sudah ada di kelompok lain --}}
+                                            @if($sudahPunyaKelompok)
+                                                <span class="ml-2 text-xs text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">
+                                                    Kelompok: {{ $kelompokLain->nama_kelompok }}
+                                                </span>
+                                            @endif
+                                        </span>
                                     </label>
                                 @endforeach
                             </div>
-                            <p class="mt-2 text-xs text-gray-500">{{ count($siswa_dipilih) }} siswa dipilih</p>
+                            
+                            <p class="mt-2 text-xs text-gray-500">
+                                {{ count($siswa_dipilih) }} siswa dipilih
+                            </p>
+                            
+                            {{-- Info untuk admin --}}
+                            @if($daftar_siswa->where('kelompok', '!=', null)->count() > 0)
+                                <div class="mt-2 bg-blue-50 border border-blue-200 p-2 rounded-lg">
+                                    <p class="text-xs text-blue-800">
+                                        <strong>Info:</strong>  Jika siswa yang ada di kelompok lain dipilih, siswa akan <strong>dipindahkan</strong> ke kelompok ini.
+                                    </p>
+                                </div>
+                            @endif
+                            
                         @else
-                            <div class="border rounded-lg p-4 text-center text-gray-500">
+                            <div class="border border-gray-300 rounded-lg p-4 text-center text-gray-500">
                                 @if($id_kelas)
-                                    <p class="text-sm">Tidak ada siswa tersedia</p>
+                                    <p class="text-sm">Tidak ada siswa di kelas ini</p>
                                 @else
                                     <p class="text-sm">Pilih kelas terlebih dahulu</p>
                                 @endif

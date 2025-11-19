@@ -17,6 +17,7 @@ class Siswa extends Model
         'nama_siswa',
         'kode_siswa',
         'id_kelas',
+        'id_ortu',  // ✅ Pastikan ini ada
         'nomor_surah_terakhir',
         'ayat_berikutnya',
     ];
@@ -31,28 +32,23 @@ class Siswa extends Model
 
     /**
      * Relasi Many-to-Many ke Kelompok
-     * Tabel pivot: siswa_kelompok
      */
     public function kelompok()
     {
         return $this->belongsToMany(
             Kelompok::class,
-            'siswa_kelompok',    // ✅ Nama tabel pivot yang benar
-            'id_siswa',          // FK untuk siswa
-            'id_kelompok'        // FK untuk kelompok
+            'siswa_kelompok',
+            'id_siswa',
+            'id_kelompok'
         );
     }
 
     /**
-     * Relasi ke Orang Tua
+     * Relasi ke Orang Tua (One-to-Many / BelongsTo)
+     * ✅ UBAH DARI belongsToMany JADI belongsTo
      */
-    public function orangTua()
+    public function ortu()
     {
-        return $this->belongsToMany(
-            OrangTua::class,
-            'ortu_siswa',
-            'id_siswa',
-            'id_ortu'
-        );
+        return $this->belongsTo(OrangTua::class, 'id_ortu', 'id_ortu');
     }
 }
