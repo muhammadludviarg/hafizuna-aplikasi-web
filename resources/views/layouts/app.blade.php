@@ -54,7 +54,7 @@
                                     d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6-4h.01M12 12h.01M15 12h.01M12 9h.01M15 9h.01M9 9h.01">
                                 </path>
                             </svg>
-                            <span class="ml-4">Dashboard</span>
+                            <span class="ml-4">Statistik</span>
                         </a>
                     </li>
 
@@ -131,7 +131,26 @@
                         </a>
                     </li>
 
-                    {{-- LINK GANTI PASSWORD (ADMIN) - Gabungan dari kedua versi --}}
+                    {{-- MENU LOG AKTIVITAS - HANYA UNTUK ADMIN --}}
+                    @if(Auth::check())
+                    <li class="relative px-6 py-1.5">
+                        @php $isActive = request()->routeIs('admin.log-aktivitas'); @endphp
+                        <span class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
+                            aria-hidden="true"></span>
+                        <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 {{ $isActive ? 'text-white' : 'text-green-300 hover:text-white' }}"
+                            href="{{ route('admin.log-aktivitas') }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
+                            </svg>
+                            <span class="ml-4">Log Aktivitas</span>
+                        </a>
+                    </li>
+                    @endif
+
+                    {{-- LINK GANTI PASSWORD (ADMIN) --}}
                     @php $isActive = request()->routeIs('admin.ganti-password'); @endphp
                     <li class="relative px-6 py-1.5">
                         <span class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}" aria-hidden="true"></span>

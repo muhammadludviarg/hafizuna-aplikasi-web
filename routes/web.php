@@ -14,6 +14,7 @@ use App\Livewire\Admin\PengaturanNilai;
 use App\Livewire\Admin\TargetHafalan;
 use App\Livewire\Admin\GantiPassword as AdminGantiPassword;
 use App\Livewire\Admin\DataMaster;
+use App\Livewire\Admin\LogAktivitasAdmin;
 
 // GURU COMPONENTS
 use App\Livewire\Guru\Dashboard as GuruDashboard;
@@ -103,6 +104,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::get('/kelola-kelompok', AdminKelolaKelompok::class)->name('kelola-kelompok');
     Route::get('/pengaturan-nilai', PengaturanNilai::class)->name('pengaturan-nilai');
     Route::get('/target-hafalan', TargetHafalan::class)->name('target-hafalan');
+    
+    // ROUTE LOG AKTIVITAS - DIPERBAIKI (tanpa duplikat /admin)
+    Route::get('/log-aktivitas', LogAktivitasAdmin::class)->name('log-aktivitas');
+    
     Route::get('/ganti-password', AdminGantiPassword::class)->name('ganti-password');
 });
 

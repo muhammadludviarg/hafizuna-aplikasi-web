@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Helpers\LogHelper;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -28,6 +29,15 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // ========================================
+        // LOG LOGIN - MANUAL
+        // ========================================
+        $user = Auth::user();
+        if ($user) {
+            $nama = $user->nama_lengkap ?? $user->email ?? 'Unknown';
+            LogHelper::log('Login ke sistem - ' . $nama, $user->id_akun);
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
@@ -36,6 +46,15 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // ========================================
+        // LOG LOGOUT - SEBELUM LOGOUT!
+        // ========================================
+        $user = Auth::user();
+        if ($user) {
+            $nama = $user->nama_lengkap ?? $user->email ?? 'Unknown';
+            LogHelper::log('Logout dari sistem - ' . $nama, $user->id_akun);
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
