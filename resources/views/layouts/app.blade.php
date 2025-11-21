@@ -20,7 +20,8 @@
     <div class="flex h-screen bg-gray-100">
 
         <aside class="z-20 flex-shrink-0 hidden w-64 overflow-y-auto bg-green-800 md:block">
-            <div class="py-4 text-gray-200">
+            {{-- Updated sidebar structure to use flexbox layout for proper spacing --}}
+            <div class="relative flex flex-col h-full py-4 text-gray-200">
 
                 <a class="flex items-center justify-center text-lg font-bold text-white"
                     href="{{ route('dashboard') }}"> <svg class="w-8 h-8 mr-2 bg-white text-green-800 p-1 rounded"
@@ -39,7 +40,8 @@
                     <span class="text-xs text-green-300">Admin</span>
                 </div>
 
-                <ul class="mt-8 space-y-2">
+                {{-- Added flex-grow to push logout button to bottom --}}
+                <ul class="mt-8 space-y-2 flex-grow">
 
                     <li class="relative px-6 py-1.5">
                         @php $isActive = request()->routeIs('dashboard'); @endphp
@@ -165,7 +167,8 @@
 
                 </ul>
 
-                <div class="absolute bottom-0 w-full px-6 my-6">
+                {{-- Improved logout button spacing - moved outside flex-grow and added proper margin --}}
+                <div class="px-6 my-6">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();"
