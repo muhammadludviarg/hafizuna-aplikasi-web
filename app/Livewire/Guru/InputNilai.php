@@ -97,8 +97,8 @@ class InputNilai extends Component
     public function selectKelompok($kelompokId)
     {
         $this->selectedKelompokId = $kelompokId;
-        $this->daftarSiswa = Siswa::whereHas('siswaKelompok', function ($query) use ($kelompokId) {
-            $query->where('id_kelompok', $kelompokId);
+        $this->daftarSiswa = Siswa::whereHas('kelompok', function ($query) use ($kelompokId) {
+            $query->where('siswa_kelompok.id_kelompok', $kelompokId);
         })->with('kelas')->get();
 
         $this->step = 2;
