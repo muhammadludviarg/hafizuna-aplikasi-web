@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ExportLaporanHafalanController;
 use Illuminate\Support\Facades\Route;
 
 // ADMIN COMPONENTS
@@ -14,6 +15,7 @@ use App\Livewire\Admin\PengaturanNilai;
 use App\Livewire\Admin\TargetHafalan;
 use App\Livewire\Admin\GantiPassword as AdminGantiPassword;
 use App\Livewire\Admin\DataMaster;
+use App\Livewire\Admin\LaporanHafalan as AdminLaporanHafalan;
 
 // GURU COMPONENTS
 use App\Livewire\Guru\Dashboard as GuruDashboard;
@@ -104,6 +106,23 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::get('/pengaturan-nilai', PengaturanNilai::class)->name('pengaturan-nilai');
     Route::get('/target-hafalan', TargetHafalan::class)->name('target-hafalan');
     Route::get('/ganti-password', AdminGantiPassword::class)->name('ganti-password');
+    
+    Route::get('/laporan-hafalan', AdminLaporanHafalan::class)->name('laporan-hafalan');
+    
+    Route::get('/export/laporan-hafalan/pdf/{kelasId}', [ExportLaporanHafalanController::class, 'exportPdf'])
+        ->name('export.laporan-hafalan.pdf');
+    Route::get('/export/laporan-hafalan/excel/{kelasId}', [ExportLaporanHafalanController::class, 'exportExcel'])
+        ->name('export.laporan-hafalan.excel');
+    
+    Route::get('/export/laporan-hafalan/pdf-siswa/{siswaId}', [ExportLaporanHafalanController::class, 'exportPdfSiswa'])
+        ->name('export.laporan-hafalan.pdf-siswa');
+    Route::get('/export/laporan-hafalan/excel-siswa/{siswaId}', [ExportLaporanHafalanController::class, 'exportExcelSiswa'])
+        ->name('export.laporan-hafalan.excel-siswa');
+    
+    Route::get('/export/sesi-setoran/pdf/{siswaId}/{surahId}', [ExportLaporanHafalanController::class, 'exportPdfSesi'])
+        ->name('export.sesi-setoran.pdf');
+    Route::get('/export/sesi-setoran/excel/{siswaId}/{surahId}', [ExportLaporanHafalanController::class, 'exportExcelSesi'])
+        ->name('export.sesi-setoran.excel');
 });
 
 /*
