@@ -427,7 +427,7 @@ class ExportLaporanHafalanController extends Controller
                 $q->where('id_surah_mulai', $surahId)
                   ->orWhere('id_surah_selesai', $surahId);
             })
-            ->with('surahMulai', 'surahSelesai', 'koreksi')
+            ->with(['surahMulai', 'surahSelesai', 'guru', 'koreksi'])
             ->orderByDesc('tanggal_setor')
             ->get();
 
@@ -442,29 +442,48 @@ class ExportLaporanHafalanController extends Controller
         $kelas = $siswa->kelompok()->first();
         $namaKelas = $kelas ? $kelas->nama_kelas : 'N/A';
         
-        // Get teacher name (from latest session)
-        $namaGuru = $latestSesi->guru_pembimbing ?? 'N/A';
+        $namaGuru = $latestSesi->guru->nama_guru ?? 'N/A';
         
-        // Calculate average scores for this surah
-        $nilaiTajwid = round($sesiSurah->avg('skor_tajwid'), 2);
-        $nilaiKelancaran = round($sesiSurah->avg('skor_kelancaran'), 2);
-        $nilaiMakhroj = round($sesiSurah->avg('skor_makhroj'), 2);
-        $nilaiRataRata = round($sesiSurah->avg('nilai_rata'), 2);
+        $nilaiTajwid = $latestSesi->skor_tajwid ?? 0;
+        $nilaiKelancaran = $latestSesi->skor_kelancaran ?? 0;
+        $nilaiMakhroj = $latestSesi->skor_makhroj ?? 0;
+        $nilaiRataRata = $latestSesi->nilai_rata ?? (($nilaiTajwid + $nilaiKelancaran + $nilaiMakhroj) / 3);
 
         // Get latest session details
-        $tanggalSesi = $latestSesi->tanggal_setor->format('l, d F Y');
         $ayatMulai = $latestSesi->ayat_mulai;
         $ayatSelesai = $latestSesi->ayat_selesai;
 
-        // Get corrections
-        $koreksi = $latestSesi->koreksi ?? [];
+        $koreksi = $latestSesi->koreksi->map(function ($k) {
+            return [
+                'lokasi' => 'Ayat ' . ($k->kata_ke ?? '?'),
+                'jenis_kesalahan' => $k->jenis_kesalahan ?? '-',
+                'catatan' => $k->catatan ?? '-'  // Pastikan field catatan diambil langsung dari database
+            ];
+        })->toArray();
 
-        // Calculate grade description
+        $riwayatSesi = $sesiSurah->map(function ($sesi) {
+            $rataRata = $sesi->nilai_rata ?? (($sesi->skor_tajwid + $sesi->skor_kelancaran + $sesi->skor_makhroj) / 3);
+            return [
+                'tanggal' => \Carbon\Carbon::parse($sesi->tanggal_setor)->format('d/m/Y'),
+                'ayat' => $sesi->ayat_mulai . '-' . $sesi->ayat_selesai,
+                'tajwid' => number_format($sesi->skor_tajwid, 1),
+                'kelancaran' => number_format($sesi->skor_kelancaran, 1),
+                'makhroj' => number_format($sesi->skor_makhroj, 1),
+                'rata_rata' => number_format($rataRata, 2)
+            ];
+        })->toArray();
+
+        $gradeTajwid = $this->getGradeDescription($nilaiTajwid);
+        $gradeKelancaran = $this->getGradeDescription($nilaiKelancaran);
+        $gradeMakhroj = $this->getGradeDescription($nilaiMakhroj);
         $gradeDesc = $this->getGradeDescription($nilaiRataRata);
 
-        $data = [
+        $tanggalSesi = \Carbon\Carbon::parse($latestSesi->tanggal_setor)->format('l, d F Y');
+
+        $pdf = Pdf::loadView('exports.sesi-setoran-pdf', [
             'sekolah' => 'HAFIZUNA',
             'nama_sekolah_lengkap' => 'SD Islam Al-Azhar 27 Cibinong Bogor',
+            'lokasi' => 'Cibinong Bogor',
             'judul' => 'Detail Sesi Setoran Hafalan',
             'nama_siswa' => $siswa->nama_siswa,
             'nama_kelas' => $namaKelas,
@@ -473,18 +492,21 @@ class ExportLaporanHafalanController extends Controller
             'ayat_selesai' => $ayatSelesai,
             'nama_guru' => $namaGuru,
             'tanggal_sesi' => $tanggalSesi,
-            'nilai_tajwid' => $nilaiTajwid,
-            'nilai_kelancaran' => $nilaiKelancaran,
-            'nilai_makhroj' => $nilaiMakhroj,
-            'nilai_rata_rata' => $nilaiRataRata,
+            'nilai_tajwid' => number_format($nilaiTajwid, 1),
+            'nilai_kelancaran' => number_format($nilaiKelancaran, 1),
+            'nilai_makhroj' => number_format($nilaiMakhroj, 1),
+            'nilai_rata_rata' => number_format($nilaiRataRata, 2),
+            'grade_tajwid' => $gradeTajwid,
+            'grade_kelancaran' => $gradeKelancaran,
+            'grade_makhroj' => $gradeMakhroj,
             'grade_desc' => $gradeDesc,
             'koreksi' => $koreksi,
-            'riwayat_sesi' => $sesiSurah->toArray(),
-        ];
+            'riwayat_sesi' => $riwayatSesi
+        ])->setPaper('a4', 'portrait');
 
-        $pdf = Pdf::loadView('exports.sesi-setoran-pdf', $data);
+        $filename = 'Detail-Sesi-' . str_replace(' ', '-', $siswa->nama_siswa) . '-' . str_replace(' ', '-', $surah->nama_surah) . '-' . date('d-m-Y') . '.pdf';
         
-        return $pdf->download('Detail-Sesi-' . $siswa->nama_siswa . '-' . $surah->nama_surah . '-' . date('dmY') . '.pdf');
+        return $pdf->download($filename);
     }
 
     public function exportExcelSesi($siswaId, $surahId)
@@ -502,7 +524,7 @@ class ExportLaporanHafalanController extends Controller
                 $q->where('id_surah_mulai', $surahId)
                   ->orWhere('id_surah_selesai', $surahId);
             })
-            ->with('surahMulai', 'surahSelesai', 'koreksi')
+            ->with(['surahMulai', 'surahSelesai', 'guru', 'koreksi'])
             ->orderByDesc('tanggal_setor')
             ->get();
 
@@ -517,8 +539,7 @@ class ExportLaporanHafalanController extends Controller
         $kelas = $siswa->kelompok()->first();
         $namaKelas = $kelas ? $kelas->nama_kelas : 'N/A';
         
-        // Get teacher name
-        $namaGuru = $latestSesi->guru_pembimbing ?? 'N/A';
+        $namaGuru = $latestSesi->guru->nama_guru ?? 'N/A';
         
         // Calculate average scores
         $nilaiTajwid = round($sesiSurah->avg('skor_tajwid'), 2);
@@ -530,8 +551,14 @@ class ExportLaporanHafalanController extends Controller
         $ayatMulai = $latestSesi->ayat_mulai;
         $ayatSelesai = $latestSesi->ayat_selesai;
 
-        // Get corrections
-        $koreksi = $latestSesi->koreksi ?? [];
+        $koreksi = $latestSesi->koreksi->map(function ($k) {
+            $nomorAyat = $k->kata_ke;
+            return [
+                'lokasi' => 'Ayat ' . $nomorAyat,
+                'jenis_kesalahan' => $k->kategori_kesalahan,
+                'catatan' => $k->catatan
+            ];
+        })->toArray();
 
         $gradeDesc = $this->getGradeDescription($nilaiRataRata);
 

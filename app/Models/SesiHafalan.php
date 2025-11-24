@@ -44,4 +44,8 @@ class SesiHafalan extends Model
     {
         return $this->belongsTo(Surah::class, 'id_surah_selesai', 'id_surah');
     }
+    public function koreksi()
+    {
+        return $this->hasMany(Koreksi::class, 'id_sesi', 'id_sesi');
+    }
 }
