@@ -187,8 +187,11 @@ class LaporanHafalan extends Component
             // Check range dari id_surah_awal to id_surah_akhir
             $surahAwal = $target->id_surah_awal;
             $surahAkhir = $target->id_surah_akhir;
-            
-            for ($i = $surahAwal; $i <= $surahAkhir; $i++) {
+
+            // SOLUSI: Gunakan range() agar bisa membaca urutan mundur (misal 114 ke 78)
+            $listSurahTarget = range($surahAwal, $surahAkhir);
+
+            foreach ($listSurahTarget as $i) {
                 if (!in_array($i, $surahYaHafalIdsArray)) {
                     $surah = Surah::find($i);
                     if ($surah) {

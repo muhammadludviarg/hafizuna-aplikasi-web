@@ -207,11 +207,12 @@ class ExportLaporanHafalanController extends Controller
                 $targetHafalan = TargetHafalanKelompok::whereIn('id_kelompok', $kelompokIds)->get();
 
                 foreach ($targetHafalan as $target) {
-                    // Loop through ID range, not nomor_surah
                     $surahAwal = $target->id_surah_awal;
                     $surahAkhir = $target->id_surah_akhir;
 
-                    for ($i = $surahAwal; $i <= $surahAkhir; $i++) {
+                    $listSurahTarget = range($surahAwal, $surahAkhir);
+
+                    foreach ($listSurahTarget as $i) {
                         // Check if already hafal
                         $sudahDihafalkan = SesiHafalan::where('id_siswa', $siswaId)
                             ->where(function ($q) use ($i) {
@@ -321,11 +322,12 @@ class ExportLaporanHafalanController extends Controller
                 $targetHafalan = TargetHafalanKelompok::whereIn('id_kelompok', $kelompokIds)->get();
 
                 foreach ($targetHafalan as $target) {
-                    // Loop through ID range, not nomor_surah
+                    // Gunakan range() agar bisa membaca urutan mundur
                     $surahAwal = $target->id_surah_awal;
                     $surahAkhir = $target->id_surah_akhir;
+                    $listSurahTarget = range($surahAwal, $surahAkhir);
 
-                    for ($i = $surahAwal; $i <= $surahAkhir; $i++) {
+                    foreach ($listSurahTarget as $i) {
                         // Check if already hafal
                         $sudahDihafalkan = SesiHafalan::where('id_siswa', $siswaId)
                             ->where(function ($q) use ($i) {
