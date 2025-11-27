@@ -4,13 +4,17 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 use App\Models\Guru;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use App\Imports\GuruImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class KelolaGuru extends Component
 {
     use WithPagination;
+    use WithFileUploads;
 
     public $search = '';
     public $showModal = false;
@@ -24,6 +28,10 @@ class KelolaGuru extends Component
     // Field untuk akun (jika create new)
     public $nama_lengkap;
     public $email;
+
+    // Import fields
+    public $importFile;
+    public $showImportModal = false;
 
     protected function rules()
     {
@@ -184,6 +192,42 @@ class KelolaGuru extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
+    }
+
+    // ==========================================
+    // IMPORT FUNCTIONS
+    // ==========================================
+
+    public function openImportModal()
+    {
+        $this->showImportModal = true;
+    }
+
+    public function closeImportModal()
+    {
+        $this->showImportModal = false;
+        $this->importFile = null;
+    }
+
+    public function import()
+    {
+        $this->validate([
+            'importFile' => 'required|mimes:xlsx,xls,csv|max:2048',
+        ]);
+
+    try {
+            Excel::import(new GuruImport, $this->importFile);
+            session()->flash('message', '✅ Berhasil import data guru!');
+            
+            // TAMBAHKAN INI:
+            $this->showImportModal = false;  // Tutup modal
+            $this->importFile = null;         // Reset file
+            $this->dispatch('import-success'); // Trigger event
+            
+            $this->resetPage();
+        } catch (\Exception $e) {
+            session()->flash('error', '❌ Gagal import: ' . $e->getMessage());
         }
     }
 

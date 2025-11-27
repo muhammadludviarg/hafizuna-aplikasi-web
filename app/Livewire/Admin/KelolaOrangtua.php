@@ -4,14 +4,18 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 use App\Models\OrangTua;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Imports\OrangTuaImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class KelolaOrangTua extends Component
 {
     use WithPagination;
+    use WithFileUploads;
 
     public $search = '';
     public $showModal = false;
@@ -28,6 +32,10 @@ class KelolaOrangTua extends Component
 
     // Error message untuk ditampilkan di dalam modal
     public $modalError = '';
+
+    // Import fields
+    public $importFile;
+    public $showImportModal = false;
 
     protected function rules()
     {
@@ -343,6 +351,42 @@ class KelolaOrangTua extends Component
             ]);
             
             session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    // ==========================================
+    // IMPORT FUNCTIONS
+    // ==========================================
+
+    public function openImportModal()
+    {
+        $this->showImportModal = true;
+    }
+
+    public function closeImportModal()
+    {
+        $this->showImportModal = false;
+        $this->importFile = null;
+    }
+
+    public function import()
+    {
+        $this->validate([
+            'importFile' => 'required|mimes:xlsx,xls,csv|max:2048',
+        ]);
+
+        try {
+            Excel::import(new OrangTuaImport, $this->importFile);
+            session()->flash('message', '✅ Berhasil import data orang tua!');
+            
+            // TAMBAHKAN INI:
+            $this->showImportModal = false;  // Tutup modal
+            $this->importFile = null;         // Reset file
+            $this->dispatch('import-success'); // Trigger event
+            
+            $this->resetPage();
+        } catch (\Exception $e) {
+            session()->flash('error', '❌ Gagal import: ' . $e->getMessage());
         }
     }
 

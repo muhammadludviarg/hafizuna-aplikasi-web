@@ -5,25 +5,45 @@
             <h3 class="text-lg font-semibold text-gray-700">Data Kelas</h3>
             <p class="text-sm text-gray-500">Kelola data kelas</p>
         </div>
-        <button wire:click="openModal" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            <span>Tambah Kelas</span>
-        </button>
+        
+        <!-- Button Group -->
+        <div class="flex gap-2">
+            <button wire:click="openModal" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>Tambah Kelas</span>
+            </button>
+
+            <!-- Button Import -->
+            <button wire:click="openImportModal" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <span>Import CSV</span>
+            </button>
+
+            <!-- Button Download Template -->
+            <a href="{{ asset('templates/template_kelas.csv') }}" download class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span>Download Template</span>
+            </a>
+        </div>
     </div>
 
     <!-- Flash Messages -->
     @if (session()->has('message'))
-        <div class="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center justify-between">
-            <span>{{ session('message') }}</span>
+        <div id="flash-message" class="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center justify-between">
+            <span>{!! session('message') !!}</span>
             <button onclick="this.parentElement.remove()" class="text-green-700 hover:text-green-900">✕</button>
         </div>
     @endif
 
     @if (session()->has('error'))
-        <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center justify-between">
-            <span>{{ session('error') }}</span>
+        <div id="flash-error" class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center justify-between">
+            <span>{!! session('error') !!}</span>
             <button onclick="this.parentElement.remove()" class="text-red-700 hover:text-red-900">✕</button>
         </div>
     @endif
@@ -77,8 +97,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                 </svg>
                             </button>
-                            <button wire:click="delete({{ $kelas->id_kelas }})" 
-                                    wire:confirm="Yakin ingin menghapus kelas {{ $kelas->nama_kelas }}?"
+                            <button onclick="confirmDeleteKelas({{ $kelas->id_kelas }}, '{{ addslashes($kelas->nama_kelas) }}')"
+                                    type="button"
                                     class="text-red-600 hover:text-red-900" title="Hapus">
                                 <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -105,7 +125,7 @@
         {{ $kelasList->links() }}
     </div>
 
-    <!-- Modal Form -->
+    <!-- Modal Form Tambah/Edit -->
     @if($showModal)
         <div class="fixed inset-0 z-50 overflow-y-auto">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -169,4 +189,107 @@
             </div>
         </div>
     @endif
+
+    <!-- Modal Import -->
+    @if($showImportModal)
+        <div class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75" wire:click="closeImportModal"></div>
+                
+                <div class="bg-white rounded-lg p-6 max-w-md w-full relative z-10 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">📥 Import Data Kelas</h3>
+                        <button wire:click="closeImportModal" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Upload File Excel/CSV
+                        </label>
+                        <input 
+                            type="file" 
+                            wire:model="importFile"
+                            accept=".xlsx,.xls,.csv"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        @error('importFile') 
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> 
+                        @enderror
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                        <p class="text-xs text-blue-800 leading-relaxed">
+                            ✅ Format: .xlsx, .xls, .csv<br>
+                            ✅ Max size: 2MB<br>
+                            💡 Download template dulu jika belum punya<br>
+                            📋 Kolom: <strong>nama_kelas, tahun_ajaran</strong>
+                        </p>
+                    </div>
+                    
+                    <div wire:loading wire:target="import" class="mb-4 text-center">
+                        <span class="text-sm text-blue-600">⏳ Sedang mengimport...</span>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-2">
+                        <button 
+                            wire:click="closeImportModal"
+                            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">
+                            Batal
+                        </button>
+                        <button 
+                            wire:click="import"
+                            wire:loading.attr="disabled"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                            Import Sekarang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
+
+<script>
+function confirmDeleteKelas(id, nama) {
+    if (confirm('Yakin ingin menghapus kelas ' + nama + '?')) {
+        @this.delete(id);
+    }
+}
+
+// Event listener untuk modal import
+document.addEventListener('livewire:init', () => {
+    Livewire.on('import-success', () => {
+        // Force remove modal backdrop
+        document.querySelectorAll('.fixed.inset-0').forEach(el => {
+            if (el.classList.contains('bg-gray-500') && el.classList.contains('bg-opacity-75')) {
+                el.remove();
+            }
+        });
+        
+        // Unlock body scroll
+        document.body.style.overflow = 'auto';
+        document.body.classList.remove('overflow-hidden');
+        
+        console.log('✅ Import success - modal closed, buttons unlocked');
+    });
+});
+
+// Auto-hide flash messages after 5 seconds
+setTimeout(() => {
+    const flashMsg = document.getElementById('flash-message');
+    const flashErr = document.getElementById('flash-error');
+    if (flashMsg) {
+        flashMsg.style.transition = 'opacity 0.5s';
+        flashMsg.style.opacity = '0';
+        setTimeout(() => flashMsg.remove(), 500);
+    }
+    if (flashErr) {
+        flashErr.style.transition = 'opacity 0.5s';
+        flashErr.style.opacity = '0';
+        setTimeout(() => flashErr.remove(), 500);
+    }
+}, 5000);
+</script>

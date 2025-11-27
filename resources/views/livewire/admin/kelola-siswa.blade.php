@@ -5,12 +5,32 @@
             <h3 class="text-lg font-semibold text-gray-700">Data Siswa</h3>
             <p class="text-sm text-gray-500">Kelola data siswa</p>
         </div>
-        <button wire:click="openModal" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            <span>Tambah Siswa</span>
-        </button>
+        
+        <!-- Button Group -->
+        <div class="flex gap-2">
+            <button wire:click="openModal" type="button" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>Tambah Siswa</span>
+            </button>
+
+            <!-- Button Import -->
+            <button wire:click="openImportModal" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <span>Import CSV</span>
+            </button>
+
+            <!-- Button Download Template -->
+            <a href="{{ asset('templates/template_siswa.csv') }}" download class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span>Download Template</span>
+            </a>
+        </div>
     </div>
 
     <!-- Flash Messages Success -->
@@ -28,7 +48,7 @@
     <!-- Flash Messages Error -->
     @if (session()->has('error'))
         <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center justify-between">
-            <span>{{ session('error') }}</span>
+            <span>{!! session('error') !!}</span>
             <button onclick="this.parentElement.remove()" class="text-red-700 hover:text-red-900">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -102,8 +122,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                 </svg>
                             </button>
-                            <button wire:click="delete({{ $siswa->id_siswa }})" 
-                                    onclick="return confirm('Yakin ingin menghapus data ini?')" 
+                            <button onclick="confirmDeleteSiswa({{ $siswa->id_siswa }}, '{{ addslashes($siswa->nama_siswa) }}')"
                                     type="button"
                                     class="text-red-600 hover:text-red-900">
                                 <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,4 +245,118 @@
             </div>
         </div>
     @endif
+
+    <!-- Modal Import -->
+    @if($showImportModal)
+        <div class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75" wire:click="closeImportModal"></div>
+                
+                <div class="bg-white rounded-lg p-6 max-w-md w-full relative z-10 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">📥 Import Data Siswa</h3>
+                        <button wire:click="closeImportModal" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Error Message INSIDE Modal -->
+                    @if (session()->has('error'))
+                        <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-red-400 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="flex-1">{!! session('error') !!}</span>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Success Message INSIDE Modal -->
+                    @if (session()->has('message'))
+                        <div class="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-green-400 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="flex-1">{{ session('message') }}</span>
+                            </div>
+                        </div>
+                    @endif
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Upload File Excel/CSV
+                        </label>
+                        <input 
+                            type="file" 
+                            wire:model="importFile"
+                            accept=".xlsx,.xls,.csv"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        @error('importFile') 
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span> 
+                        @enderror
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                        <p class="text-xs text-blue-800 leading-relaxed">
+                            ✅ Format: .xlsx, .xls, .csv<br>
+                            ✅ Max size: 2MB<br>
+                            💡 Download template dulu jika belum punya<br>
+                            📋 Kolom: <strong>nama_siswa, kode_siswa, nama_kelas, email_ortu</strong>
+                        </p>
+                    </div>
+                    
+                    <div wire:loading wire:target="import" class="mb-4 text-center">
+                        <span class="text-sm text-blue-600">⏳ Sedang mengimport...</span>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-2">
+                        <button 
+                            wire:click="closeImportModal"
+                            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">
+                            Batal
+                        </button>
+                        <button 
+                            wire:click="import"
+                            wire:loading.attr="disabled"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                            Import Sekarang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
+
+<script>
+function confirmDeleteSiswa(id, nama) {
+    if (confirm('Yakin ingin menghapus siswa ' + nama + '?')) {
+        Livewire.find('{{ $_instance->getId() }}').delete(id);
+    }
+}
+</script>
+
+<script>
+// Fix z-index modal overlay
+document.addEventListener('livewire:init', () => {
+    Livewire.on('modal-closed', () => {
+        document.body.style.overflow = 'auto';
+        // Hapus semua backdrop yang mungkin tertinggal
+        const backdrops = document.querySelectorAll('.fixed.inset-0.bg-gray-500');
+        backdrops.forEach(backdrop => {
+            if (!backdrop.closest('[wire\\:model]')) {
+                backdrop.remove();
+            }
+        });
+    });
+});
+
+// Re-attach event listener setelah Livewire update
+document.addEventListener('livewire:navigated', () => {
+    // Fungsi confirm delete akan otomatis ter-attach ulang
+});
+</script>

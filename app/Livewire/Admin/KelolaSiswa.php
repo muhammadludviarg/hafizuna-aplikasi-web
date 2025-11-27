@@ -4,13 +4,17 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 use App\Models\Siswa;
 use App\Models\Kelas;
 use App\Models\OrangTua;
+use App\Imports\SiswaImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class KelolaSiswa extends Component
 {
     use WithPagination;
+    use WithFileUploads;
 
     public $search = '';
     public $showModal = false;
@@ -22,6 +26,10 @@ class KelolaSiswa extends Component
     public $kode_siswa;
     public $id_kelas;
     public $id_ortu;
+
+    // Import fields
+    public $importFile;
+    public $showImportModal = false;
 
     protected $rules = [
         'nama_siswa' => 'required|min:3',
@@ -140,6 +148,42 @@ class KelolaSiswa extends Component
             session()->flash('message', 'Data siswa berhasil dihapus.');
         } catch (\Exception $e) {
             session()->flash('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
+    }
+
+    // ==========================================
+    // IMPORT FUNCTIONS
+    // ==========================================
+
+    public function openImportModal()
+    {
+        $this->showImportModal = true;
+    }
+
+    public function closeImportModal()
+    {
+        $this->showImportModal = false;
+        $this->importFile = null;
+    }
+
+    public function import()
+    {
+        $this->validate([
+            'importFile' => 'required|mimes:xlsx,xls,csv|max:2048',
+        ]);
+
+        try {
+            Excel::import(new SiswaImport, $this->importFile);
+            session()->flash('message', '✅ Berhasil import data siswa!');
+            
+            // TAMBAHKAN INI:
+            $this->showImportModal = false;  // Tutup modal
+            $this->importFile = null;         // Reset file
+            $this->dispatch('import-success'); // Trigger event
+            
+            $this->resetPage();
+        } catch (\Exception $e) {
+            session()->flash('error', '❌ Gagal import: ' . $e->getMessage());
         }
     }
 
