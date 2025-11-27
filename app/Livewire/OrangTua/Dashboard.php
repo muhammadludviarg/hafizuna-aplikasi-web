@@ -3,162 +3,167 @@
 namespace App\Livewire\OrangTua;
 
 use Livewire\Component;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Siswa;
 use App\Models\SesiHafalan;
-use App\Models\TargetHafalanKelompok;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 
 class Dashboard extends Component
 {
     public $anakList = [];
-    public $selectedAnak = null;
+    public $selectedAnakId = null;
     public $selectedAnakData = null;
-    
+
+    // Variabel Statistik Single
+    public $nilaiAspekTajwid = 0;
+    public $nilaiAspekKelancaran = 0;
+    public $nilaiAspekMakhroj = 0;
+
+    // Variabel Chart Perkembangan (Line Chart)
     public $chartPerkembanganLabels = [];
     public $chartPerkembanganTajwid = [];
     public $chartPerkembanganMakhroj = [];
     public $chartPerkembanganKelancaran = [];
-    
+
+    // Variabel Chart Target (Bar Chart)
     public $chartTargetLabels = [];
     public $chartTargetPencapaian = [];
     public $chartTargetTarget = [];
-    
-    public $nilaiAspekTajwid = 0;
-    public $nilaiAspekMakhroj = 0;
-    public $nilaiAspekKelancaran = 0;
 
     public function mount()
     {
-        $this->loadAnakList();
+        $this->loadAnak();
     }
 
-    public function loadAnakList()
+    public function loadAnak()
     {
-        $user = auth()->user();
-        Log::info('[v0] Auth User ID: ' . $user->id_akun . ' Name: ' . $user->nama_lengkap);
-        
-        $orangTua = $user->ortu()->first();
-        Log::info('[v0] OrangTua Result:', ['orangTua' => $orangTua ? 'Found' : 'NULL']);
-        
-        if ($orangTua) {
-            Log::info('[v0] OrangTua ID: ' . $orangTua->id_ortu);
-            
-            $siswaBefore = $orangTua->siswa();
-            Log::info('[v0] Siswa Query Before Get:', ['query' => $siswaBefore->toSql(), 'bindings' => $siswaBefore->getBindings()]);
-            
-            $siswaRaw = $orangTua->siswa()->with('kelas')->get();
-            Log::info('[v0] Siswa Count: ' . $siswaRaw->count());
-            Log::info('[v0] Siswa Data:', ['data' => $siswaRaw->toArray()]);
-            
-            $this->anakList = $siswaRaw
-                ->map(function ($siswa) {
-                    // Hitung progress hafalan
-                    $totalSesi = SesiHafalan::where('id_siswa', $siswa->id_siswa)->count();
-                    $rataRataNilai = SesiHafalan::where('id_siswa', $siswa->id_siswa)->avg('nilai_rata') ?? 0;
-                    
-                    $setoranTerakhir = SesiHafalan::where('id_siswa', $siswa->id_siswa)
-                        ->with(['surahMulai', 'surahSelesai'])
-                        ->orderBy('tanggal_setor', 'DESC')
-                        ->limit(2)
-                        ->get()
-                        ->map(function ($sesi) {
-                            return [
-                                'surah' => $sesi->surahMulai->nama_surah ?? 'Unknown',
-                                'nilai' => number_format($sesi->nilai_rata, 0)
-                            ];
-                        })
-                        ->toArray();
-                    
+        $user = Auth::user();
+        if (!$user->ortu)
+            return;
+
+        // Load anak beserta data ringkas untuk card list
+        $this->anakList = Siswa::where('id_ortu', $user->ortu->id_ortu)
+            ->get()
+            ->map(function ($siswa) {
+                $sesi = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
+                $totalAyat = 0;
+                foreach ($sesi as $s) {
+                    $totalAyat += ($s->ayat_selesai - $s->ayat_mulai + 1);
+                }
+
+                // Ambil setoran terakhir
+                $lastSesi = $sesi->sortByDesc('tanggal_setor')->take(2);
+                $setoranTerakhir = $lastSesi->map(function ($s) {
                     return [
-                        'id_siswa' => $siswa->id_siswa,
-                        'nama_siswa' => $siswa->nama_siswa,
-                        'kelas' => $siswa->kelas->nama_kelas,
-                        'progress' => 60, // Placeholder, bisa disesuaikan dengan logic
-                        'total_sesi' => $totalSesi,
-                        'rata_rata' => number_format($rataRataNilai, 0),
-                        'setoran_terakhir' => $setoranTerakhir,
+                        'surah' => $s->surahMulai->nama_surah ?? '-',
+                        'nilai' => $s->nilai_rata
                     ];
-                })
-                ->toArray();
-                
-            Log::info('[v0] AnakList:', ['count' => count($this->anakList), 'data' => $this->anakList]);
-        } else {
-            Log::info('[v0] OrangTua is null for user:', ['userId' => $user->id_akun]);
+                });
+
+                return [
+                    'id_siswa' => $siswa->id_siswa,
+                    'nama_siswa' => $siswa->nama_siswa,
+                    'kelas' => $siswa->kelas->nama_kelas ?? '-',
+                    'total_sesi' => $sesi->count(),
+                    'total_ayat' => $totalAyat,
+                    'rata_rata' => $sesi->count() > 0 ? round($sesi->avg('nilai_rata'), 1) : 0,
+                    'progress' => min(100, round(($totalAyat / 1000) * 100)), // Asumsi target 1000 ayat
+                    'setoran_terakhir' => $setoranTerakhir
+                ];
+            })->toArray();
+
+        // Auto select anak pertama
+        if (!empty($this->anakList)) {
+            $this->selectAnak($this->anakList[0]['id_siswa']);
         }
     }
 
-    public function selectAnak($idSiswa)
+    public function selectAnak($siswaId)
     {
-        $this->selectedAnak = $idSiswa;
-        $this->loadDetailAnak($idSiswa);
+        $this->selectedAnakId = $siswaId;
+        $this->selectedAnakData = collect($this->anakList)->firstWhere('id_siswa', $siswaId);
+        $this->loadStatistikDetail();
+
+        // Kirim event ke JS untuk update chart
+        $this->dispatch('update-charts', [
+            'perkembangan' => [
+                'labels' => $this->chartPerkembanganLabels,
+                'tajwid' => $this->chartPerkembanganTajwid,
+                'makhroj' => $this->chartPerkembanganMakhroj,
+                'kelancaran' => $this->chartPerkembanganKelancaran
+            ],
+            'target' => [
+                'labels' => $this->chartTargetLabels,
+                'pencapaian' => $this->chartTargetPencapaian,
+                'target' => $this->chartTargetTarget
+            ]
+        ]);
     }
 
-    public function loadDetailAnak($idSiswa)
+    public function loadStatistikDetail()
     {
-        $siswa = Siswa::find($idSiswa);
-        $this->selectedAnakData = [
-            'id_siswa' => $siswa->id_siswa,
-            'nama_siswa' => $siswa->nama_siswa,
-            'kelas' => $siswa->kelas->nama_kelas,
-        ];
+        if (!$this->selectedAnakId)
+            return;
 
-        // 1. Chart Perkembangan Nilai (4 minggu terakhir)
-        $sevenDaysAgo = now()->subDays(28);
-        $sesiTerakhir = SesiHafalan::where('id_siswa', $idSiswa)
-            ->where('tanggal_setor', '>=', $sevenDaysAgo)
-            ->orderBy('tanggal_setor')
+        $sesiHafalan = SesiHafalan::where('id_siswa', $this->selectedAnakId)
+            ->orderBy('tanggal_setor', 'asc')
             ->get();
 
-        $minggu = [];
-        $tajwidData = [];
-        $makrojData = [];
-        $kelancaran = [];
-
-        foreach ($sesiTerakhir->groupBy(function ($item) {
-            return $item->tanggal_setor->floorWeek(Carbon::MONDAY)->format('Y-m-d');
-        }) as $week => $sessions) {
-            $minggu[] = 'Minggu ' . count($minggu) + 1;
-            $tajwidData[] = $sessions->avg('skor_tajwid');
-            $makrojData[] = $sessions->avg('skor_makhroj');
-            $kelancaran[] = $sessions->avg('skor_kelancaran');
+        if ($sesiHafalan->isEmpty()) {
+            $this->resetCharts();
+            return;
         }
 
-        $this->chartPerkembanganLabels = $minggu;
-        $this->chartPerkembanganTajwid = $tajwidData;
-        $this->chartPerkembanganMakhroj = $makrojData;
-        $this->chartPerkembanganKelancaran = $kelancaran;
+        // 1. Hitung Rata-rata Aspek (Untuk Progress Bar)
+        $this->nilaiAspekTajwid = round($sesiHafalan->avg('skor_tajwid'), 1);
+        $this->nilaiAspekKelancaran = round($sesiHafalan->avg('skor_kelancaran'), 1);
+        $this->nilaiAspekMakhroj = round($sesiHafalan->avg('skor_makhroj'), 1);
 
-        // 2. Chart Target Hafalan Bulanan
-        $bulanIni = Carbon::now()->month;
-        $tahunIni = Carbon::now()->year;
-        
-        $targetBulan = TargetHafalanKelompok::where('id_kelompok', $siswa->id_kelas)
-            ->whereMonth('tanggal_mulai', $bulanIni)
-            ->whereYear('tanggal_mulai', $tahunIni)
-            ->first();
+        // 2. Siapkan Data Chart Perkembangan (10 Sesi Terakhir)
+        $dataGrafik = $sesiHafalan->take(-10);
 
-        $bulanLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'];
-        $pencapaianData = [15, 18, 22, 20, 21, 19]; // Placeholder
-        $targetData = [20, 20, 20, 20, 20, 20]; // Placeholder
+        $this->chartPerkembanganLabels = $dataGrafik->map(fn($s) => $s->tanggal_setor->format('d M'))->toArray();
+        $this->chartPerkembanganTajwid = $dataGrafik->pluck('skor_tajwid')->toArray();
+        $this->chartPerkembanganMakhroj = $dataGrafik->pluck('skor_makhroj')->toArray();
+        $this->chartPerkembanganKelancaran = $dataGrafik->pluck('skor_kelancaran')->toArray();
 
-        $this->chartTargetLabels = $bulanLabels;
-        $this->chartTargetPencapaian = $pencapaianData;
-        $this->chartTargetTarget = $targetData;
+        // 3. Siapkan Data Chart Target Bulanan (3 Bulan Terakhir)
+        // Kelompokkan data per bulan
+        $groupedByMonth = $sesiHafalan->groupBy(function ($date) {
+            return Carbon::parse($date->tanggal_setor)->format('M Y'); // Jan 2024
+        })->take(-4); // Ambil 4 bulan terakhir
 
-        // 3. Nilai Per Aspek Penilaian
-        $avgTajwid = SesiHafalan::where('id_siswa', $idSiswa)->avg('skor_tajwid') ?? 0;
-        $avgMakhroj = SesiHafalan::where('id_siswa', $idSiswa)->avg('skor_makhroj') ?? 0;
-        $avgKelancaran = SesiHafalan::where('id_siswa', $idSiswa)->avg('skor_kelancaran') ?? 0;
+        $this->chartTargetLabels = [];
+        $this->chartTargetPencapaian = [];
+        $this->chartTargetTarget = [];
 
-        $this->nilaiAspekTajwid = round($avgTajwid);
-        $this->nilaiAspekMakhroj = round($avgMakhroj);
-        $this->nilaiAspekKelancaran = round($avgKelancaran);
+        foreach ($groupedByMonth as $month => $sessions) {
+            $this->chartTargetLabels[] = $month;
+
+            // Hitung total ayat bulan ini
+            $ayatBulanIni = 0;
+            foreach ($sessions as $s) {
+                $ayatBulanIni += ($s->ayat_selesai - $s->ayat_mulai + 1);
+            }
+            $this->chartTargetPencapaian[] = $ayatBulanIni;
+            $this->chartTargetTarget[] = 50; // Target statis 50 ayat per bulan (bisa disesuaikan)
+        }
+    }
+
+    private function resetCharts()
+    {
+        $this->nilaiAspekTajwid = 0;
+        $this->nilaiAspekKelancaran = 0;
+        $this->nilaiAspekMakhroj = 0;
+        $this->chartPerkembanganLabels = [];
+        $this->chartPerkembanganTajwid = [];
+        $this->chartTargetLabels = [];
+        $this->chartTargetPencapaian = [];
     }
 
     public function render()
     {
-        return view('livewire.orang-tua.dashboard')->layout('layouts.orang-tua');
+        return view('livewire.orang-tua.dashboard')
+            ->layout('layouts.orang-tua');
     }
 }
