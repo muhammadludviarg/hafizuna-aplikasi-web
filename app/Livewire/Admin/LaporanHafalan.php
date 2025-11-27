@@ -365,7 +365,7 @@ class LaporanHafalan extends Component
             session()->flash('error', 'Pilih kelas terlebih dahulu');
             return;
         }
-        return redirect()->route('admin.export.laporan-hafalan.pdf', ['kelasId' => $this->selectedKelasId]);
+        return redirect()->route('export.laporan-hafalan.pdf', ['kelasId' => $this->selectedKelasId]);
     }
 
     public function downloadExcel()
@@ -374,37 +374,31 @@ class LaporanHafalan extends Component
             session()->flash('error', 'Pilih kelas terlebih dahulu');
             return;
         }
-        return redirect()->route('admin.export.laporan-hafalan.excel', ['kelasId' => $this->selectedKelasId]);
+        return redirect()->route('export.laporan-hafalan.excel', ['kelasId' => $this->selectedKelasId]);
     }
+
+    // --- DOWNLOAD ---
+    // Sekarang menggunakan route umum (tanpa prefix 'admin.')
 
     public function downloadPdfSiswa()
     {
-        if (!$this->selectedSiswaId) {
-            session()->flash('error', 'Pilih siswa terlebih dahulu');
+        if (!$this->selectedSiswaId)
             return;
-        }
-
-        return redirect()->away(route('admin.export.laporan-hafalan.pdf-siswa', ['siswaId' => $this->selectedSiswaId]));
+        return redirect()->away(route('export.laporan-hafalan.pdf-siswa', ['siswaId' => $this->selectedSiswaId]));
     }
 
     public function downloadExcelSiswa()
     {
-        if (!$this->selectedSiswaId) {
-            session()->flash('error', 'Pilih siswa terlebih dahulu');
+        if (!$this->selectedSiswaId)
             return;
-        }
-
-        return redirect()->away(route('admin.export.laporan-hafalan.excel-siswa', ['siswaId' => $this->selectedSiswaId]));
+        return redirect()->away(route('export.laporan-hafalan.excel-siswa', ['siswaId' => $this->selectedSiswaId]));
     }
 
     public function downloadPdfSesi()
     {
-        if (!$this->selectedSiswaId || !$this->selectedSurahId) {
-            session()->flash('error', 'Pilih sesi terlebih dahulu');
+        if (!$this->selectedSiswaId || !$this->selectedSurahId)
             return;
-        }
-
-        return redirect()->away(route('admin.export.sesi-setoran.pdf', [
+        return redirect()->away(route('export.sesi-setoran.pdf', [
             'siswaId' => $this->selectedSiswaId,
             'surahId' => $this->selectedSurahId
         ]));
@@ -412,12 +406,9 @@ class LaporanHafalan extends Component
 
     public function downloadExcelSesi()
     {
-        if (!$this->selectedSiswaId || !$this->selectedSurahId) {
-            session()->flash('error', 'Pilih sesi terlebih dahulu');
+        if (!$this->selectedSiswaId || !$this->selectedSurahId)
             return;
-        }
-
-        return redirect()->away(route('admin.export.sesi-setoran.excel', [
+        return redirect()->away(route('export.sesi-setoran.excel', [
             'siswaId' => $this->selectedSiswaId,
             'surahId' => $this->selectedSurahId
         ]));
