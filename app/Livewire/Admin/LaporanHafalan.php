@@ -1,73 +1,104 @@
 <?php
 
-namespace App\Livewire\OrangTua;
+namespace App\Livewire\Admin;
 
 use Livewire\Component;
+use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\SesiHafalan;
 use App\Models\Surah;
+use App\Models\Target;
 use App\Models\TargetHafalanKelompok;
-use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class LaporanHafalan extends Component
 {
-    // Tidak ada Kelas List di sini
-    public $anakList = [];
-
-    // Langsung mulai dari Siswa
+    public $kelasList = [];
+    public $selectedKelasId = null;
     public $selectedSiswaId = null;
     public $selectedSurahId = null;
     public $selectedSesiDetail = null;
-
+    public $detailLaporan = null;
+    public $kelasDetail = null;
     public $siswaDetail = null;
     public $surahDetail = null;
-
     public $tanggalMulai = null;
     public $tanggalAkhir = null;
 
     public function mount()
     {
-        $this->loadAnakList();
+        $this->loadKelasList();
     }
 
-    public function loadAnakList()
+    public function loadKelasList()
     {
-        $user = Auth::user();
-        $ortu = $user->ortu; // Relasi User ke OrangTua
-
-        if (!$ortu) {
-            $this->anakList = [];
-            return;
-        }
-
-        // AMBIL ANAK DARI ORANG TUA INI
-        // Langsung load data detailnya biar mirip struktur Admin tapi versi mini
-        $this->anakList = Siswa::where('id_ortu', $ortu->id_ortu)
+        $this->kelasList = Kelas::with('siswa')
             ->get()
-            ->map(function ($siswa) {
-                $sesiHafalan = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
-                $jumlahSesi = $sesiHafalan->count();
-                $nilaiRataRata = $jumlahSesi > 0 ? round($sesiHafalan->avg('nilai_rata'), 2) : 0;
-
-                $totalAyat = 0;
-                foreach ($sesiHafalan as $sesi) {
-                    $totalAyat += ($sesi->ayat_selesai - $sesi->ayat_mulai + 1);
-                }
+            ->map(function ($kelas) {
+                $jumlahSiswa = $kelas->siswa->count();
+                $tahunAjaran = $kelas->tahun_ajaran ?? 'Tidak Ada';
 
                 return [
-                    'id_siswa' => $siswa->id_siswa,
-                    'nama_siswa' => $siswa->nama_siswa,
-                    'jumlah_sesi' => $jumlahSesi,
-                    'nilai_rata_rata' => $nilaiRataRata,
-                    'total_ayat' => $totalAyat,
+                    'id' => $kelas->id_kelas,
+                    'nama_kelas' => $kelas->nama_kelas,
+                    'tahun_ajaran' => $tahunAjaran,
+                    'jumlah_siswa' => $jumlahSiswa,
                 ];
             })
             ->toArray();
+    }
 
-        // Jika anak cuma 1, otomatis pilih
-        if (count($this->anakList) === 1) {
-            $this->selectSiswa($this->anakList[0]['id_siswa']);
+    public function selectKelas($kelasId)
+    {
+        $this->selectedKelasId = $kelasId;
+        $this->selectedSiswaId = null;
+        $this->selectedSurahId = null;
+        $this->loadDetailLaporan();
+    }
+
+    public function loadDetailLaporan()
+    {
+        if (!$this->selectedKelasId) {
+            $this->detailLaporan = null;
+            $this->kelasDetail = null;
+            return;
         }
+
+        $kelas = Kelas::find($this->selectedKelasId);
+        if (!$kelas) {
+            return;
+        }
+
+        $this->kelasDetail = [
+            'nama_kelas' => $kelas->nama_kelas,
+            'tahun_ajaran' => $kelas->tahun_ajaran ?? 'Tidak Ada',
+        ];
+
+        $siswaDetail = $kelas->siswa->map(function ($siswa) {
+            $sesiHafalan = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
+
+            $jumlahSesi = $sesiHafalan->count();
+            $nilaiRataRata = $jumlahSesi > 0
+                ? round($sesiHafalan->avg('nilai_rata'), 2)
+                : 0;
+
+            $totalAyat = 0;
+            foreach ($sesiHafalan as $sesi) {
+                $totalAyat += ($sesi->ayat_selesai - $sesi->ayat_mulai + 1);
+            }
+
+            return [
+                'id_siswa' => $siswa->id_siswa,
+                'nama_siswa' => $siswa->nama_siswa,
+                'jumlah_sesi' => $jumlahSesi,
+                'nilai_rata_rata' => $nilaiRataRata,
+                'total_ayat' => $totalAyat,
+            ];
+        })->sortByDesc('nilai_rata_rata')
+            ->values()
+            ->toArray();
+
+        $this->detailLaporan = $siswaDetail;
     }
 
     public function selectSiswa($siswaId)
@@ -301,20 +332,49 @@ class LaporanHafalan extends Component
         ];
     }
 
-    // --- NAVIGATION ---
-    public function backToSiswaList()
+    public function backToList()
     {
+        $this->selectedKelasId = null;
         $this->selectedSiswaId = null;
-        $this->siswaDetail = null;
         $this->selectedSurahId = null;
+        $this->detailLaporan = null;
+        $this->siswaDetail = null;
+        $this->surahDetail = null;
     }
 
-    public function backToSiswa() // Kembali dari Surah ke Detail Siswa
+    public function backToKelas()
+    {
+        $this->selectedSiswaId = null;
+        $this->selectedSurahId = null;
+        $this->siswaDetail = null;
+        $this->surahDetail = null;
+    }
+
+    public function backToSiswa()
     {
         $this->selectedSurahId = null;
         $this->surahDetail = null;
-        if ($this->selectedSiswaId)
+        if ($this->selectedSiswaId) {
             $this->loadDetailSiswa();
+        }
+    }
+
+    public function downloadPdf()
+    {
+        if (!$this->selectedKelasId) {
+            session()->flash('error', 'Pilih kelas terlebih dahulu');
+            return;
+        }
+        return redirect()->route('export.laporan-hafalan.pdf', ['kelasId' => $this->selectedKelasId]);
+    }
+
+    public function downloadExcel()
+    {
+        if (!$this->selectedKelasId) {
+            session()->flash('error', 'Pilih kelas terlebih dahulu');
+            return;
+        }
+        return redirect()->route('export.laporan-hafalan.excel', ['kelasId' => $this->selectedKelasId]);
     }
 
     // --- DOWNLOAD ---
@@ -356,6 +416,6 @@ class LaporanHafalan extends Component
 
     public function render()
     {
-        return view('livewire.orang-tua.laporan-hafalan')->layout('layouts.orang-tua');
+        return view('livewire.admin.laporan-hafalan')->layout('layouts.app');
     }
 }

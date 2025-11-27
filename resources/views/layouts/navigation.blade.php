@@ -16,7 +16,6 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
                     
-                    <!-- Added admin menu links for dashboard navigation -->
                     @if(auth()->user() && auth()->user()->hasRole('admin'))
                         <x-nav-link :href="route('admin.kelola-guru')" :active="request()->routeIs('admin.kelola-guru')">
                             {{ __('Kelola Guru') }}
@@ -54,14 +53,16 @@
                             {{ __('Profile') }}
                         </x-dropdown-link>
 
-                        <!-- Added Ganti Password link for admin -->
+                        <!-- Improve dropdown spacing between items to prevent button overlap -->
                         @if(auth()->user() && auth()->user()->hasRole('admin'))
+                            <div class="border-t border-gray-100 my-1"></div>
                             <x-dropdown-link :href="route('admin.ganti-password')">
                                 {{ __('Ganti Password') }}
                             </x-dropdown-link>
                         @endif
 
                         <!-- Authentication -->
+                        <div class="border-t border-gray-100 my-1"></div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
 
@@ -94,7 +95,6 @@
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
 
-            <!-- Added responsive admin menu links -->
             @if(auth()->user() && auth()->user()->hasRole('admin'))
                 <x-responsive-nav-link :href="route('admin.kelola-guru')" :active="request()->routeIs('admin.kelola-guru')">
                     {{ __('Kelola Guru') }}
@@ -123,7 +123,6 @@
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
 
-                <!-- Added responsive Ganti Password link -->
                 @if(auth()->user() && auth()->user()->hasRole('admin'))
                     <x-responsive-nav-link :href="route('admin.ganti-password')">
                         {{ __('Ganti Password') }}

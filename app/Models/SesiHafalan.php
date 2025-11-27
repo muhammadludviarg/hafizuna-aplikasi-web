@@ -2,6 +2,9 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Koreksi;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 class SesiHafalan extends Model
 {
     use HasFactory;
@@ -43,5 +46,10 @@ class SesiHafalan extends Model
     public function surahSelesai()
     {
         return $this->belongsTo(Surah::class, 'id_surah_selesai', 'id_surah');
+    }
+
+    public function koreksi()
+    {
+        return $this->hasMany(Koreksi::class, 'id_sesi');
     }
 }

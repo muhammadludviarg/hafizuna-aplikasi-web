@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ExportLaporanHafalanController;
 use Illuminate\Support\Facades\Route;
 
 // ADMIN COMPONENTS
@@ -9,12 +10,13 @@ use App\Livewire\Admin\DataAdmin;
 use App\Livewire\Admin\KelolaGuru;
 use App\Livewire\Admin\KelolaSiswa;
 use App\Livewire\Admin\KelolaKelas;
-use App\Livewire\Admin\KelolaKelompok as AdminKelolaKelompok;
+use App\Livewire\Admin\KelolaKelompok;
 use App\Livewire\Admin\PengaturanNilai;
 use App\Livewire\Admin\TargetHafalan;
 use App\Livewire\Admin\GantiPassword as AdminGantiPassword;
 use App\Livewire\Admin\DataMaster;
 use App\Livewire\Admin\LogAktivitasAdmin;
+use App\Livewire\Admin\LaporanHafalan as AdminLaporanHafalan;
 
 // GURU COMPONENTS
 use App\Livewire\Guru\Dashboard as GuruDashboard;
@@ -24,11 +26,10 @@ use App\Livewire\Guru\DetailKelompok;
 use App\Livewire\Guru\LaporanHafalan;
 use App\Livewire\Guru\GantiPassword;
 
-// (BARU) ORTU COMPONENTS
+// ORTU COMPONENTS
 use App\Livewire\OrangTua\Dashboard as OrtuDashboard;
 use App\Livewire\OrangTua\LaporanHafalan as OrtuLaporanHafalan;
 use App\Livewire\OrangTua\GantiPassword as OrtuGantiPassword;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +49,35 @@ require __DIR__ . '/auth.php';
 
 /*
 |--------------------------------------------------------------------------
+| RUTE EXPORT (Bisa diakses Admin, Guru, & Ortu)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified'])->group(function () {
+
+    // Nama route kita hilangkan prefix 'admin.' nya
+
+    Route::get('/export/laporan-hafalan/pdf/{kelasId}', [ExportLaporanHafalanController::class, 'exportPdf'])
+        ->name('export.laporan-hafalan.pdf'); // Digunakan oleh Admin saja
+
+    Route::get('/export/laporan-hafalan/excel/{kelasId}', [ExportLaporanHafalanController::class, 'exportExcel'])
+        ->name('export.laporan-hafalan.excel'); // Digunakan oleh Admin saja
+
+    // Rute Siswa & Sesi (Digunakan Admin, Guru, Ortu)
+    Route::get('/export/laporan-hafalan/pdf-siswa/{siswaId}', [ExportLaporanHafalanController::class, 'exportPdfSiswa'])
+        ->name('export.laporan-hafalan.pdf-siswa');
+
+    Route::get('/export/laporan-hafalan/excel-siswa/{siswaId}', [ExportLaporanHafalanController::class, 'exportExcelSiswa'])
+        ->name('export.laporan-hafalan.excel-siswa');
+
+    Route::get('/export/sesi-setoran/pdf/{siswaId}/{surahId}', [ExportLaporanHafalanController::class, 'exportPdfSesi'])
+        ->name('export.sesi-setoran.pdf');
+
+    Route::get('/export/sesi-setoran/excel/{siswaId}/{surahId}', [ExportLaporanHafalanController::class, 'exportExcelSesi'])
+        ->name('export.sesi-setoran.excel');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Grup Rute yang Dilindungi (Wajib Login)
 |--------------------------------------------------------------------------
 */
@@ -60,10 +90,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
     Route::get('/dashboard', function () {
         $user = auth()->user();
-
-        // (PERBAIKAN URUTAN)
-        // Cek peran spesifik (Guru/Ortu) SEBELUM peran umum (Admin)
-        // Ini akan memperbaiki error redirect Anda
 
         if ($user->hasRole('guru')) {
             return redirect()->route('guru.dashboard');
@@ -101,14 +127,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::get('/kelola-guru', KelolaGuru::class)->name('kelola-guru');
     Route::get('/kelola-siswa', KelolaSiswa::class)->name('kelola-siswa');
     Route::get('/kelola-kelas', KelolaKelas::class)->name('kelola-kelas');
-    Route::get('/kelola-kelompok', AdminKelolaKelompok::class)->name('kelola-kelompok');
+    Route::get('/kelola-kelompok', KelolaKelompok::class)->name('kelola-kelompok');
+
     Route::get('/pengaturan-nilai', PengaturanNilai::class)->name('pengaturan-nilai');
     Route::get('/target-hafalan', TargetHafalan::class)->name('target-hafalan');
-    
+
     // ROUTE LOG AKTIVITAS - DIPERBAIKI (tanpa duplikat /admin)
     Route::get('/log-aktivitas', LogAktivitasAdmin::class)->name('log-aktivitas');
-    
+
     Route::get('/ganti-password', AdminGantiPassword::class)->name('ganti-password');
+
+    Route::get('/laporan-hafalan', AdminLaporanHafalan::class)->name('laporan-hafalan');
+
+    Route::get('/laporan-hafalan', AdminLaporanHafalan::class)->name('laporan-hafalan');
 });
 
 /*
@@ -132,9 +163,6 @@ Route::prefix('guru')->name('guru.')->middleware(['auth', 'verified'])->group(fu
 |--------------------------------------------------------------------------
 */
 Route::prefix('ortu')->name('ortu.')->middleware(['auth', 'verified'])->group(function () {
-
-    // (PERBAIKAN) 
-    // Hubungkan rute ke komponen Livewire Orang Tua yang benar
 
     Route::get('/dashboard', OrtuDashboard::class)->name('dashboard');
     Route::get('/laporan', OrtuLaporanHafalan::class)->name('laporan');
