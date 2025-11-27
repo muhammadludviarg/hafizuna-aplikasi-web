@@ -109,18 +109,31 @@ class Dashboard extends Component
             $this->guruPerformaTotalSesi[] = $guru->total_sesi ?? 0;
         }
         
-        // 6. Aktivitas Terbaru (5 sesi hafalan terbaru dengan relasi siswa, guru, surah)
-        $this->aktivitasTerbaru = SesiHafalan::with('siswa', 'guru', 'surahMulai', 'surahSelesai')
-            ->orderBy('tanggal_setor', 'desc')
+        // 6. Aktivitas Terbaru dengan proper JOIN ke akun table untuk mendapat nama guru yang benar
+        $this->aktivitasTerbaru = DB::table('sesi_hafalan')
+            ->join('siswa', 'sesi_hafalan.id_siswa', '=', 'siswa.id_siswa')
+            ->join('guru', 'sesi_hafalan.id_guru', '=', 'guru.id_guru')
+            ->join('akun as guru_akun', 'guru.id_akun', '=', 'guru_akun.id_akun')
+            ->join('surah as surah_mulai', 'sesi_hafalan.id_surah_mulai', '=', 'surah_mulai.id_surah')
+            ->join('surah as surah_selesai', 'sesi_hafalan.id_surah_selesai', '=', 'surah_selesai.id_surah')
+            ->select(
+                'siswa.nama_siswa',
+                'guru_akun.nama_lengkap as guru_nama',
+                'surah_mulai.nama_surah as surah_mulai_nama',
+                'surah_selesai.nama_surah as surah_selesai_nama',
+                'sesi_hafalan.tanggal_setor',
+                'sesi_hafalan.nilai_rata'
+            )
+            ->orderBy('sesi_hafalan.tanggal_setor', 'desc')
             ->limit(5)
             ->get()
             ->map(function ($sesi, $index) {
                 return [
                     'index' => $index + 1,
-                    'nama_siswa' => $sesi->siswa->nama_siswa ?? 'N/A',
-                    'surah' => ($sesi->surahMulai->nama_surah ?? 'N/A') . ' • ' . ($sesi->surahSelesai->nama_surah ?? 'N/A'),
-                    'guru' => $sesi->guru->nama_guru ?? 'N/A',
-                    'tanggal' => $sesi->tanggal_setor ? $sesi->tanggal_setor->format('d M Y') : 'N/A',
+                    'nama_siswa' => $sesi->nama_siswa ?? 'N/A',
+                    'surah' => ($sesi->surah_mulai_nama ?? 'N/A') . ' • ' . ($sesi->surah_selesai_nama ?? 'N/A'),
+                    'guru' => $sesi->guru_nama ?? 'N/A',
+                    'tanggal' => $sesi->tanggal_setor ? Carbon::parse($sesi->tanggal_setor)->format('d M Y') : 'N/A',
                     'nilai' => round($sesi->nilai_rata ?? 0, 0),
                     'warna_avatar' => ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500'][$index] ?? 'bg-blue-500'
                 ];

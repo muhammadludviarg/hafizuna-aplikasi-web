@@ -155,10 +155,10 @@ class DummyDataSeeder extends Seeder
         ]);
 
 
-        // 8. Buat 7 Siswa (untuk dibagi ke 3 kelompok & 4 ortu)
-        $this->command->info('Membuat 7 data dummy Siswa...');
+        // 8. Buat Siswa
+        $this->command->info('Membuat data dummy Siswa...');
 
-        // Siswa untuk Kelompok A (Wali: Ortu 1)
+        // Siswa S-001 s/d S-007 (Dibiarkan sama)
         $siswaA1 = Siswa::create([
             'nama_siswa' => 'Ahmad Yusuf',
             'kode_siswa' => 'S-001',
@@ -181,13 +181,13 @@ class DummyDataSeeder extends Seeder
         ]);
         $siswaB2 = Siswa::create([
             'nama_siswa' => 'Zainab Al-Ghazali',
-            'kode_siswa' => 'S-004',
+            'kode_siswa' => 'S-004', // Kode S-004
             'id_kelas' => $kelas->id_kelas,
             'id_ortu' => $ortu2->id_ortu, // Anak Ortu 2
         ]);
         $siswaB3 = Siswa::create([
             'nama_siswa' => 'Khadijah Al-Kubra',
-            'kode_siswa' => 'S-005',
+            'kode_siswa' => 'S-005', // Kode S-005
             'id_kelas' => $kelas->id_kelas,
             'id_ortu' => $ortu3->id_ortu, // Anak Ortu 3
         ]);
@@ -195,15 +195,36 @@ class DummyDataSeeder extends Seeder
         // Siswa untuk Kelompok C (Wali: Ortu 4)
         $siswaC1 = Siswa::create([
             'nama_siswa' => 'Umar Bin Khattab',
-            'kode_siswa' => 'S-006',
+            'kode_siswa' => 'S-006', // Kode S-006
             'id_kelas' => $kelas->id_kelas,
             'id_ortu' => $ortu4->id_ortu, // Anak Ortu 4
         ]);
         $siswaC2 = Siswa::create([
             'nama_siswa' => 'Utsman Bin Affan',
-            'kode_siswa' => 'S-007',
+            'kode_siswa' => 'S-007', // Kode S-007
             'id_kelas' => $kelas->id_kelas,
             'id_ortu' => $ortu4->id_ortu, // Anak Ortu 4
+        ]);
+
+        // Siswa Tambahan (KODE SISWA WAJIB UNIK: S-008, S-009, S-010)
+        // Saya asumsikan Anda ingin menempatkan mereka di Ortu 1, 2, dan 3.
+        $siswa4 = Siswa::create([
+            'nama_siswa' => 'Aisyah muhammad',
+            'kode_siswa' => 'S-008', // Diubah dari S-004 menjadi S-008
+            'id_kelas' => $kelas->id_kelas,
+            'id_ortu' => $ortu1->id_ortu,
+        ]);
+        $siswa5 = Siswa::create([
+            'nama_siswa' => 'Aisyah muhammad abc',
+            'kode_siswa' => 'S-009', // Diubah dari S-005 menjadi S-009
+            'id_kelas' => $kelas->id_kelas,
+            'id_ortu' => $ortu2->id_ortu, // Menggunakan $ortu2
+        ]);
+        $siswa6 = Siswa::create([
+            'nama_siswa' => 'Muhammad abc',
+            'kode_siswa' => 'S-010', // Diubah dari S-006 menjadi S-010
+            'id_kelas' => $kelas->id_kelas,
+            'id_ortu' => $ortu3->id_ortu, // Menggunakan $ortu3
         ]);
 
         // 9. Masukkan Siswa ke Kelompok
@@ -218,9 +239,14 @@ class DummyDataSeeder extends Seeder
         SiswaKelompok::create(['id_siswa' => $siswaB2->id_siswa, 'id_kelompok' => $kelompokB->id_kelompok, 'tgl_mulai' => now(), 'tgl_selesai' => now()->addYear()]);
         SiswaKelompok::create(['id_siswa' => $siswaB3->id_siswa, 'id_kelompok' => $kelompokB->id_kelompok, 'tgl_mulai' => now(), 'tgl_selesai' => now()->addYear()]);
 
-        // Kelompok C (2 Siswa)
+        // Kelompok C (2 Siswa + 3 Siswa Tambahan)
         SiswaKelompok::create(['id_siswa' => $siswaC1->id_siswa, 'id_kelompok' => $kelompokC->id_kelompok, 'tgl_mulai' => now(), 'tgl_selesai' => now()->addYear()]);
         SiswaKelompok::create(['id_siswa' => $siswaC2->id_siswa, 'id_kelompok' => $kelompokC->id_kelompok, 'tgl_mulai' => now(), 'tgl_selesai' => now()->addYear()]);
+
+        // Memasukkan siswa tambahan ke Kelompok C
+        SiswaKelompok::create(['id_siswa' => $siswa4->id_siswa, 'id_kelompok' => $kelompokC->id_kelompok, 'tgl_mulai' => now(), 'tgl_selesai' => now()->addYear()]);
+        SiswaKelompok::create(['id_siswa' => $siswa5->id_siswa, 'id_kelompok' => $kelompokC->id_kelompok, 'tgl_mulai' => now(), 'tgl_selesai' => now()->addYear()]);
+        SiswaKelompok::create(['id_siswa' => $siswa6->id_siswa, 'id_kelompok' => $kelompokC->id_kelompok, 'tgl_mulai' => now(), 'tgl_selesai' => now()->addYear()]);
 
         $this->command->info('Data dummy berhasil dibuat.');
         $this->command->info('---------------------------------');
@@ -230,10 +256,10 @@ class DummyDataSeeder extends Seeder
         $this->command->info(' - guru3@hafizuna.com (Kelompok C)');
         $this->command->info('---------------------------------');
         $this->command->info('Akun Ortu:');
-        $this->command->info(' - muhammadludvi468@gmail.com (2 anak)');
-        $this->command->info(' - ortu2@hafizuna.com (2 anak)');
-        $this->command->info(' - ortu3@hafizuna.com (1 anak)');
-        $this->command->info(' - ortu4@hafizuna.com (2 anak)');
+        $this->command->info(' - muhammadludvi468@gmail.com (Ortu 1)');
+        $this->command->info(' - ortu2@hafizuna.com (Ortu 2)');
+        $this->command->info(' - ortu3@hafizuna.com (Ortu 3)');
+        $this->command->info(' - ortu4@hafizuna.com (Ortu 4)');
         $this->command->info('---------------------------------');
         $this->command->info('Password untuk semua akun: password');
     }

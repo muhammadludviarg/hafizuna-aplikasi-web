@@ -15,7 +15,7 @@ class ExportLaporanHafalanController extends Controller
     public function exportPdf($kelasId)
     {
         $kelas = Kelas::with('siswa')->find($kelasId);
-        
+
         if (!$kelas) {
             return abort(404);
         }
@@ -25,7 +25,7 @@ class ExportLaporanHafalanController extends Controller
             $sesiHafalan = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
 
             $jumlahSesi = $sesiHafalan->count();
-            $nilaiRataRata = $jumlahSesi > 0 
+            $nilaiRataRata = $jumlahSesi > 0
                 ? round($sesiHafalan->avg('nilai_rata'), 2)
                 : 0;
 
@@ -41,8 +41,8 @@ class ExportLaporanHafalanController extends Controller
                 'nilai_rata_rata' => $nilaiRataRata,
             ];
         })->sortByDesc('nilai_rata_rata')
-          ->values()
-          ->toArray();
+            ->values()
+            ->toArray();
 
         $data = [
             'sekolah' => 'HAFIZUNA',
@@ -57,14 +57,14 @@ class ExportLaporanHafalanController extends Controller
         ];
 
         $pdf = Pdf::loadView('exports.laporan-hafalan-pdf', $data);
-        
+
         return $pdf->download('Laporan-Hafalan-' . $kelas->nama_kelas . '-' . date('dmY') . '.pdf');
     }
 
     public function exportExcel($kelasId)
     {
         $kelas = Kelas::with('siswa')->find($kelasId);
-        
+
         if (!$kelas) {
             return abort(404);
         }
@@ -74,7 +74,7 @@ class ExportLaporanHafalanController extends Controller
             $sesiHafalan = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
 
             $jumlahSesi = $sesiHafalan->count();
-            $nilaiRataRata = $jumlahSesi > 0 
+            $nilaiRataRata = $jumlahSesi > 0
                 ? round($sesiHafalan->avg('nilai_rata'), 2)
                 : 0;
 
@@ -90,13 +90,13 @@ class ExportLaporanHafalanController extends Controller
                 'nilai_rata_rata' => $nilaiRataRata,
             ];
         })->sortByDesc('nilai_rata_rata')
-          ->values()
-          ->toArray();
+            ->values()
+            ->toArray();
 
         $csvContent = $this->generateCsv($kelas, $siswaDetail);
-        
+
         $filename = 'Laporan-Hafalan-' . str_replace(' ', '-', $kelas->nama_kelas) . '-' . date('d-m-Y') . '.csv';
-        
+
         return response($csvContent, 200)
             ->header('Content-Type', 'text/csv; charset=UTF-8')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
@@ -106,20 +106,20 @@ class ExportLaporanHafalanController extends Controller
     private function generateCsv($kelas, $siswaDetail)
     {
         $output = fopen('php://temp', 'r+');
-        
+
         // Add UTF-8 BOM untuk Excel
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-        
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
         // Header info
         fputcsv($output, ['HAFIZUNA - SD Islam Al-Azhar 27'], ',');
         fputcsv($output, ['Laporan Hafalan Per Kelas'], ',');
         fputcsv($output, ['Kelas: ' . $kelas->nama_kelas . ' | Tahun Ajaran: ' . $kelas->tahun_ajaran], ',');
         fputcsv($output, ['Tanggal: ' . date('d/m/Y') . ' | Jumlah Siswa: ' . count($siswaDetail)], ',');
         fputcsv($output, [], ',');
-        
+
         // Column headers
         fputcsv($output, ['No', 'Nama Siswa', 'Total Ayat', 'Jumlah Sesi', 'Nilai Rata-rata'], ',');
-        
+
         // Data rows
         foreach ($siswaDetail as $index => $siswa) {
             fputcsv($output, [
@@ -130,18 +130,18 @@ class ExportLaporanHafalanController extends Controller
                 $siswa['nilai_rata_rata']
             ], ',');
         }
-        
+
         rewind($output);
         $csv = stream_get_contents($output);
         fclose($output);
-        
+
         return $csv;
     }
 
     public function exportPdfSiswa($siswaId)
     {
         $siswa = Siswa::find($siswaId);
-        
+
         if (!$siswa) {
             return abort(404);
         }
@@ -155,14 +155,14 @@ class ExportLaporanHafalanController extends Controller
         // Format data surah yang sudah dihafalkan
         $surahDihafalkan = [];
         $surahIds = [];
-        
+
         foreach ($sesiHafalan as $sesi) {
             $surahIds[] = $sesi->id_surah_mulai;
             if ($sesi->id_surah_mulai !== $sesi->id_surah_selesai) {
                 $surahIds[] = $sesi->id_surah_selesai;
             }
         }
-        
+
         $surahIds = array_unique($surahIds);
 
         // Ambil data unik per surah dengan statistik terbaru
@@ -171,14 +171,14 @@ class ExportLaporanHafalanController extends Controller
             $sesiSurah = SesiHafalan::where('id_siswa', $siswaId)
                 ->where(function ($q) use ($surahId) {
                     $q->where('id_surah_mulai', $surahId)
-                      ->orWhere('id_surah_selesai', $surahId);
+                        ->orWhere('id_surah_selesai', $surahId);
                 })
                 ->get();
 
             if ($sesiSurah->count() > 0) {
                 $surah = Surah::find($surahId);
                 $jumlahSesi = $sesiSurah->count();
-                
+
                 $surahStats[] = [
                     'no' => $surah->nomor_surah,
                     'nama_surah' => $surah->nama_surah,
@@ -200,23 +200,23 @@ class ExportLaporanHafalanController extends Controller
         if ($siswa) {
             // Ambil semua kelompok siswa
             $siswaKelompok = $siswa->kelompok;
-            
+
             if ($siswaKelompok->isNotEmpty()) {
                 // Get target hafalan from all kelompok that this siswa belongs to
                 $kelompokIds = $siswaKelompok->pluck('id_kelompok')->toArray();
                 $targetHafalan = TargetHafalanKelompok::whereIn('id_kelompok', $kelompokIds)->get();
-                
+
                 foreach ($targetHafalan as $target) {
                     // Loop through ID range, not nomor_surah
                     $surahAwal = $target->id_surah_awal;
                     $surahAkhir = $target->id_surah_akhir;
-                    
+
                     for ($i = $surahAwal; $i <= $surahAkhir; $i++) {
                         // Check if already hafal
                         $sudahDihafalkan = SesiHafalan::where('id_siswa', $siswaId)
                             ->where(function ($q) use ($i) {
                                 $q->where('id_surah_mulai', $i)
-                                  ->orWhere('id_surah_selesai', $i);
+                                    ->orWhere('id_surah_selesai', $i);
                             })
                             ->exists();
 
@@ -248,14 +248,14 @@ class ExportLaporanHafalanController extends Controller
         ];
 
         $pdf = Pdf::loadView('exports.laporan-hafalan-siswa-pdf', $data);
-        
+
         return $pdf->download('Laporan-Hafalan-' . $siswa->nama_siswa . '-' . date('dmY') . '.pdf');
     }
 
     public function exportExcelSiswa($siswaId)
     {
         $siswa = Siswa::find($siswaId);
-        
+
         if (!$siswa) {
             return abort(404);
         }
@@ -269,14 +269,14 @@ class ExportLaporanHafalanController extends Controller
         // Format data surah yang sudah dihafalkan
         $surahDihafalkan = [];
         $surahIds = [];
-        
+
         foreach ($sesiHafalan as $sesi) {
             $surahIds[] = $sesi->id_surah_mulai;
             if ($sesi->id_surah_mulai !== $sesi->id_surah_selesai) {
                 $surahIds[] = $sesi->id_surah_selesai;
             }
         }
-        
+
         $surahIds = array_unique($surahIds);
 
         // Ambil data unik per surah
@@ -285,14 +285,14 @@ class ExportLaporanHafalanController extends Controller
             $sesiSurah = SesiHafalan::where('id_siswa', $siswaId)
                 ->where(function ($q) use ($surahId) {
                     $q->where('id_surah_mulai', $surahId)
-                      ->orWhere('id_surah_selesai', $surahId);
+                        ->orWhere('id_surah_selesai', $surahId);
                 })
                 ->get();
 
             if ($sesiSurah->count() > 0) {
                 $surah = Surah::find($surahId);
                 $jumlahSesi = $sesiSurah->count();
-                
+
                 $surahStats[] = [
                     'no' => $surah->nomor_surah,
                     'nama_surah' => $surah->nama_surah,
@@ -314,23 +314,23 @@ class ExportLaporanHafalanController extends Controller
         if ($siswa) {
             // Ambil semua kelompok siswa
             $siswaKelompok = $siswa->kelompok;
-            
+
             if ($siswaKelompok->isNotEmpty()) {
                 // Get target hafalan from all kelompok that this siswa belongs to
                 $kelompokIds = $siswaKelompok->pluck('id_kelompok')->toArray();
                 $targetHafalan = TargetHafalanKelompok::whereIn('id_kelompok', $kelompokIds)->get();
-                
+
                 foreach ($targetHafalan as $target) {
                     // Loop through ID range, not nomor_surah
                     $surahAwal = $target->id_surah_awal;
                     $surahAkhir = $target->id_surah_akhir;
-                    
+
                     for ($i = $surahAwal; $i <= $surahAkhir; $i++) {
                         // Check if already hafal
                         $sudahDihafalkan = SesiHafalan::where('id_siswa', $siswaId)
                             ->where(function ($q) use ($i) {
                                 $q->where('id_surah_mulai', $i)
-                                  ->orWhere('id_surah_selesai', $i);
+                                    ->orWhere('id_surah_selesai', $i);
                             })
                             ->exists();
 
@@ -351,9 +351,9 @@ class ExportLaporanHafalanController extends Controller
         }
 
         $csvContent = $this->generateCsvSiswa($siswa, $surahStats, $surahBelumDihafalkan);
-        
+
         $filename = 'Laporan-Hafalan-' . str_replace(' ', '-', $siswa->nama_siswa) . '-' . date('d-m-Y') . '.csv';
-        
+
         return response($csvContent, 200)
             ->header('Content-Type', 'text/csv; charset=UTF-8')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
@@ -363,21 +363,21 @@ class ExportLaporanHafalanController extends Controller
     private function generateCsvSiswa($siswa, $surahStats, $surahBelumDihafalkan)
     {
         $output = fopen('php://temp', 'r+');
-        
+
         // Add UTF-8 BOM untuk Excel
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-        
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
         // Header info
         fputcsv($output, ['HAFIZUNA - SD Islam Al-Azhar 27'], ',');
         fputcsv($output, ['Laporan Hafalan Al-Qur\'an'], ',');
         fputcsv($output, ['Nama Siswa: ' . $siswa->nama_siswa], ',');
         fputcsv($output, ['Tanggal: ' . date('d/m/Y')], ',');
         fputcsv($output, [], ',');
-        
+
         // Section 1: Surah yang Sudah Dihafalkan
         fputcsv($output, ['Surah yang Sudah Dihafalkan'], ',');
         fputcsv($output, ['No', 'Nama Surah', 'Sesi', 'Tajwid', 'Kelancaran', 'Makhroj', 'Rata-rata'], ',');
-        
+
         foreach ($surahStats as $index => $surah) {
             fputcsv($output, [
                 $index + 1,
@@ -389,13 +389,13 @@ class ExportLaporanHafalanController extends Controller
                 $surah['nilai_rata']
             ], ',');
         }
-        
+
         fputcsv($output, [], ',');
-        
+
         // Section 2: Target Hafalan yang Belum Dihafalkan
         fputcsv($output, ['Target Hafalan yang Belum Dihafalkan'], ',');
         fputcsv($output, ['No', 'Nama Surah', 'Status', 'Progress'], ',');
-        
+
         foreach ($surahBelumDihafalkan as $index => $surah) {
             fputcsv($output, [
                 $index + 1,
@@ -404,11 +404,11 @@ class ExportLaporanHafalanController extends Controller
                 $surah['progress']
             ], ',');
         }
-        
+
         rewind($output);
         $csv = stream_get_contents($output);
         fclose($output);
-        
+
         return $csv;
     }
 
@@ -416,7 +416,7 @@ class ExportLaporanHafalanController extends Controller
     {
         $siswa = Siswa::find($siswaId);
         $surah = Surah::find($surahId);
-        
+
         if (!$siswa || !$surah) {
             return abort(404);
         }
@@ -425,7 +425,7 @@ class ExportLaporanHafalanController extends Controller
         $sesiSurah = SesiHafalan::where('id_siswa', $siswaId)
             ->where(function ($q) use ($surahId) {
                 $q->where('id_surah_mulai', $surahId)
-                  ->orWhere('id_surah_selesai', $surahId);
+                    ->orWhere('id_surah_selesai', $surahId);
             })
             ->with(['surahMulai', 'surahSelesai', 'guru', 'koreksi'])
             ->orderByDesc('tanggal_setor')
@@ -437,11 +437,10 @@ class ExportLaporanHafalanController extends Controller
 
         // Get latest session for details
         $latestSesi = $sesiSurah->first();
-        
+
         // Get siswa's kelas
         $kelas = $siswa->kelompok()->first();
         $namaKelas = $kelas ? $kelas->nama_kelas : 'N/A';
-        
         $namaGuru = $latestSesi->guru->nama_guru ?? 'N/A';
         
         $nilaiTajwid = $latestSesi->skor_tajwid ?? 0;
@@ -457,7 +456,7 @@ class ExportLaporanHafalanController extends Controller
             return [
                 'lokasi' => 'Ayat ' . ($k->kata_ke ?? '?'),
                 'jenis_kesalahan' => $k->jenis_kesalahan ?? '-',
-                'catatan' => $k->catatan ?? '-'  // Pastikan field catatan diambil langsung dari database
+                'catatan' => $k->catatan ?? '-'
             ];
         })->toArray();
 
@@ -513,7 +512,7 @@ class ExportLaporanHafalanController extends Controller
     {
         $siswa = Siswa::find($siswaId);
         $surah = Surah::find($surahId);
-        
+
         if (!$siswa || !$surah) {
             return abort(404);
         }
@@ -522,7 +521,7 @@ class ExportLaporanHafalanController extends Controller
         $sesiSurah = SesiHafalan::where('id_siswa', $siswaId)
             ->where(function ($q) use ($surahId) {
                 $q->where('id_surah_mulai', $surahId)
-                  ->orWhere('id_surah_selesai', $surahId);
+                    ->orWhere('id_surah_selesai', $surahId);
             })
             ->with(['surahMulai', 'surahSelesai', 'guru', 'koreksi'])
             ->orderByDesc('tanggal_setor')
@@ -534,7 +533,7 @@ class ExportLaporanHafalanController extends Controller
 
         // Get latest session for details
         $latestSesi = $sesiSurah->first();
-        
+
         // Get siswa's kelas
         $kelas = $siswa->kelompok()->first();
         $namaKelas = $kelas ? $kelas->nama_kelas : 'N/A';
@@ -563,23 +562,23 @@ class ExportLaporanHafalanController extends Controller
         $gradeDesc = $this->getGradeDescription($nilaiRataRata);
 
         $csvContent = $this->generateCsvSesi(
-            $siswa, 
-            $surah, 
-            $namaKelas, 
-            $namaGuru, 
-            $ayatMulai, 
+            $siswa,
+            $surah,
+            $namaKelas,
+            $namaGuru,
+            $ayatMulai,
             $ayatSelesai,
-            $nilaiTajwid, 
-            $nilaiKelancaran, 
-            $nilaiMakhroj, 
+            $nilaiTajwid,
+            $nilaiKelancaran,
+            $nilaiMakhroj,
             $nilaiRataRata,
             $gradeDesc,
             $koreksi,
             $sesiSurah
         );
-        
+
         $filename = 'Detail-Sesi-' . str_replace(' ', '-', $siswa->nama_siswa) . '-' . str_replace(' ', '-', $surah->nama_surah) . '-' . date('d-m-Y') . '.csv';
-        
+
         return response($csvContent, 200)
             ->header('Content-Type', 'text/csv; charset=UTF-8')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
@@ -589,16 +588,16 @@ class ExportLaporanHafalanController extends Controller
     private function generateCsvSesi($siswa, $surah, $namaKelas, $namaGuru, $ayatMulai, $ayatSelesai, $nilaiTajwid, $nilaiKelancaran, $nilaiMakhroj, $nilaiRataRata, $gradeDesc, $koreksi, $sesiSurah)
     {
         $output = fopen('php://temp', 'r+');
-        
+
         // Add UTF-8 BOM
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-        
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
         // Header
         fputcsv($output, ['HAFIZUNA'], ',');
         fputcsv($output, ['SD Islam Al-Azhar 27 Cibinong Bogor'], ',');
         fputcsv($output, ['Detail Sesi Setoran Hafalan'], ',');
         fputcsv($output, [], ',');
-        
+
         // INFORMASI SESI
         fputcsv($output, ['INFORMASI SESI'], ',');
         fputcsv($output, ['Siswa', $siswa->nama_siswa], ',');
@@ -608,7 +607,7 @@ class ExportLaporanHafalanController extends Controller
         fputcsv($output, ['Guru Pembimbing', $namaGuru], ',');
         fputcsv($output, ['Tanggal', date('d/m/Y')], ',');
         fputcsv($output, [], ',');
-        
+
         // PENILAIAN HAFALAN
         fputcsv($output, ['PENILAIAN HAFALAN'], ',');
         fputcsv($output, ['Aspek', 'Nilai', 'Keterangan'], ',');
@@ -617,7 +616,7 @@ class ExportLaporanHafalanController extends Controller
         fputcsv($output, ['Makhroj', $nilaiMakhroj, $this->getGradeDescription($nilaiMakhroj)], ',');
         fputcsv($output, ['RATA-RATA', $nilaiRataRata, $gradeDesc], ',');
         fputcsv($output, [], ',');
-        
+
         // CATATAN KOREKSI
         if (count($koreksi) > 0) {
             fputcsv($output, ['CATATAN KOREKSI'], ',');
@@ -632,7 +631,7 @@ class ExportLaporanHafalanController extends Controller
             }
             fputcsv($output, [], ',');
         }
-        
+
         // RIWAYAT SESI UNTUK SURAH INI
         fputcsv($output, ['RIWAYAT SESI UNTUK SURAH INI'], ',');
         fputcsv($output, ['No', 'Tanggal', 'Ayat', 'Tajwid', 'Kelancaran', 'Makhroj', 'Rata-rata'], ',');
@@ -647,11 +646,11 @@ class ExportLaporanHafalanController extends Controller
                 $sesi['nilai_rata']
             ], ',');
         }
-        
+
         rewind($output);
         $csv = stream_get_contents($output);
         fclose($output);
-        
+
         return $csv;
     }
 

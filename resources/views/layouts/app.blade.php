@@ -20,7 +20,8 @@
     <div class="flex h-screen bg-gray-100">
 
         <aside class="z-20 flex-shrink-0 hidden w-64 overflow-y-auto bg-green-800 md:block">
-            <div class="py-4 text-gray-200">
+            {{-- Updated sidebar structure to use flexbox layout for proper spacing --}}
+            <div class="relative flex flex-col h-full py-4 text-gray-200">
 
                 <a class="flex items-center justify-center text-lg font-bold text-white"
                     href="{{ route('dashboard') }}"> <svg class="w-8 h-8 mr-2 bg-white text-green-800 p-1 rounded"
@@ -39,7 +40,8 @@
                     <span class="text-xs text-green-300">Admin</span>
                 </div>
 
-                <ul class="mt-8 space-y-2">
+                {{-- Added flex-grow to push logout button to bottom --}}
+                <ul class="mt-8 space-y-2 flex-grow">
 
                     <li class="relative px-6 py-1.5">
                         @php $isActive = request()->routeIs('dashboard'); @endphp
@@ -91,14 +93,14 @@
 
                     <li class="relative px-6 py-1.5">
                         <a class="inline-flex items-center w-full text-sm font-medium text-green-300 hover:text-white transition-colors duration-150"
-                            href="#">
+                            href="{{ route('admin.kelola-kelompok') }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.084-1.284-.24-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.084-1.284.24-1.857m0 0a5.002 5.002 0 019.52 0M12 12a5 5 0 110-10 5 5 0 010 10z">
                                 </path>
                             </svg>
-                            <span class="ml-4">Kelas & Kelompok</span>
+                            <span class="ml-4">Kelola Siswa dan Kelompok</span>
                         </a>
                     </li>
 
@@ -134,7 +136,26 @@
                         </a>
                     </li>
 
-                    {{-- LINK GANTI PASSWORD (ADMIN) - Gabungan dari kedua versi --}}
+                    {{-- MENU LOG AKTIVITAS - HANYA UNTUK ADMIN --}}
+                    @if(Auth::check())
+                    <li class="relative px-6 py-1.5">
+                        @php $isActive = request()->routeIs('admin.log-aktivitas'); @endphp
+                        <span class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
+                            aria-hidden="true"></span>
+                        <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 {{ $isActive ? 'text-white' : 'text-green-300 hover:text-white' }}"
+                            href="{{ route('admin.log-aktivitas') }}">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
+                            </svg>
+                            <span class="ml-4">Log Aktivitas</span>
+                        </a>
+                    </li>
+                    @endif
+
+                    {{-- LINK GANTI PASSWORD (ADMIN) --}}
                     @php $isActive = request()->routeIs('admin.ganti-password'); @endphp
                     <li class="relative px-6 py-1.5">
                         <span class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}" aria-hidden="true"></span>
@@ -149,7 +170,8 @@
 
                 </ul>
 
-                <div class="absolute bottom-0 w-full px-6 my-6">
+                {{-- Improved logout button spacing - moved outside flex-grow and added proper margin --}}
+                <div class="px-6 my-6">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();"

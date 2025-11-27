@@ -1,0 +1,51 @@
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
+use Illuminate\Auth\Events\Authenticated;
+use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use App\Helpers\LogHelper;
+
+class EventServiceProvider extends ServiceProvider
+{
+    /**
+     * The event to listener mappings for the application.
+     *
+     * @var array<class-string, array<int, class-string>>
+     */
+    protected $listen = [
+        // Event lain yang sudah ada...
+    ];
+
+    /**
+     * Register any events for your application.
+     */
+    public function boot(): void
+    {
+        // AUTO LOG SAAT LOGIN
+        \Illuminate\Support\Facades\Event::listen(Login::class, function ($event) {
+            if ($event->user) {
+                $nama = $event->user->nama_lengkap ?? $event->user->email ?? 'Unknown';
+                LogHelper::log('Login ke sistem - ' . $nama, $event->user->id_akun);
+            }
+        });
+
+        // AUTO LOG SAAT LOGOUT
+        \Illuminate\Support\Facades\Event::listen(Logout::class, function ($event) {
+            if ($event->user) {
+                $nama = $event->user->nama_lengkap ?? $event->user->email ?? 'Unknown';
+                LogHelper::log('Logout dari sistem - ' . $nama, $event->user->id_akun);
+            }
+        });
+    }
+
+    /**
+     * Determine if events and listeners should be automatically discovered.
+     */
+    public function shouldDiscoverEvents(): bool
+    {
+        return false;
+    }
+}
