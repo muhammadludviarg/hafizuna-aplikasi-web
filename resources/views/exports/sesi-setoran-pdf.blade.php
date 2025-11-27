@@ -2,17 +2,25 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: DejaVu Sans, Arial, sans-serif;
+            margin: 60px;
+            font-size: 11px;
+            line-height: 1.4;
             color: #333;
         }
         
         .header {
             text-align: center;
             margin-bottom: 15px;
-            border-bottom: 2px solid #16A34A;
+            border-bottom: 3px solid #16A34A;
             padding-bottom: 10px;
         }
         
@@ -25,25 +33,34 @@
         
         .header p {
             margin: 3px 0;
-            font-size: 11px;
+            font-size: 10px;
+        }
+        
+        .header h2 {
+            font-size: 12px;
+            font-weight: bold;
+            margin: 8px 0 0 0;
+            color: #333;
         }
         
         .section-title {
             font-size: 12px;
             font-weight: bold;
-            margin-top: 15px;
+            margin-top: 12px;
             margin-bottom: 8px;
             color: #333;
+            border-bottom: 2px solid #16A34A;
+            padding-bottom: 3px;
         }
         
         .info-row {
             display: flex;
-            margin: 3px 0;
+            margin: 4px 0;
             font-size: 11px;
         }
         
         .info-label {
-            width: 120px;
+            width: 140px;
             font-weight: bold;
         }
         
@@ -64,30 +81,53 @@
         }
         
         th {
-            padding: 8px;
+            padding: 7px;
             text-align: left;
             font-weight: bold;
-            border: 1px solid #ddd;
+            border: 1px solid #16A34A;
         }
         
         td {
-            padding: 6px 8px;
+            padding: 5px 7px;
             border: 1px solid #ddd;
         }
         
         tbody tr:nth-child(odd) {
-            background-color: #f5f5f5;
+            background-color: #f9f9f9;
+        }
+        
+        tbody tr:nth-child(even) {
+            background-color: #ffffff;
+        }
+        
+        .rating-label {
+            font-weight: bold;
+        }
+        
+        .bg-light {
+            background-color: #e8f5e9;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-right {
+            text-align: right;
         }
         
         .footer {
             margin-top: 15px;
             text-align: center;
-            font-size: 10px;
+            font-size: 9px;
             color: #999;
         }
         
-        .rating-label {
-            font-weight: bold;
+        /* Style untuk mendukung text Arab dan Unicode */
+        .arabic-text {
+            font-family: DejaVu Sans, Arial Unicode MS, serif;
+            word-break: break-word;
+            white-space: normal;
         }
     </style>
 </head>
@@ -95,7 +135,7 @@
     <div class="header">
         <h1>{{ $sekolah }}</h1>
         <p>{{ $nama_sekolah_lengkap }}</p>
-        <h2 style="font-size: 13px; margin: 10px 0 5px 0;">{{ $judul }}</h2>
+        <h2>{{ $judul }}</h2>
     </div>
 
     <!-- INFORMASI SESI -->
@@ -130,30 +170,30 @@
     <table>
         <thead>
             <tr>
-                <th style="width: 30%;">Aspek</th>
-                <th style="width: 20%;">Nilai</th>
-                <th style="width: 50%;">Keterangan</th>
+                <th style="width: 35%;">Aspek</th>
+                <th style="width: 20%; text-align: center;">Nilai</th>
+                <th style="width: 45%;">Keterangan</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td>Tajwid</td>
-                <td style="text-align: center;">{{ $nilai_tajwid }}</td>
-                <td>{{ $this->getGradeDescription($nilai_tajwid) ?? '' }}</td>
+                <td class="text-center">{{ $nilai_tajwid }}</td>
+                <td>{{ $grade_tajwid ?? '' }}</td>
             </tr>
             <tr>
                 <td>Kelancaran</td>
-                <td style="text-align: center;">{{ $nilai_kelancaran }}</td>
-                <td>{{ $this->getGradeDescription($nilai_kelancaran) ?? '' }}</td>
+                <td class="text-center">{{ $nilai_kelancaran }}</td>
+                <td>{{ $grade_kelancaran ?? '' }}</td>
             </tr>
             <tr>
                 <td>Makhroj</td>
-                <td style="text-align: center;">{{ $nilai_makhroj }}</td>
-                <td>{{ $this->getGradeDescription($nilai_makhroj) ?? '' }}</td>
+                <td class="text-center">{{ $nilai_makhroj }}</td>
+                <td>{{ $grade_makhroj ?? '' }}</td>
             </tr>
-            <tr style="background-color: #e8f5e9;">
+            <tr class="bg-light">
                 <td class="rating-label">RATA-RATA</td>
-                <td style="text-align: center; font-weight: bold;">{{ $nilai_rata_rata }}</td>
+                <td class="text-center rating-label">{{ $nilai_rata_rata }}</td>
                 <td class="rating-label">{{ $grade_desc ?? '' }}</td>
             </tr>
         </tbody>
@@ -165,8 +205,8 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width: 5%;">No</th>
-                    <th style="width: 25%;">Lokasi</th>
+                    <th style="width: 8%;">No</th>
+                    <th style="width: 22%;">Lokasi</th>
                     <th style="width: 25%;">Jenis Kesalahan</th>
                     <th style="width: 45%;">Catatan</th>
                 </tr>
@@ -174,10 +214,40 @@
             <tbody>
                 @foreach($koreksi as $index => $item)
                     <tr>
-                        <td>{{ $index + 1 }}</td>
+                        <td class="text-center">{{ $index + 1 }}</td>
                         <td>{{ $item['lokasi'] ?? '-' }}</td>
                         <td>{{ $item['jenis_kesalahan'] ?? '-' }}</td>
-                        <td>{{ $item['catatan'] ?? '-' }}</td>
+                        <!-- Tambahkan class arabic-text untuk mendukung karakter Arab -->
+                        <td class="arabic-text">{{ $item['catatan'] ?? '-' }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+
+    <!-- RIWAYAT SESI UNTUK SURAH INI -->
+    @if(count($riwayat_sesi) > 0)
+        <div class="section-title">RIWAYAT SESI UNTUK SURAH INI</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 18%; text-align: center;">Tanggal</th>
+                    <th style="width: 15%; text-align: center;">Ayat</th>
+                    <th style="width: 15%; text-align: center;">Tajwid</th>
+                    <th style="width: 15%; text-align: center;">Kelancaran</th>
+                    <th style="width: 15%; text-align: center;">Makhroj</th>
+                    <th style="width: 22%; text-align: center;">Rata-rata</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($riwayat_sesi as $riwayat)
+                    <tr>
+                        <td class="text-center">{{ $riwayat['tanggal'] }}</td>
+                        <td class="text-center">{{ $riwayat['ayat'] }}</td>
+                        <td class="text-center">{{ $riwayat['tajwid'] }}</td>
+                        <td class="text-center">{{ $riwayat['kelancaran'] }}</td>
+                        <td class="text-center">{{ $riwayat['makhroj'] }}</td>
+                        <td class="text-right">{{ $riwayat['rata_rata'] }}</td>
                     </tr>
                 @endforeach
             </tbody>
