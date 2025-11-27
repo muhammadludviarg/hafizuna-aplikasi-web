@@ -9,6 +9,8 @@ use App\Models\Surah;
 use App\Models\Kelompok;
 use App\Models\TargetHafalanKelompok;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use ArPHP\I18N\Arabic;
 
 class ExportLaporanHafalanController extends Controller
 {
@@ -138,228 +140,107 @@ class ExportLaporanHafalanController extends Controller
         return $csv;
     }
 
-    public function exportPdfSiswa($siswaId)
+    public function exportPdfSesi($siswaId, $surahId)
     {
-        $siswa = Siswa::find($siswaId);
+        // 1. LOAD DATA SISWA + KELAS + KELOMPOK & GURUNYA
+        $siswa = Siswa::with(['kelas', 'kelompok.guru'])->find($siswaId);
+        $surah = Surah::find($surahId);
 
-        if (!$siswa) {
+        if (!$siswa || !$surah)
             return abort(404);
+
+        // 2. LOGIKA GURU (Dari Kelompok Siswa)
+        // Ambil kelompok pertama siswa, lalu ambil gurunya
+        $namaGuru = '-';
+        $kelompokSiswa = $siswa->kelompok->first();
+
+        if ($kelompokSiswa && $kelompokSiswa->guru) {
+            $namaGuru = $kelompokSiswa->guru->nama_guru;
         }
 
-        // Ambil sesi hafalan siswa - surah yang sudah dihafalkan
-        $sesiHafalan = SesiHafalan::where('id_siswa', $siswaId)
-            ->with('surahMulai', 'surahSelesai')
-            ->orderBy('tanggal_setor')
+        // 3. AMBIL SESI UNTUK SURAH INI
+        $allSesi = SesiHafalan::where('id_siswa', $siswaId)
+            ->where(function ($q) use ($surahId) {
+                $q->where('id_surah_mulai', $surahId)
+                    ->orWhere('id_surah_selesai', $surahId);
+            })
+            ->with(['koreksi.ayat'])
+            ->orderBy('tanggal_setor', 'asc')
             ->get();
 
-        // Format data surah yang sudah dihafalkan
-        $surahDihafalkan = [];
-        $surahIds = [];
+        if ($allSesi->isEmpty())
+            return abort(404, 'Sesi tidak ditemukan');
 
-        foreach ($sesiHafalan as $sesi) {
-            $surahIds[] = $sesi->id_surah_mulai;
-            if ($sesi->id_surah_mulai !== $sesi->id_surah_selesai) {
-                $surahIds[] = $sesi->id_surah_selesai;
-            }
-        }
+        $latestSesi = $allSesi->last();
 
-        $surahIds = array_unique($surahIds);
+        // 4. PERBAIKI TEKS ARAB (Reshaping)
+        // Walaupun dari API, teks harus di-reshape agar nyambung di PDF
+        $arabic = new Arabic();
+        $allKoreksiHistory = [];
 
-        // Ambil data unik per surah dengan statistik terbaru
-        $surahStats = [];
-        foreach ($surahIds as $surahId) {
-            $sesiSurah = SesiHafalan::where('id_siswa', $siswaId)
-                ->where(function ($q) use ($surahId) {
-                    $q->where('id_surah_mulai', $surahId)
-                        ->orWhere('id_surah_selesai', $surahId);
-                })
-                ->get();
+        foreach ($allSesi as $index => $sesi) {
+            $nomorSesi = $index + 1;
+            foreach ($sesi->koreksi as $k) {
+                // Perbaiki teks Arab
+                $catatanFixed = $k->catatan ? $arabic->utf8Glyphs($k->catatan) : '-';
 
-            if ($sesiSurah->count() > 0) {
-                $surah = Surah::find($surahId);
-                $jumlahSesi = $sesiSurah->count();
-
-                $surahStats[] = [
-                    'no' => $surah->nomor_surah,
-                    'nama_surah' => $surah->nama_surah,
-                    'jumlah_sesi' => $jumlahSesi,
-                    'nilai_tajwid' => round($sesiSurah->avg('skor_tajwid'), 2),
-                    'nilai_kelancaran' => round($sesiSurah->avg('skor_kelancaran'), 2),
-                    'nilai_makhroj' => round($sesiSurah->avg('skor_makhroj'), 2),
-                    'nilai_rata' => round($sesiSurah->avg('nilai_rata'), 2),
+                $allKoreksiHistory[] = [
+                    'lokasi' => 'Ayat ' . ($k->ayat ? $k->ayat->nomor_ayat : ($k->kata_ke ?? '?')),
+                    'sesi_ke' => $nomorSesi,
+                    'jenis_kesalahan' => $k->kategori_kesalahan ?? '-',
+                    'catatan' => $catatanFixed // Teks yang sudah diperbaiki
                 ];
             }
         }
 
-        // Urutkan berdasarkan nomor surah
-        usort($surahStats, function ($a, $b) {
-            return $a['no'] - $b['no'];
-        });
+        $allKoreksiHistory = array_reverse($allKoreksiHistory);
 
-        $surahBelumDihafalkan = [];
-        if ($siswa) {
-            // Ambil semua kelompok siswa
-            $siswaKelompok = $siswa->kelompok;
+        // Data Pelengkap
+        $namaKelas = $siswa->kelas ? $siswa->kelas->nama_kelas : 'N/A';
+        $nilaiRataRata = $latestSesi->nilai_rata ?? 0;
 
-            if ($siswaKelompok->isNotEmpty()) {
-                // Get target hafalan from all kelompok that this siswa belongs to
-                $kelompokIds = $siswaKelompok->pluck('id_kelompok')->toArray();
-                $targetHafalan = TargetHafalanKelompok::whereIn('id_kelompok', $kelompokIds)->get();
+        // Grade
+        $gradeTajwid = $this->getGradeDescription($latestSesi->skor_tajwid);
+        $gradeKelancaran = $this->getGradeDescription($latestSesi->skor_kelancaran);
+        $gradeMakhroj = $this->getGradeDescription($latestSesi->skor_makhroj);
+        $gradeDesc = $this->getGradeDescription($nilaiRataRata);
 
-                foreach ($targetHafalan as $target) {
-                    $surahAwal = $target->id_surah_awal;
-                    $surahAkhir = $target->id_surah_akhir;
+        // Data Riwayat Nilai
+        $riwayatSesiFormatted = $allSesi->sortByDesc('tanggal_setor')->map(function ($sesi) {
+            return [
+                'tanggal' => $sesi->tanggal_setor->format('d/m/Y'),
+                'ayat' => $sesi->ayat_mulai . '-' . $sesi->ayat_selesai,
+                'tajwid' => number_format($sesi->skor_tajwid, 1),
+                'kelancaran' => number_format($sesi->skor_kelancaran, 1),
+                'makhroj' => number_format($sesi->skor_makhroj, 1),
+                'rata_rata' => number_format($sesi->nilai_rata, 2)
+            ];
+        })->values()->toArray();
 
-                    $listSurahTarget = range($surahAwal, $surahAkhir);
-
-                    foreach ($listSurahTarget as $i) {
-                        // Check if already hafal
-                        $sudahDihafalkan = SesiHafalan::where('id_siswa', $siswaId)
-                            ->where(function ($q) use ($i) {
-                                $q->where('id_surah_mulai', $i)
-                                    ->orWhere('id_surah_selesai', $i);
-                            })
-                            ->exists();
-
-                        if (!$sudahDihafalkan) {
-                            $surah = Surah::find($i);
-                            if ($surah) {
-                                $surahBelumDihafalkan[] = [
-                                    'no' => $surah->nomor_surah,
-                                    'nama_surah' => $surah->nama_surah,
-                                    'status' => 'Belum Dimulai',
-                                    'progress' => '0/' . $surah->jumlah_ayat . ' ayat',
-                                ];
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        $data = [
+        $pdf = Pdf::loadView('exports.sesi-setoran-pdf', [
             'sekolah' => 'HAFIZUNA',
-            'nama_sekolah_lengkap' => 'SD Islam Al-Azhar 27',
-            'lokasi' => 'Cibinong Bogor',
-            'judul' => 'Laporan Hafalan Al-Qur\'an',
+            'nama_sekolah_lengkap' => 'SD Islam Al-Azhar 27 Cibinong Bogor',
+            'judul' => 'Riwayat Koreksi Hafalan',
             'nama_siswa' => $siswa->nama_siswa,
-            'tanggal' => date('d/m/Y'),
-            'surah_dihafalkan' => $surahStats,
-            'surah_belum_dihafalkan' => $surahBelumDihafalkan,
-        ];
+            'nama_kelas' => $namaKelas,
+            'nama_surah' => $surah->nama_surah,
+            'ayat_mulai' => $latestSesi->ayat_mulai,
+            'ayat_selesai' => $latestSesi->ayat_selesai,
+            'nama_guru' => $namaGuru, // ✅ Guru Pembimbing dari Kelompok
+            'tanggal_sesi' => Carbon::parse($latestSesi->tanggal_setor)->translatedFormat('l, d F Y'),
+            'nilai_tajwid' => number_format($latestSesi->skor_tajwid, 1),
+            'nilai_kelancaran' => number_format($latestSesi->skor_kelancaran, 1),
+            'nilai_makhroj' => number_format($latestSesi->skor_makhroj, 1),
+            'nilai_rata_rata' => number_format($nilaiRataRata, 2),
+            'grade_tajwid' => $gradeTajwid,
+            'grade_kelancaran' => $gradeKelancaran,
+            'grade_makhroj' => $gradeMakhroj,
+            'grade_desc' => $gradeDesc,
+            'koreksi' => $allKoreksiHistory,
+            'riwayat_sesi' => $riwayatSesiFormatted,
+        ])->setPaper('a4', 'portrait');
 
-        $pdf = Pdf::loadView('exports.laporan-hafalan-siswa-pdf', $data);
-
-        return $pdf->download('Laporan-Hafalan-' . $siswa->nama_siswa . '-' . date('dmY') . '.pdf');
-    }
-
-    public function exportExcelSiswa($siswaId)
-    {
-        $siswa = Siswa::find($siswaId);
-
-        if (!$siswa) {
-            return abort(404);
-        }
-
-        // Ambil sesi hafalan siswa
-        $sesiHafalan = SesiHafalan::where('id_siswa', $siswaId)
-            ->with('surahMulai', 'surahSelesai')
-            ->orderBy('tanggal_setor')
-            ->get();
-
-        // Format data surah yang sudah dihafalkan
-        $surahDihafalkan = [];
-        $surahIds = [];
-
-        foreach ($sesiHafalan as $sesi) {
-            $surahIds[] = $sesi->id_surah_mulai;
-            if ($sesi->id_surah_mulai !== $sesi->id_surah_selesai) {
-                $surahIds[] = $sesi->id_surah_selesai;
-            }
-        }
-
-        $surahIds = array_unique($surahIds);
-
-        // Ambil data unik per surah
-        $surahStats = [];
-        foreach ($surahIds as $surahId) {
-            $sesiSurah = SesiHafalan::where('id_siswa', $siswaId)
-                ->where(function ($q) use ($surahId) {
-                    $q->where('id_surah_mulai', $surahId)
-                        ->orWhere('id_surah_selesai', $surahId);
-                })
-                ->get();
-
-            if ($sesiSurah->count() > 0) {
-                $surah = Surah::find($surahId);
-                $jumlahSesi = $sesiSurah->count();
-
-                $surahStats[] = [
-                    'no' => $surah->nomor_surah,
-                    'nama_surah' => $surah->nama_surah,
-                    'jumlah_sesi' => $jumlahSesi,
-                    'nilai_tajwid' => round($sesiSurah->avg('skor_tajwid'), 2),
-                    'nilai_kelancaran' => round($sesiSurah->avg('skor_kelancaran'), 2),
-                    'nilai_makhroj' => round($sesiSurah->avg('skor_makhroj'), 2),
-                    'nilai_rata' => round($sesiSurah->avg('nilai_rata'), 2),
-                ];
-            }
-        }
-
-        // Urutkan berdasarkan nomor surah
-        usort($surahStats, function ($a, $b) {
-            return $a['no'] - $b['no'];
-        });
-
-        $surahBelumDihafalkan = [];
-        if ($siswa) {
-            // Ambil semua kelompok siswa
-            $siswaKelompok = $siswa->kelompok;
-
-            if ($siswaKelompok->isNotEmpty()) {
-                // Get target hafalan from all kelompok that this siswa belongs to
-                $kelompokIds = $siswaKelompok->pluck('id_kelompok')->toArray();
-                $targetHafalan = TargetHafalanKelompok::whereIn('id_kelompok', $kelompokIds)->get();
-
-                foreach ($targetHafalan as $target) {
-                    // Gunakan range() agar bisa membaca urutan mundur
-                    $surahAwal = $target->id_surah_awal;
-                    $surahAkhir = $target->id_surah_akhir;
-                    $listSurahTarget = range($surahAwal, $surahAkhir);
-
-                    foreach ($listSurahTarget as $i) {
-                        // Check if already hafal
-                        $sudahDihafalkan = SesiHafalan::where('id_siswa', $siswaId)
-                            ->where(function ($q) use ($i) {
-                                $q->where('id_surah_mulai', $i)
-                                    ->orWhere('id_surah_selesai', $i);
-                            })
-                            ->exists();
-
-                        if (!$sudahDihafalkan) {
-                            $surah = Surah::find($i);
-                            if ($surah) {
-                                $surahBelumDihafalkan[] = [
-                                    'no' => $surah->nomor_surah,
-                                    'nama_surah' => $surah->nama_surah,
-                                    'status' => 'Belum Dimulai',
-                                    'progress' => '0/' . $surah->jumlah_ayat . ' ayat',
-                                ];
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        $csvContent = $this->generateCsvSiswa($siswa, $surahStats, $surahBelumDihafalkan);
-
-        $filename = 'Laporan-Hafalan-' . str_replace(' ', '-', $siswa->nama_siswa) . '-' . date('d-m-Y') . '.csv';
-
-        return response($csvContent, 200)
-            ->header('Content-Type', 'text/csv; charset=UTF-8')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+        return $pdf->download('Detail-Sesi-' . str_replace(' ', '-', $siswa->nama_siswa) . '.pdf');
     }
 
     private function generateCsvSiswa($siswa, $surahStats, $surahBelumDihafalkan)
@@ -414,248 +295,186 @@ class ExportLaporanHafalanController extends Controller
         return $csv;
     }
 
-    public function exportPdfSesi($siswaId, $surahId)
-    {
-        $siswa = Siswa::find($siswaId);
-        $surah = Surah::find($surahId);
-
-        if (!$siswa || !$surah) {
-            return abort(404);
-        }
-
-        // Get all sessions for this surah
-        $sesiSurah = SesiHafalan::where('id_siswa', $siswaId)
-            ->where(function ($q) use ($surahId) {
-                $q->where('id_surah_mulai', $surahId)
-                    ->orWhere('id_surah_selesai', $surahId);
-            })
-            ->with(['surahMulai', 'surahSelesai', 'guru', 'koreksi'])
-            ->orderByDesc('tanggal_setor')
-            ->get();
-
-        if ($sesiSurah->isEmpty()) {
-            return abort(404, 'Sesi tidak ditemukan');
-        }
-
-        // Get latest session for details
-        $latestSesi = $sesiSurah->first();
-
-        // Get siswa's kelas
-        $kelas = $siswa->kelompok()->first();
-        $namaKelas = $kelas ? $kelas->nama_kelas : 'N/A';
-        $namaGuru = $latestSesi->guru->nama_guru ?? 'N/A';
-        
-        $nilaiTajwid = $latestSesi->skor_tajwid ?? 0;
-        $nilaiKelancaran = $latestSesi->skor_kelancaran ?? 0;
-        $nilaiMakhroj = $latestSesi->skor_makhroj ?? 0;
-        $nilaiRataRata = $latestSesi->nilai_rata ?? (($nilaiTajwid + $nilaiKelancaran + $nilaiMakhroj) / 3);
-
-        // Get latest session details
-        $ayatMulai = $latestSesi->ayat_mulai;
-        $ayatSelesai = $latestSesi->ayat_selesai;
-
-        $koreksi = $latestSesi->koreksi->map(function ($k) {
-            return [
-                'lokasi' => 'Ayat ' . ($k->kata_ke ?? '?'),
-                'jenis_kesalahan' => $k->jenis_kesalahan ?? '-',
-                'catatan' => $k->catatan ?? '-'
-            ];
-        })->toArray();
-
-        $riwayatSesi = $sesiSurah->map(function ($sesi) {
-            $rataRata = $sesi->nilai_rata ?? (($sesi->skor_tajwid + $sesi->skor_kelancaran + $sesi->skor_makhroj) / 3);
-            return [
-                'tanggal' => \Carbon\Carbon::parse($sesi->tanggal_setor)->format('d/m/Y'),
-                'ayat' => $sesi->ayat_mulai . '-' . $sesi->ayat_selesai,
-                'tajwid' => number_format($sesi->skor_tajwid, 1),
-                'kelancaran' => number_format($sesi->skor_kelancaran, 1),
-                'makhroj' => number_format($sesi->skor_makhroj, 1),
-                'rata_rata' => number_format($rataRata, 2)
-            ];
-        })->toArray();
-
-        $gradeTajwid = $this->getGradeDescription($nilaiTajwid);
-        $gradeKelancaran = $this->getGradeDescription($nilaiKelancaran);
-        $gradeMakhroj = $this->getGradeDescription($nilaiMakhroj);
-        $gradeDesc = $this->getGradeDescription($nilaiRataRata);
-
-        $tanggalSesi = \Carbon\Carbon::parse($latestSesi->tanggal_setor)->format('l, d F Y');
-
-        $pdf = Pdf::loadView('exports.sesi-setoran-pdf', [
-            'sekolah' => 'HAFIZUNA',
-            'nama_sekolah_lengkap' => 'SD Islam Al-Azhar 27 Cibinong Bogor',
-            'lokasi' => 'Cibinong Bogor',
-            'judul' => 'Detail Sesi Setoran Hafalan',
-            'nama_siswa' => $siswa->nama_siswa,
-            'nama_kelas' => $namaKelas,
-            'nama_surah' => $surah->nama_surah,
-            'ayat_mulai' => $ayatMulai,
-            'ayat_selesai' => $ayatSelesai,
-            'nama_guru' => $namaGuru,
-            'tanggal_sesi' => $tanggalSesi,
-            'nilai_tajwid' => number_format($nilaiTajwid, 1),
-            'nilai_kelancaran' => number_format($nilaiKelancaran, 1),
-            'nilai_makhroj' => number_format($nilaiMakhroj, 1),
-            'nilai_rata_rata' => number_format($nilaiRataRata, 2),
-            'grade_tajwid' => $gradeTajwid,
-            'grade_kelancaran' => $gradeKelancaran,
-            'grade_makhroj' => $gradeMakhroj,
-            'grade_desc' => $gradeDesc,
-            'koreksi' => $koreksi,
-            'riwayat_sesi' => $riwayatSesi
-        ])->setPaper('a4', 'portrait');
-
-        $filename = 'Detail-Sesi-' . str_replace(' ', '-', $siswa->nama_siswa) . '-' . str_replace(' ', '-', $surah->nama_surah) . '-' . date('d-m-Y') . '.pdf';
-        
-        return $pdf->download($filename);
-    }
-
     public function exportExcelSesi($siswaId, $surahId)
     {
-        $siswa = Siswa::find($siswaId);
+        $siswa = Siswa::with('kelas')->find($siswaId);
         $surah = Surah::find($surahId);
 
-        if (!$siswa || !$surah) {
+        if (!$siswa || !$surah)
             return abort(404);
-        }
 
-        // Get all sessions for this surah
-        $sesiSurah = SesiHafalan::where('id_siswa', $siswaId)
+        $allSesi = SesiHafalan::where('id_siswa', $siswaId)
             ->where(function ($q) use ($surahId) {
                 $q->where('id_surah_mulai', $surahId)
                     ->orWhere('id_surah_selesai', $surahId);
             })
-            ->with(['surahMulai', 'surahSelesai', 'guru', 'koreksi'])
-            ->orderByDesc('tanggal_setor')
+            ->with(['guru', 'koreksi.ayat'])
+            ->orderBy('tanggal_setor', 'asc') // Ascending untuk hitung urutan
             ->get();
 
-        if ($sesiSurah->isEmpty()) {
+        if ($allSesi->isEmpty())
             return abort(404, 'Sesi tidak ditemukan');
+
+        $latestSesi = $allSesi->last();
+
+        $namaKelas = $siswa->kelas ? $siswa->kelas->nama_kelas : 'N/A';
+        $namaGuru = $latestSesi->guru ? $latestSesi->guru->nama_guru : '-';
+        $nilaiRataRata = $latestSesi->nilai_rata ?? 0;
+
+        // KUMPULKAN RIWAYAT KOREKSI UNTUK EXCEL
+        $allKoreksiHistory = [];
+        foreach ($allSesi as $index => $sesi) {
+            $nomorSesi = $index + 1;
+            foreach ($sesi->koreksi as $k) {
+                // Di Excel TIDAK PERLU utf8Glyphs, karena Excel native support Arab
+                $allKoreksiHistory[] = [
+                    'lokasi' => 'Ayat ' . ($k->ayat ? $k->ayat->nomor_ayat : ($k->kata_ke ?? '?')),
+                    'sesi_ke' => $nomorSesi,
+                    'tanggal' => $sesi->tanggal_setor->format('d/m/Y'),
+                    'jenis_kesalahan' => $k->kategori_kesalahan ?? '-',
+                    'catatan' => $k->catatan ?? '-'
+                ];
+            }
         }
 
-        // Get latest session for details
-        $latestSesi = $sesiSurah->first();
+        // Urutkan dari terbaru
+        $allKoreksiHistory = array_reverse($allKoreksiHistory);
 
-        // Get siswa's kelas
-        $kelas = $siswa->kelompok()->first();
-        $namaKelas = $kelas ? $kelas->nama_kelas : 'N/A';
-        
-        $namaGuru = $latestSesi->guru->nama_guru ?? 'N/A';
-        
-        // Calculate average scores
-        $nilaiTajwid = round($sesiSurah->avg('skor_tajwid'), 2);
-        $nilaiKelancaran = round($sesiSurah->avg('skor_kelancaran'), 2);
-        $nilaiMakhroj = round($sesiSurah->avg('skor_makhroj'), 2);
-        $nilaiRataRata = round($sesiSurah->avg('nilai_rata'), 2);
-
-        // Get latest session details
-        $ayatMulai = $latestSesi->ayat_mulai;
-        $ayatSelesai = $latestSesi->ayat_selesai;
-
-        $koreksi = $latestSesi->koreksi->map(function ($k) {
-            $nomorAyat = $k->kata_ke;
-            return [
-                'lokasi' => 'Ayat ' . $nomorAyat,
-                'jenis_kesalahan' => $k->kategori_kesalahan,
-                'catatan' => $k->catatan
-            ];
-        })->toArray();
-
+        // Deskripsi grade
         $gradeDesc = $this->getGradeDescription($nilaiRataRata);
 
-        $csvContent = $this->generateCsvSesi(
-            $siswa,
-            $surah,
-            $namaKelas,
-            $namaGuru,
-            $ayatMulai,
-            $ayatSelesai,
-            $nilaiTajwid,
-            $nilaiKelancaran,
-            $nilaiMakhroj,
-            $nilaiRataRata,
-            $gradeDesc,
-            $koreksi,
-            $sesiSurah
-        );
-
-        $filename = 'Detail-Sesi-' . str_replace(' ', '-', $siswa->nama_siswa) . '-' . str_replace(' ', '-', $surah->nama_surah) . '-' . date('d-m-Y') . '.csv';
-
-        return response($csvContent, 200)
-            ->header('Content-Type', 'text/csv; charset=UTF-8')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
-    }
-
-    private function generateCsvSesi($siswa, $surah, $namaKelas, $namaGuru, $ayatMulai, $ayatSelesai, $nilaiTajwid, $nilaiKelancaran, $nilaiMakhroj, $nilaiRataRata, $gradeDesc, $koreksi, $sesiSurah)
-    {
+        // Generate CSV
         $output = fopen('php://temp', 'r+');
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM Header
 
-        // Add UTF-8 BOM
-        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-        // Header
-        fputcsv($output, ['HAFIZUNA'], ',');
-        fputcsv($output, ['SD Islam Al-Azhar 27 Cibinong Bogor'], ',');
-        fputcsv($output, ['Detail Sesi Setoran Hafalan'], ',');
+        // Header Laporan
+        fputcsv($output, ['HAFIZUNA - SD Islam Al-Azhar 27 Cibinong Bogor'], ',');
+        fputcsv($output, ['Detail Riwayat Sesi Setoran Hafalan'], ',');
         fputcsv($output, [], ',');
 
-        // INFORMASI SESI
-        fputcsv($output, ['INFORMASI SESI'], ',');
+        // Informasi Sesi (Ambil status terakhir)
+        fputcsv($output, ['INFORMASI TERKINI'], ',');
         fputcsv($output, ['Siswa', $siswa->nama_siswa], ',');
         fputcsv($output, ['Kelas', $namaKelas], ',');
         fputcsv($output, ['Surah', $surah->nama_surah], ',');
-        fputcsv($output, ['Ayat', $ayatMulai . ' - ' . $ayatSelesai], ',');
-        fputcsv($output, ['Guru Pembimbing', $namaGuru], ',');
-        fputcsv($output, ['Tanggal', date('d/m/Y')], ',');
+        fputcsv($output, ['Guru', $namaGuru], ',');
+        fputcsv($output, ['Tanggal Terakhir', $latestSesi->tanggal_setor->format('d/m/Y')], ',');
         fputcsv($output, [], ',');
 
-        // PENILAIAN HAFALAN
-        fputcsv($output, ['PENILAIAN HAFALAN'], ',');
-        fputcsv($output, ['Aspek', 'Nilai', 'Keterangan'], ',');
-        fputcsv($output, ['Tajwid', $nilaiTajwid, $this->getGradeDescription($nilaiTajwid)], ',');
-        fputcsv($output, ['Kelancaran', $nilaiKelancaran, $this->getGradeDescription($nilaiKelancaran)], ',');
-        fputcsv($output, ['Makhroj', $nilaiMakhroj, $this->getGradeDescription($nilaiMakhroj)], ',');
-        fputcsv($output, ['RATA-RATA', $nilaiRataRata, $gradeDesc], ',');
-        fputcsv($output, [], ',');
+        // Tabel Riwayat Koreksi
+        if (count($allKoreksiHistory) > 0) {
+            fputcsv($output, ['RIWAYAT CATATAN KOREKSI (SEMUA SESI)'], ',');
+            fputcsv($output, ['No', 'Tanggal', 'Sesi Ke-', 'Lokasi', 'Jenis Kesalahan', 'Catatan'], ',');
 
-        // CATATAN KOREKSI
-        if (count($koreksi) > 0) {
-            fputcsv($output, ['CATATAN KOREKSI'], ',');
-            fputcsv($output, ['No', 'Lokasi', 'Jenis Kesalahan', 'Catatan'], ',');
-            foreach ($koreksi as $index => $item) {
+            foreach ($allKoreksiHistory as $index => $item) {
                 fputcsv($output, [
                     $index + 1,
-                    $item['lokasi'] ?? '',
-                    $item['jenis_kesalahan'] ?? '',
-                    $item['catatan'] ?? ''
+                    $item['tanggal'],
+                    $item['sesi_ke'], // ✅ Kolom Sesi Ke
+                    $item['lokasi'],
+                    $item['jenis_kesalahan'],
+                    $item['catatan']
                 ], ',');
             }
-            fputcsv($output, [], ',');
-        }
-
-        // RIWAYAT SESI UNTUK SURAH INI
-        fputcsv($output, ['RIWAYAT SESI UNTUK SURAH INI'], ',');
-        fputcsv($output, ['No', 'Tanggal', 'Ayat', 'Tajwid', 'Kelancaran', 'Makhroj', 'Rata-rata'], ',');
-        foreach ($sesiSurah as $index => $sesi) {
-            fputcsv($output, [
-                $index + 1,
-                $sesi['tanggal_setor'],
-                $sesi['ayat_mulai'] . '-' . $sesi['ayat_selesai'],
-                $sesi['skor_tajwid'],
-                $sesi['skor_kelancaran'],
-                $sesi['skor_makhroj'],
-                $sesi['nilai_rata']
-            ], ',');
+        } else {
+            fputcsv($output, ['Tidak ada catatan koreksi untuk surah ini.'], ',');
         }
 
         rewind($output);
         $csv = stream_get_contents($output);
         fclose($output);
 
-        return $csv;
+        $filename = 'Detail-Sesi-' . str_replace(' ', '-', $siswa->nama_siswa) . '.csv';
+
+        return response($csv, 200)
+            ->header('Content-Type', 'text/csv; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
 
+    private function generateCsvSesi($siswa, $surah, $namaKelas, $namaGuru, $ayatMulai, $ayatSelesai, $nilaiTajwid, $nilaiKelancaran, $nilaiMakhroj, $nilaiRataRata, $gradeDesc, $allKoreksiHistory, $sesiSurah)
+    {
+        $output = fopen('php://temp', 'r+');
+
+        // 1. Add UTF-8 BOM agar Excel bisa baca karakter Arab dengan benar
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+        // 2. Header Laporan (Judul Sekolah)
+        fputcsv($output, ['HAFIZUNA'], ',');
+        fputcsv($output, ['SD Islam Al-Azhar 27 Cibinong Bogor'], ',');
+        fputcsv($output, ['Detail Riwayat Hafalan Siswa'], ',');
+        fputcsv($output, [], ','); // Baris kosong
+
+        // 3. INFORMASI UTAMA (Header Data)
+        fputcsv($output, ['INFORMASI TERKINI'], ',');
+        fputcsv($output, ['Nama Siswa', $siswa->nama_siswa], ',');
+        fputcsv($output, ['Kelas', $namaKelas], ',');
+        fputcsv($output, ['Surah', $surah->nama_surah], ',');
+        fputcsv($output, ['Guru Pembimbing Terakhir', $namaGuru], ',');
+        fputcsv($output, ['Tanggal Update', date('d/m/Y')], ',');
+        fputcsv($output, [], ',');
+
+        // 4. PENILAIAN TERAKHIR (Ringkasan)
+        fputcsv($output, ['NILAI TERAKHIR'], ',');
+        fputcsv($output, ['Aspek', 'Nilai'], ',');
+        fputcsv($output, ['Tajwid', $nilaiTajwid], ',');
+        fputcsv($output, ['Kelancaran', $nilaiKelancaran], ',');
+        fputcsv($output, ['Makhroj', $nilaiMakhroj], ',');
+        fputcsv($output, ['RATA-RATA', $nilaiRataRata . ' (' . $gradeDesc . ')'], ',');
+        fputcsv($output, [], ',');
+
+        // 5. TABEL RIWAYAT KOREKSI (Bagian Penting)
+        fputcsv($output, ['RIWAYAT CATATAN KOREKSI (DARI SEMUA SESI)'], ',');
+
+        // Header Tabel Koreksi
+        fputcsv($output, [
+            'No',
+            'Tanggal',
+            'Sesi Ke-',       // ✅ Kolom baru sesuai permintaan
+            'Lokasi Ayat',
+            'Jenis Kesalahan',
+            'Catatan (Lafadz)'
+        ], ',');
+
+        if (count($allKoreksiHistory) > 0) {
+            foreach ($allKoreksiHistory as $index => $item) {
+                fputcsv($output, [
+                    $index + 1,
+                    $item['tanggal'],           // Tanggal Sesi
+                    $item['sesi_ke'],           // Sesi Ke-X
+                    $item['lokasi'],            // Ayat berapa
+                    $item['jenis_kesalahan'],   // Jenis
+                    $item['catatan']            // Teks Arab/Catatan
+                ], ',');
+            }
+        } else {
+            fputcsv($output, ['Tidak ada catatan koreksi untuk surah ini.'], ',');
+        }
+
+        fputcsv($output, [], ',');
+
+        // 6. RINGKASAN DATA NILAI PER SESI (Opsional, biar lengkap)
+        fputcsv($output, ['REKAPITULASI NILAI PER PERTEMUAN'], ',');
+        fputcsv($output, ['No', 'Tanggal', 'Ayat', 'Tajwid', 'Kelancaran', 'Makhroj', 'Rata-rata'], ',');
+
+        foreach ($sesiSurah as $index => $sesi) {
+            fputcsv($output, [
+                $index + 1,
+                $sesi->tanggal_setor->format('d/m/Y'),
+                $sesi->ayat_mulai . '-' . $sesi->ayat_selesai,
+                $sesi->skor_tajwid,
+                $sesi->skor_kelancaran,
+                $sesi->skor_makhroj,
+                $sesi->nilai_rata
+            ], ',');
+        }
+
+        // Finalisasi
+        rewind($output);
+        $csv = stream_get_contents($output);
+        fclose($output);
+
+        return $csv;
+    }
     private function getGradeDescription($nilai)
     {
         if ($nilai >= 90) {

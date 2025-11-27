@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -8,7 +9,7 @@
             margin: 0;
             padding: 0;
         }
-        
+
         body {
             font-family: DejaVu Sans, Arial, sans-serif;
             margin: 60px;
@@ -16,33 +17,33 @@
             line-height: 1.4;
             color: #333;
         }
-        
+
         .header {
             text-align: center;
             margin-bottom: 15px;
             border-bottom: 3px solid #16A34A;
             padding-bottom: 10px;
         }
-        
+
         .header h1 {
             margin: 0;
             font-size: 16px;
             color: #16A34A;
             font-weight: bold;
         }
-        
+
         .header p {
             margin: 3px 0;
             font-size: 10px;
         }
-        
+
         .header h2 {
             font-size: 12px;
             font-weight: bold;
             margin: 8px 0 0 0;
             color: #333;
         }
-        
+
         .section-title {
             font-size: 12px;
             font-weight: bold;
@@ -52,85 +53,115 @@
             border-bottom: 2px solid #16A34A;
             padding-bottom: 3px;
         }
-        
+
         .info-row {
             display: flex;
             margin: 4px 0;
             font-size: 11px;
         }
-        
+
         .info-label {
             width: 140px;
             font-weight: bold;
         }
-        
+
         .info-value {
             flex: 1;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 8px 0;
             font-size: 10px;
         }
-        
+
         thead {
             background-color: #16A34A;
             color: white;
         }
-        
+
         th {
             padding: 7px;
             text-align: left;
             font-weight: bold;
             border: 1px solid #16A34A;
         }
-        
+
         td {
             padding: 5px 7px;
             border: 1px solid #ddd;
         }
-        
+
         tbody tr:nth-child(odd) {
             background-color: #f9f9f9;
         }
-        
+
         tbody tr:nth-child(even) {
             background-color: #ffffff;
         }
-        
+
         .rating-label {
             font-weight: bold;
         }
-        
+
         .bg-light {
             background-color: #e8f5e9;
         }
-        
+
         .text-center {
             text-align: center;
         }
-        
+
         .text-right {
             text-align: right;
         }
-        
+
         .footer {
             margin-top: 15px;
             text-align: center;
             font-size: 9px;
             color: #999;
         }
-        
-        /* Style untuk mendukung text Arab dan Unicode */
+
+        /* Tambahkan style untuk kolom spesifik */
+        .col-no {
+            width: 5%;
+            text-align: center;
+        }
+
+        .col-lokasi {
+            width: 15%;
+        }
+
+        .col-kata {
+            width: 10%;
+            text-align: center;
+        }
+
+        .col-lafadz {
+            width: 20%;
+            text-align: right;
+            font-size: 14px;
+        }
+
+        .col-jenis {
+            width: 20%;
+        }
+
+        .col-catatan {
+            width: 30%;
+        }
+
+        /* Font khusus Arab jika tersedia, fallback ke sans-serif */
         .arabic-text {
-            font-family: DejaVu Sans, Arial Unicode MS, serif;
-            word-break: break-word;
-            white-space: normal;
+            font-family: 'DejaVu Sans', sans-serif;
+            text-align: right;
+            font-size: 14px;
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <h1>{{ $sekolah }}</h1>
@@ -205,10 +236,11 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width: 8%;">No</th>
-                    <th style="width: 22%;">Lokasi</th>
-                    <th style="width: 25%;">Jenis Kesalahan</th>
-                    <th style="width: 45%;">Catatan</th>
+                    <th class="col-no">No</th>
+                    <th class="col-lokasi">Lokasi</th>
+                    <th style="width: 15%; text-align: center;">Sesi Ke</th>
+                    <th class="col-jenis">Jenis Kesalahan</th>
+                    <th class="col-catatan">Catatan</th>
                 </tr>
             </thead>
             <tbody>
@@ -216,9 +248,11 @@
                     <tr>
                         <td class="text-center">{{ $index + 1 }}</td>
                         <td>{{ $item['lokasi'] ?? '-' }}</td>
+                        <td class="text-center">{{ $item['sesi_ke'] ?? '-' }}</td>
                         <td>{{ $item['jenis_kesalahan'] ?? '-' }}</td>
-                        <!-- Tambahkan class arabic-text untuk mendukung karakter Arab -->
-                        <td class="arabic-text">{{ $item['catatan'] ?? '-' }}</td>
+                        <td class="arabic-text">
+                            {{ $item['catatan'] ?? '-' }}
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
@@ -258,4 +292,5 @@
         <p>Halaman 1 dari 1</p>
     </div>
 </body>
+
 </html>

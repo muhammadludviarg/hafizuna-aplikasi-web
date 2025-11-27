@@ -17,12 +17,11 @@ class LaporanHafalan extends Component
     public $selectedKelasId = null;
     public $selectedSiswaId = null;
     public $selectedSurahId = null;
-    
+    public $selectedSesiDetail = null;
     public $detailLaporan = null;
     public $kelasDetail = null;
     public $siswaDetail = null;
     public $surahDetail = null;
-    
     public $tanggalMulai = null;
     public $tanggalAkhir = null;
 
@@ -38,7 +37,7 @@ class LaporanHafalan extends Component
             ->map(function ($kelas) {
                 $jumlahSiswa = $kelas->siswa->count();
                 $tahunAjaran = $kelas->tahun_ajaran ?? 'Tidak Ada';
-                
+
                 return [
                     'id' => $kelas->id_kelas,
                     'nama_kelas' => $kelas->nama_kelas,
@@ -79,7 +78,7 @@ class LaporanHafalan extends Component
             $sesiHafalan = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
 
             $jumlahSesi = $sesiHafalan->count();
-            $nilaiRataRata = $jumlahSesi > 0 
+            $nilaiRataRata = $jumlahSesi > 0
                 ? round($sesiHafalan->avg('nilai_rata'), 2)
                 : 0;
 
@@ -96,8 +95,8 @@ class LaporanHafalan extends Component
                 'total_ayat' => $totalAyat,
             ];
         })->sortByDesc('nilai_rata_rata')
-          ->values()
-          ->toArray();
+            ->values()
+            ->toArray();
 
         $this->detailLaporan = $siswaDetail;
     }
@@ -147,7 +146,7 @@ class LaporanHafalan extends Component
         $riwayatFormatted = $riwayatSesi->map(function ($sesi) {
             $surahMulai = $sesi->surahMulai;
             $surahSelesai = $sesi->surahSelesai;
-            
+
             $surahText = $surahMulai->nama_surah;
             if ($surahMulai->id_surah !== $surahSelesai->id_surah) {
                 $surahText .= ' - ' . $surahSelesai->nama_surah;
@@ -175,13 +174,13 @@ class LaporanHafalan extends Component
 
         $siswaKelompok = $siswa->kelompok;
         $targetHafalan = [];
-        
+
         if ($siswaKelompok->isNotEmpty()) {
             // Get target hafalan from all kelompok that this siswa belongs to
             $kelompokIds = $siswaKelompok->pluck('id_kelompok')->toArray();
             $targetHafalan = TargetHafalanKelompok::whereIn('id_kelompok', $kelompokIds)->get();
         }
-        
+
         $targetBelumDihafalkan = [];
         foreach ($targetHafalan as $target) {
             // Check range dari id_surah_awal to id_surah_akhir
@@ -219,6 +218,51 @@ class LaporanHafalan extends Component
         ];
     }
 
+    public function selectSesi($sesiId)
+    {
+        $sesi = SesiHafalan::with(['guru', 'koreksi.ayat'])->find($sesiId);
+        if (!$sesi)
+            return;
+
+        // Hitung Sesi Ke Berapa (Logic Kumulatif)
+        // Hitung jumlah sesi siswa ini, surah ini, yang tanggalnya <= sesi ini
+        $urutanSesi = SesiHafalan::where('id_siswa', $sesi->id_siswa)
+            ->where(function ($q) use ($sesi) {
+                $q->where('id_surah_mulai', $sesi->id_surah_mulai)
+                    ->orWhere('id_surah_selesai', $sesi->id_surah_mulai);
+            })
+            ->where('tanggal_setor', '<=', $sesi->tanggal_setor)
+            ->count();
+
+        // Format data koreksi
+        $koreksiFormatted = $sesi->koreksi->map(function ($k) use ($urutanSesi) {
+            return [
+                'lokasi' => 'Ayat ' . ($k->ayat ? $k->ayat->nomor_ayat : ($k->kata_ke ?? '?')),
+                'sesi_ke' => $urutanSesi, // Ini kolom baru yang diminta
+                'jenis_kesalahan' => $k->kategori_kesalahan ?? '-',
+                'catatan' => $k->catatan ?? '-' // Arab di UI aman tanpa reshaping
+            ];
+        })->toArray();
+
+        $this->selectedSesiDetail = [
+            'id' => $sesi->id_sesi,
+            'tanggal' => \Carbon\Carbon::parse($sesi->tanggal_setor)->translatedFormat('d F Y'),
+            'guru' => $sesi->guru ? $sesi->guru->nama_guru : 'Belum ditentukan',
+            'ayat_mulai' => $sesi->ayat_mulai,
+            'ayat_selesai' => $sesi->ayat_selesai,
+            'nilai_tajwid' => $sesi->skor_tajwid,
+            'nilai_kelancaran' => $sesi->skor_kelancaran,
+            'nilai_makhroj' => $sesi->skor_makhroj,
+            'nilai_rata' => $sesi->nilai_rata,
+            'koreksi' => $koreksiFormatted
+        ];
+    }
+
+    public function closeSesiDetail()
+    {
+        $this->selectedSesiDetail = null;
+    }
+
     public function filterPeriode()
     {
         $this->loadDetailSiswa();
@@ -247,7 +291,7 @@ class LaporanHafalan extends Component
         $sesiSurah = SesiHafalan::where('id_siswa', $this->selectedSiswaId)
             ->where(function ($q) use ($surah) {
                 $q->where('id_surah_mulai', $surah->id_surah)
-                  ->orWhere('id_surah_selesai', $surah->id_surah);
+                    ->orWhere('id_surah_selesai', $surah->id_surah);
             })
             ->with('surahMulai', 'surahSelesai')
             ->orderByDesc('tanggal_setor')
@@ -310,6 +354,9 @@ class LaporanHafalan extends Component
     {
         $this->selectedSurahId = null;
         $this->surahDetail = null;
+        if ($this->selectedSiswaId) {
+            $this->loadDetailSiswa();
+        }
     }
 
     public function downloadPdf()
@@ -336,7 +383,7 @@ class LaporanHafalan extends Component
             session()->flash('error', 'Pilih siswa terlebih dahulu');
             return;
         }
-        
+
         return redirect()->away(route('admin.export.laporan-hafalan.pdf-siswa', ['siswaId' => $this->selectedSiswaId]));
     }
 
@@ -346,7 +393,7 @@ class LaporanHafalan extends Component
             session()->flash('error', 'Pilih siswa terlebih dahulu');
             return;
         }
-        
+
         return redirect()->away(route('admin.export.laporan-hafalan.excel-siswa', ['siswaId' => $this->selectedSiswaId]));
     }
 
@@ -356,7 +403,7 @@ class LaporanHafalan extends Component
             session()->flash('error', 'Pilih sesi terlebih dahulu');
             return;
         }
-        
+
         return redirect()->away(route('admin.export.sesi-setoran.pdf', [
             'siswaId' => $this->selectedSiswaId,
             'surahId' => $this->selectedSurahId
@@ -369,7 +416,7 @@ class LaporanHafalan extends Component
             session()->flash('error', 'Pilih sesi terlebih dahulu');
             return;
         }
-        
+
         return redirect()->away(route('admin.export.sesi-setoran.excel', [
             'siswaId' => $this->selectedSiswaId,
             'surahId' => $this->selectedSurahId
