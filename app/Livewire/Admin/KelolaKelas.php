@@ -4,11 +4,15 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 use App\Models\Kelas;
+use App\Imports\KelasImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class KelolaKelas extends Component
 {
     use WithPagination;
+    use WithFileUploads;
 
     public $search = '';
     public $showModal = false;
@@ -18,6 +22,10 @@ class KelolaKelas extends Component
     public $kelasId;
     public $nama_kelas;
     public $tahun_ajaran;
+
+    // Import fields
+    public $importFile;
+    public $showImportModal = false;
 
     protected function rules()
     {
@@ -124,6 +132,42 @@ class KelolaKelas extends Component
             $this->resetPage();
         } catch (\Exception $e) {
             session()->flash('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
+    }
+
+    // ==========================================
+    // IMPORT FUNCTIONS
+    // ==========================================
+
+    public function openImportModal()
+    {
+        $this->showImportModal = true;
+    }
+
+    public function closeImportModal()
+    {
+        $this->showImportModal = false;
+        $this->importFile = null;
+    }
+
+    public function import()
+    {
+        $this->validate([
+            'importFile' => 'required|mimes:xlsx,xls,csv|max:2048',
+        ]);
+
+        try {
+            Excel::import(new KelasImport, $this->importFile);
+            session()->flash('message', '✅ Berhasil import data kelas!');
+            
+            // TAMBAHKAN INI:
+            $this->showImportModal = false;  // Tutup modal
+            $this->importFile = null;         // Reset file
+            $this->dispatch('import-success'); // Trigger event
+            
+            $this->resetPage();
+        } catch (\Exception $e) {
+            session()->flash('error', '❌ Gagal import: ' . $e->getMessage());
         }
     }
 
