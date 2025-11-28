@@ -10,6 +10,7 @@ use App\Models\Kelas;
 use App\Models\OrangTua;
 use App\Imports\SiswaImport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\TemplateSiswaExport;
 
 class KelolaSiswa extends Component
 {
@@ -19,7 +20,7 @@ class KelolaSiswa extends Component
     public $search = '';
     public $showModal = false;
     public $editMode = false;
-    
+
     // Form fields
     public $siswaId;
     public $nama_siswa;
@@ -100,13 +101,13 @@ class KelolaSiswa extends Component
     {
         try {
             $siswa = Siswa::findOrFail($id);
-            
+
             $this->siswaId = $siswa->id_siswa;
             $this->nama_siswa = $siswa->nama_siswa;
             $this->kode_siswa = $siswa->kode_siswa;
             $this->id_kelas = $siswa->id_kelas;
             $this->id_ortu = $siswa->id_ortu;
-            
+
             $this->editMode = true;
             $this->showModal = true;
         } catch (\Exception $e) {
@@ -155,6 +156,11 @@ class KelolaSiswa extends Component
     // IMPORT FUNCTIONS
     // ==========================================
 
+    public function downloadTemplate()
+    {
+        return Excel::download(new TemplateSiswaExport, 'template_siswa.xlsx');
+    }
+
     public function openImportModal()
     {
         $this->showImportModal = true;
@@ -175,12 +181,12 @@ class KelolaSiswa extends Component
         try {
             Excel::import(new SiswaImport, $this->importFile);
             session()->flash('message', '✅ Berhasil import data siswa!');
-            
+
             // TAMBAHKAN INI:
             $this->showImportModal = false;  // Tutup modal
             $this->importFile = null;         // Reset file
             $this->dispatch('import-success'); // Trigger event
-            
+
             $this->resetPage();
         } catch (\Exception $e) {
             session()->flash('error', '❌ Gagal import: ' . $e->getMessage());
@@ -190,9 +196,9 @@ class KelolaSiswa extends Component
     public function render()
     {
         $siswa = Siswa::with(['kelas', 'ortu.akun'])
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('nama_siswa', 'like', '%' . $this->search . '%')
-                      ->orWhere('kode_siswa', 'like', '%' . $this->search . '%');
+                    ->orWhere('kode_siswa', 'like', '%' . $this->search . '%');
             })
             ->paginate(10);
 

@@ -2,37 +2,36 @@
 
 namespace Database\Seeders;
 
-use App\Models\User; // Pastikan ini model untuk tabel 'akun'
-use App\Models\Admin;
 use Illuminate\Database\Seeder;
+use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class AdminUserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+    public function run()
     {
-        // 1. Ciptakan Akun User
-        $userAdmin = User::create([
-            'nama_lengkap' => 'Administrator Hafizuna',
-            'email' => 'admin@hafizuna.com',
-            // Gunakan sandi_hash (kolom di tabel akun) untuk menyimpan password
-            'sandi_hash' => Hash::make('password'), 
-            'status' => true, // Aktif
-            // 'email_verified_at' => now(), // <-- DIHAPUS, karena tidak ada di migrasi tabel 'akun'
-        ]);
+        $admins = [
+            'admin1@hafizuna.com',
+            'admin2@hafizuna.com',
+            'admin3@hafizuna.com',
+        ];
 
-        // 2. Hubungkan User tersebut dengan Role Admin
-        // Kolom foreign key di tabel 'admin' adalah 'id_akun'
-        Admin::create([
-            'id_akun' => $userAdmin->id_akun,
-        ]);
-        
-        $this->command->info('Akun Admin telah berhasil dibuat:');
-        $this->command->info('Email: admin@hafizuna.com');
-        $this->command->info('Password: password');
+        foreach ($admins as $index => $email) {
+            // 1. Buat/Cari Akun
+            $user = User::firstOrCreate(
+                ['email' => $email], // Cek berdasarkan email
+                [
+                    'nama_lengkap' => 'Administrator ' . ($index + 1),
+                    'sandi_hash' => Hash::make('password123'), // Password Hash
+                    'status' => 1,
+                ]
+            );
+
+            // 2. Hubungkan ke Tabel Admin
+            Admin::firstOrCreate([
+                'id_akun' => $user->id_akun
+            ]);
+        }
     }
 }

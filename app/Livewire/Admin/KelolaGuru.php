@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use App\Imports\GuruImport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\TemplateGuruExport;
 
 class KelolaGuru extends Component
 {
@@ -19,13 +20,13 @@ class KelolaGuru extends Component
     public $search = '';
     public $showModal = false;
     public $editMode = false;
-    
+
     // Form fields
     public $guruId;
     public $id_akun;
     public $no_hp;
-    
-    // Field untuk akun (jika create new)
+
+    // Field untuk akun
     public $nama_lengkap;
     public $email;
 
@@ -41,10 +42,8 @@ class KelolaGuru extends Component
         ];
 
         if ($this->editMode) {
-            // Edit mode - validasi unique kecuali record ini
             $rules['email'] = 'required|email|unique:akun,email,' . $this->id_akun . ',id_akun';
         } else {
-            // Create mode - validasi unique total
             $rules['email'] = 'required|email|unique:akun,email';
         }
 
@@ -87,17 +86,15 @@ class KelolaGuru extends Component
         try {
             DB::beginTransaction();
 
-            // Buat akun dulu (sesuai struktur tabel akun yang ada)
             $akun = User::create([
                 'nama_lengkap' => $this->nama_lengkap,
                 'email' => $this->email,
-                'sandi_hash' => bcrypt('password123'), // Kolom password di tabel Anda namanya sandi_hash
-                'status' => 1, // Aktif
+                'sandi_hash' => bcrypt('password123'),
+                'status' => 1,
             ]);
 
-            // Buat guru
             Guru::create([
-                'id_akun' => $akun->id_akun, // Primary key tabel akun adalah id_akun
+                'id_akun' => $akun->id_akun,
                 'no_hp' => $this->no_hp,
             ]);
 
@@ -116,17 +113,16 @@ class KelolaGuru extends Component
     {
         try {
             $guru = Guru::with('akun')->findOrFail($id);
-            
+
             $this->guruId = $guru->id_guru;
             $this->id_akun = $guru->id_akun;
             $this->no_hp = $guru->no_hp;
-            
-            // Load data akun
+
             if ($guru->akun) {
                 $this->nama_lengkap = $guru->akun->nama_lengkap;
                 $this->email = $guru->akun->email;
             }
-            
+
             $this->editMode = true;
             $this->showModal = true;
         } catch (\Exception $e) {
@@ -143,12 +139,10 @@ class KelolaGuru extends Component
 
             $guru = Guru::findOrFail($this->guruId);
 
-            // Update guru
             $guru->update([
                 'no_hp' => $this->no_hp,
             ]);
 
-            // Update akun
             if ($guru->akun) {
                 $guru->akun->update([
                     'nama_lengkap' => $this->nama_lengkap,
@@ -170,28 +164,45 @@ class KelolaGuru extends Component
     public function delete($id)
     {
         try {
+            $guru = Guru::with('akun')->findOrFail($id);
+
+            // 1. CEK RIWAYAT MENGUJI (Sesi Hafalan)
+            // Database Anda men-set 'onDelete restrict' di tabel sesi_hafalan
+            $jumlahSesi = DB::table('sesi_hafalan')->where('id_guru', $id)->count();
+            if ($jumlahSesi > 0) {
+                session()->flash('error', "Gagal: Guru ini tercatat penguji di $jumlahSesi sesi hafalan. Data tidak bisa dihapus demi arsip nilai.");
+                return;
+            }
+
+            // 2. CEK KELOMPOK BINAAN
+            $jumlahKelompok = DB::table('kelompok')->where('id_guru', $id)->count();
+            if ($jumlahKelompok > 0) {
+                session()->flash('error', "Gagal: Guru ini masih membina $jumlahKelompok kelompok. Ganti pembimbing kelompok dulu.");
+                return;
+            }
+
             DB::beginTransaction();
 
-            $guru = Guru::with('akun')->findOrFail($id);
-            
-            // Simpan ID akun sebelum hapus guru
             $id_akun = $guru->id_akun;
-            
-            // Hapus data guru dulu
+
+            // Hapus data guru
             $guru->delete();
-            
-            // Hapus akun juga (CASCADE DELETE)
+
+            // Hapus akun & log
             if ($id_akun) {
+                DB::table('log_aktivitas')->where('id_akun', $id_akun)->delete();
                 User::where('id_akun', $id_akun)->delete();
             }
 
             DB::commit();
 
             session()->flash('message', 'Data guru dan akun berhasil dihapus.');
+            $this->dispatch('modal-closed');
             $this->resetPage();
+
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Gagal menghapus data: ' . $e->getMessage());
+            session()->flash('error', 'Gagal menghapus: ' . $e->getMessage());
         }
     }
 
@@ -216,29 +227,33 @@ class KelolaGuru extends Component
             'importFile' => 'required|mimes:xlsx,xls,csv|max:2048',
         ]);
 
-    try {
+        try {
             Excel::import(new GuruImport, $this->importFile);
             session()->flash('message', '✅ Berhasil import data guru!');
-            
-            // TAMBAHKAN INI:
-            $this->showImportModal = false;  // Tutup modal
-            $this->importFile = null;         // Reset file
-            $this->dispatch('import-success'); // Trigger event
-            
+
+            $this->showImportModal = false;
+            $this->importFile = null;
+            $this->dispatch('import-success');
+
             $this->resetPage();
         } catch (\Exception $e) {
             session()->flash('error', '❌ Gagal import: ' . $e->getMessage());
         }
     }
 
+    public function downloadTemplate()
+    {
+        return Excel::download(new TemplateGuruExport, 'template_guru.xlsx');
+    }
+
     public function render()
     {
         $guru = Guru::with('akun')
-            ->when($this->search, function($query) {
+            ->when($this->search, function ($query) {
                 $query->where('no_hp', 'like', '%' . $this->search . '%')
-                    ->orWhereHas('akun', function($q) {
+                    ->orWhereHas('akun', function ($q) {
                         $q->where('nama_lengkap', 'like', '%' . $this->search . '%')
-                          ->orWhere('email', 'like', '%' . $this->search . '%');
+                            ->orWhere('email', 'like', '%' . $this->search . '%');
                     });
             })
             ->paginate(10);

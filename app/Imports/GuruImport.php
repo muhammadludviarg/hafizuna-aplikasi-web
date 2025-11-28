@@ -8,8 +8,9 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 
-class GuruImport implements ToModel, WithHeadingRow, WithValidation
+class GuruImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmptyRows
 {
     public function model(array $row)
     {

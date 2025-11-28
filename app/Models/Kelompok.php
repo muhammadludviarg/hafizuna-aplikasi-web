@@ -12,10 +12,20 @@ class Kelompok extends Model
     protected $table = 'kelompok';
     protected $primaryKey = 'id_kelompok';
     public $timestamps = false;
-    protected $fillable = ['tahun_ajaran', 'id_kelas', 'id_guru'];
-    public function kelas() { return $this->belongsTo(Kelas::class, 'id_kelas'); }
-    public function guru() { return $this->belongsTo(Guru::class, 'id_guru'); }
-    
+    protected $fillable = [
+        'nama_kelompok', 
+        'id_kelas',
+        'id_guru',
+        'tahun_ajaran', 
+    ];
+    public function kelas()
+    {
+        return $this->belongsTo(Kelas::class, 'id_kelas');
+    }
+    public function guru()
+    {
+        return $this->belongsTo(Guru::class, 'id_guru');
+    }
     public function siswa()
     {
         return $this->belongsToMany(Siswa::class, 'siswa_kelompok', 'id_kelompok', 'id_siswa');

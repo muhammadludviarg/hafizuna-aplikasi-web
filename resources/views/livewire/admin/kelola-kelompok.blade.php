@@ -5,24 +5,32 @@
         <p class="text-gray-600 mt-1">Kelola siswa dan kelompok setoran hafalan</p>
     </div>
 
-    {{-- Flash Messages --}}
-    @if (session()->has('success'))
-        <div class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-start">
-            <svg class="w-5 h-5 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-            </svg>
-            <span>{{ session('success') }}</span>
-        </div>
-    @endif
+    {{-- Flash Messages (Floating) --}}
+    <div class="fixed top-4 right-4 z-[9999] w-96 space-y-4 pointer-events-none">
+        @if (session()->has('success'))
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg flex justify-between items-start animate-fade-in-down transition-all duration-500 pointer-events-auto">
+                <div class="flex items-center">
+                    <svg class="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <p>{{ session('success') }}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-green-700 hover:text-green-900 font-bold ml-2">×</button>
+            </div>
+        @endif
 
-    @if (session()->has('error'))
-        <div class="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-start">
-            <svg class="w-5 h-5 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-            </svg>
-            <span>{{ session('error') }}</span>
-        </div>
-    @endif
+        @if (session()->has('error'))
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg flex justify-between items-start animate-fade-in-down transition-all duration-500 pointer-events-auto">
+                <div class="flex items-center">
+                    <svg class="h-6 w-6 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <p>{{ session('error') }}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-red-700 hover:text-red-900 font-bold ml-2">×</button>
+            </div>
+        @endif
+    </div>
 
     {{-- Main Content --}}
     <div class="bg-white rounded-lg shadow-md border border-gray-200 p-6">
@@ -55,7 +63,6 @@
                     class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition">
             </div>
         </div>
-        {{-- END SEARCH BAR --}}
 
         {{-- Table --}}
         <div class="overflow-x-auto">
@@ -71,7 +78,7 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($kelompok as $item)
-                        <tr class="hover:bg-gray-50">
+                        <tr wire:key="kelompok-{{ $item->id_kelompok }}" class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-medium text-gray-900">{{ $item->nama_kelompok }}</div>
                                 <div class="text-xs text-gray-500">{{ $item->tahun_ajaran }}</div>
@@ -100,7 +107,7 @@
                                     </svg>
                                 </button>
                                 <button wire:click="hapusKelompok({{ $item->id_kelompok }})" 
-                                        wire:confirm="Apakah Anda yakin ingin menghapus kelompok ini?"
+                                        wire:confirm="Apakah Anda yakin ingin menghapus kelompok ini? Data target hafalan & progres siswa di kelompok ini juga akan terhapus."
                                         class="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -207,13 +214,6 @@
                             @enderror
                         </div>
                     </div>
-
-                    <!-- <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
-                        <p class="text-xs text-blue-800">
-                            <strong>Info:</strong> Tanggal ini berlaku untuk semua siswa yang dipilih. Jika siswa bergabung di waktu berbeda, edit kelompok dan atur ulang tanggalnya.
-                        </p>
-                    </div> -->
-    
 
                     {{-- Pilih Siswa --}}
                     <div>

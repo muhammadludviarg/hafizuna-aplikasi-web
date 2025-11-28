@@ -8,6 +8,9 @@ use Livewire\WithFileUploads;
 use App\Models\Kelas;
 use App\Imports\KelasImport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\TemplateKelasExport;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class KelolaKelas extends Component
 {
@@ -17,7 +20,7 @@ class KelolaKelas extends Component
     public $search = '';
     public $showModal = false;
     public $editMode = false;
-    
+
     // Form fields
     public $kelasId;
     public $nama_kelas;
@@ -84,11 +87,11 @@ class KelolaKelas extends Component
     {
         try {
             $kelas = Kelas::findOrFail($id);
-            
+
             $this->kelasId = $kelas->id_kelas;
             $this->nama_kelas = $kelas->nama_kelas;
             $this->tahun_ajaran = $kelas->tahun_ajaran;
-            
+
             $this->editMode = true;
             $this->showModal = true;
         } catch (\Exception $e) {
@@ -120,17 +123,33 @@ class KelolaKelas extends Component
     {
         try {
             $kelas = Kelas::findOrFail($id);
-            
-            // Check apakah ada siswa di kelas ini
-            if ($kelas->siswa && $kelas->siswa->count() > 0) {
-                session()->flash('error', 'Tidak dapat menghapus kelas yang masih memiliki siswa.');
+
+            // 1. CEK SISWA (PROTEKSI)
+            // Kita tidak ingin siswa tiba-tiba "hilang kelasnya" tanpa sepengetahuan admin
+            $jumlahSiswa = DB::table('siswa')->where('id_kelas', $id)->count();
+
+            if ($jumlahSiswa > 0) {
+                session()->flash('error', "Gagal: Kelas <strong>{$kelas->nama_kelas}</strong> masih memiliki <strong>$jumlahSiswa siswa</strong> aktif. Harap pindahkan atau keluarkan siswa terlebih dahulu.");
                 return;
             }
-            
+
+            DB::beginTransaction();
+
+            // 2. Hapus Kelompok Mengaji terkait (Pembersihan)
+            // Karena kelas dihapus, kelompok di dalamnya juga harus dihapus
+            DB::table('kelompok')->where('id_kelas', $id)->delete();
+
+            // 3. Hapus Kelas
             $kelas->delete();
+
+            DB::commit();
+
             session()->flash('message', 'Data kelas berhasil dihapus.');
+            $this->dispatch('modal-closed');
             $this->resetPage();
+
         } catch (\Exception $e) {
+            DB::rollBack();
             session()->flash('error', 'Gagal menghapus data: ' . $e->getMessage());
         }
     }
@@ -159,24 +178,28 @@ class KelolaKelas extends Component
         try {
             Excel::import(new KelasImport, $this->importFile);
             session()->flash('message', '✅ Berhasil import data kelas!');
-            
-            // TAMBAHKAN INI:
-            $this->showImportModal = false;  // Tutup modal
-            $this->importFile = null;         // Reset file
-            $this->dispatch('import-success'); // Trigger event
-            
+
+            $this->showImportModal = false;
+            $this->importFile = null;
+            $this->dispatch('import-success');
+
             $this->resetPage();
         } catch (\Exception $e) {
             session()->flash('error', '❌ Gagal import: ' . $e->getMessage());
         }
     }
 
+    public function downloadTemplate()
+    {
+        return Excel::download(new TemplateKelasExport, 'template_kelas.xlsx');
+    }
+
     public function render()
     {
         $kelas = Kelas::withCount('siswa')
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('nama_kelas', 'like', '%' . $this->search . '%')
-                      ->orWhere('tahun_ajaran', 'like', '%' . $this->search . '%');
+                    ->orWhere('tahun_ajaran', 'like', '%' . $this->search . '%');
             })
             ->paginate(10);
 

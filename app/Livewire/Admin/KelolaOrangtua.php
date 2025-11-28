@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\Notifikasi;
+use App\Models\Siswa;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
@@ -11,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Imports\OrangTuaImport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\TemplateOrangTuaExport;
 
 class KelolaOrangTua extends Component
 {
@@ -20,12 +23,12 @@ class KelolaOrangTua extends Component
     public $search = '';
     public $showModal = false;
     public $editMode = false;
-    
+
     // Form fields
     public $ortuId;
     public $id_akun;
     public $no_hp;
-    
+
     // Field untuk akun
     public $nama_lengkap;
     public $email;
@@ -97,7 +100,7 @@ class KelolaOrangTua extends Component
     public function store()
     {
         $this->modalError = '';
-        
+
         $this->validate();
 
         try {
@@ -135,27 +138,27 @@ class KelolaOrangTua extends Component
 
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollBack();
-            
+
             Log::error('Database error creating orang tua', [
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
             ]);
-            
+
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
                 $this->modalError = 'Email sudah terdaftar. Silakan gunakan email lain.';
             } else {
                 $this->modalError = 'Gagal menyimpan: ' . $e->getMessage();
             }
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Error creating orang tua', [
                 'error' => $e->getMessage(),
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
             ]);
-            
+
             $this->modalError = 'Terjadi kesalahan: ' . $e->getMessage();
         }
     }
@@ -163,25 +166,25 @@ class KelolaOrangTua extends Component
     public function edit($id)
     {
         $this->modalError = '';
-        
+
         try {
             Log::info('Editing orang tua', ['id_ortu' => $id]);
-            
+
             $ortu = OrangTua::with('akun')->find($id);
-            
+
             if (!$ortu) {
                 session()->flash('error', 'Data orang tua tidak ditemukan.');
                 return;
             }
-            
+
             $this->ortuId = $ortu->id_ortu;
             $this->id_akun = $ortu->id_akun;
             $this->no_hp = $ortu->no_hp ?? '';
-            
+
             if ($ortu->akun) {
                 $this->nama_lengkap = $ortu->akun->nama_lengkap;
                 $this->email = $ortu->akun->email;
-                
+
                 Log::info('Orang tua loaded for edit', [
                     'id_ortu' => $this->ortuId,
                     'id_akun' => $this->id_akun,
@@ -191,16 +194,16 @@ class KelolaOrangTua extends Component
                 Log::warning('Orang tua has no akun', ['id_ortu' => $id]);
                 $this->modalError = 'Data akun tidak ditemukan untuk orang tua ini.';
             }
-            
+
             $this->editMode = true;
             $this->showModal = true;
-            
+
         } catch (\Exception $e) {
             Log::error('Error loading orang tua for edit', [
                 'id_ortu' => $id,
                 'error' => $e->getMessage(),
             ]);
-            
+
             session()->flash('error', 'Gagal memuat data: ' . $e->getMessage());
         }
     }
@@ -208,7 +211,7 @@ class KelolaOrangTua extends Component
     public function update()
     {
         $this->modalError = '';
-        
+
         $this->validate();
 
         try {
@@ -220,7 +223,7 @@ class KelolaOrangTua extends Component
             ]);
 
             $ortu = OrangTua::find($this->ortuId);
-            
+
             if (!$ortu) {
                 throw new \Exception('Data orang tua tidak ditemukan.');
             }
@@ -238,7 +241,7 @@ class KelolaOrangTua extends Component
                     'nama_lengkap' => $this->nama_lengkap,
                     'email' => $this->email,
                 ]);
-                
+
                 Log::info('Akun updated', ['id_akun' => $ortu->id_akun]);
             } else {
                 Log::warning('No akun to update', ['id_ortu' => $ortu->id_ortu]);
@@ -249,30 +252,30 @@ class KelolaOrangTua extends Component
             session()->flash('message', 'Data orang tua berhasil diperbarui.');
             $this->closeModal();
             $this->resetPage();
-            
+
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollBack();
-            
+
             Log::error('Database error updating orang tua', [
                 'id_ortu' => $this->ortuId,
                 'error' => $e->getMessage(),
             ]);
-            
+
             if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
                 $this->modalError = 'Email sudah digunakan oleh orang tua lain.';
             } else {
                 $this->modalError = 'Gagal memperbarui: ' . $e->getMessage();
             }
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Error updating orang tua', [
                 'id_ortu' => $this->ortuId,
                 'error' => $e->getMessage(),
                 'line' => $e->getLine(),
             ]);
-            
+
             $this->modalError = 'Terjadi kesalahan: ' . $e->getMessage();
         }
     }
@@ -280,77 +283,56 @@ class KelolaOrangTua extends Component
     public function delete($id)
     {
         try {
-            Log::info('Attempting to delete orang tua', ['id_ortu' => $id]);
-            
+            $ortu = OrangTua::with('akun')->findOrFail($id);
+
+            // 1. CEK RELASI SISWA (PROTEKSI UTAMA)
+            // Kita gunakan count() untuk memastikan
+            $jumlahAnak = DB::table('siswa')->where('id_ortu', $id)->count();
+
+            if ($jumlahAnak > 0) {
+                session()->flash('error', "Gagal: Orang Tua ini masih terdata memiliki $jumlahAnak siswa. Hapus data siswa terlebih dahulu.");
+                return;
+            }
+
             DB::beginTransaction();
 
-            $ortu = OrangTua::with(['akun', 'siswa'])->find($id);
-            
-            if (!$ortu) {
-                session()->flash('error', 'Data orang tua tidak ditemukan.');
-                return;
-            }
-            
-            // Check apakah masih punya siswa
-            $jumlahSiswa = $ortu->siswa ? $ortu->siswa->count() : 0;
-            
-            if ($jumlahSiswa > 0) {
-                Log::warning('Cannot delete orang tua with siswa', [
-                    'id_ortu' => $id,
-                    'jumlah_siswa' => $jumlahSiswa,
-                ]);
-                
-                session()->flash('error', 'Tidak dapat menghapus orang tua yang masih memiliki ' . $jumlahSiswa . ' siswa terdaftar.');
-                return;
-            }
-            
             $id_akun = $ortu->id_akun;
-            $nama_ortu = $ortu->akun ? $ortu->akun->nama_lengkap : 'Unknown';
-            
-            // Hapus orang tua
+
+            // 2. BERSIHKAN NOTIFIKASI (PENTING: Ini sering jadi penyebab gagal hapus)
+            DB::table('notifikasi')->where('id_ortu', $id)->delete();
+
+            // 3. FORCE UNLINK SISWA (JAGA-JAGA)
+            // Jika ada data siswa yang 'ghost' (tidak terdeteksi di count awal karena cache/lainnya)
+            // kita paksa set id_ortu jadi NULL biar tidak error foreign key.
+            DB::table('siswa')->where('id_ortu', $id)->update(['id_ortu' => null]);
+
+            // 4. HAPUS DATA ORANG TUA
             $ortu->delete();
-            Log::info('Orang tua deleted', ['id_ortu' => $id]);
-            
-            // Hapus akun (CASCADE)
+
+            // 5. HAPUS AKUN LOGIN (HATI-HATI)
             if ($id_akun) {
-                $deleted = User::where('id_akun', $id_akun)->delete();
-                Log::info('Akun deleted', [
-                    'id_akun' => $id_akun,
-                    'deleted' => $deleted,
-                ]);
+                // Cek apakah akun ini dipakai juga di tabel 'Guru' (Double Role)
+                $isGuru = DB::table('guru')->where('id_akun', $id_akun)->exists();
+
+                if (!$isGuru) {
+                    // Jika bukan guru, aman untuk dihapus total
+                    DB::table('log_aktivitas')->where('id_akun', $id_akun)->delete(); // Bersihkan log
+                    User::where('id_akun', $id_akun)->delete(); // Hapus user
+                } else {
+                    // Jika ternyata dia juga Guru, jangan hapus akunnya, cuma data ortunya saja
+                    Log::info('Akun tidak dihapus karena juga terdaftar sebagai Guru', ['id_akun' => $id_akun]);
+                }
             }
 
             DB::commit();
 
-            session()->flash('message', 'Data orang tua "' . $nama_ortu . '" dan akun berhasil dihapus.');
+            session()->flash('message', 'Data orang tua berhasil dihapus.');
             $this->resetPage();
-            
-        } catch (\Illuminate\Database\QueryException $e) {
-            DB::rollBack();
-            
-            Log::error('Database error deleting orang tua', [
-                'id_ortu' => $id,
-                'error' => $e->getMessage(),
-                'code' => $e->getCode(),
-            ]);
-            
-            if (strpos($e->getMessage(), 'foreign key constraint') !== false) {
-                session()->flash('error', 'Tidak dapat menghapus karena masih ada data terkait.');
-            } else {
-                session()->flash('error', 'Gagal menghapus: ' . $e->getMessage());
-            }
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
-            Log::error('Error deleting orang tua', [
-                'id_ortu' => $id,
-                'error' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
-            ]);
-            
-            session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            Log::error('Gagal hapus ortu: ' . $e->getMessage());
+            session()->flash('error', 'Gagal menghapus: ' . $e->getMessage());
         }
     }
 
@@ -358,6 +340,10 @@ class KelolaOrangTua extends Component
     // IMPORT FUNCTIONS
     // ==========================================
 
+    public function downloadTemplate()
+    {
+        return Excel::download(new TemplateOrangTuaExport, 'template_orang_tua.xlsx');
+    }
     public function openImportModal()
     {
         $this->showImportModal = true;
@@ -378,12 +364,12 @@ class KelolaOrangTua extends Component
         try {
             Excel::import(new OrangTuaImport, $this->importFile);
             session()->flash('message', '✅ Berhasil import data orang tua!');
-            
+
             // TAMBAHKAN INI:
             $this->showImportModal = false;  // Tutup modal
             $this->importFile = null;         // Reset file
             $this->dispatch('import-success'); // Trigger event
-            
+
             $this->resetPage();
         } catch (\Exception $e) {
             session()->flash('error', '❌ Gagal import: ' . $e->getMessage());
@@ -393,11 +379,11 @@ class KelolaOrangTua extends Component
     public function render()
     {
         $orangTua = OrangTua::with(['akun', 'siswa'])
-            ->when($this->search, function($query) {
+            ->when($this->search, function ($query) {
                 $query->where('no_hp', 'like', '%' . $this->search . '%')
-                    ->orWhereHas('akun', function($q) {
+                    ->orWhereHas('akun', function ($q) {
                         $q->where('nama_lengkap', 'like', '%' . $this->search . '%')
-                          ->orWhere('email', 'like', '%' . $this->search . '%');
+                            ->orWhere('email', 'like', '%' . $this->search . '%');
                     });
             })
             ->orderBy('id_ortu', 'desc')
