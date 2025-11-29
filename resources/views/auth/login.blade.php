@@ -1,116 +1,68 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<x-guest-layout bg-image="login-bg.jpg">
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <title>{{ config('app.name', 'Hafizuna') }} - Login</title>
-
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-
-<body class="font-sans text-gray-900 antialiased">
-    <div class="min-h-screen flex">
-
-        {{--
-        BAGIAN KIRI (WARNA SOLID)
-        PERBAIKAN: Menghapus <img> dan menggantinya dengan bg-green-700
-        --}}
-        <div class="hidden lg:block lg:w-1/2 bg-green-700 relative">
-
-            {{-- Teks di atas Latar (Sesuai Figma 3c9b2c.png) --}}
-            <div class="absolute inset-0 flex flex-col justify-center items-center p-12 text-white">
-
-                {{-- Logo (dari x-application-logo) --}}
-                <svg class="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18s-3.332.477-4.5 1.253">
-                    </path>
-                </svg>
-
-                <h1 class="text-5xl font-bold text-center mt-4">HAFIZUNA</h1>
-                <p class="mt-2 text-xl text-green-200 text-center">
-                    Manajemen Hafalan Terpadu
-                </p>
-            </div>
-        </div>
-
-        {{--
-        BAGIAN KANAN (FORM LOGIN)
-        --}}
-        <div class="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 bg-white">
-            <div class="max-w-md w-full">
-
-                {{-- Logo (Sesuai Figma 3c9b2c.png) --}}
-                <div class="flex justify-center mb-6">
-                    <a href="/" class="flex flex-col items-center text-center">
-                        {{-- Ganti warna logo default (gray) menjadi hijau --}}
-                        <x-application-logo class="w-20 h-20 fill-current text-green-700" />
-                        <span class="mt-2 text-3xl font-bold text-green-800">HAFIZUNA</span>
-                    </a>
-                </div>
-
-                <h2 class="text-2xl font-bold text-center text-gray-900">
-                    Masuk ke Akun Anda
-                </h2>
-                <p class="text-center text-gray-600 mt-2">
-                    Selamat datang kembali! Silakan masukkan data Anda.
-                </p>
-
-                <x-auth-session-status class="my-4" :status="session('status')" />
-
-                <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-6">
-                    @csrf
-
-                    <div>
-                        <x-input-label for="email" value="Email" />
-                        <x-text-input id="email" class="block mt-1 w-full" type="email" name="email"
-                            :value="old('email')" required autofocus autocomplete="username" />
-                        <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                    </div>
-
-                    <div class="mt-4">
-                        <x-input-label for="password" value="Password" />
-                        <x-text-input id="password" class="block mt-1 w-full" type="password" name="password" required
-                            autocomplete="current-password" />
-                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                    </div>
-
-                    <div class="flex items-center justify-between mt-4">
-                        <label for="remember_me" class="inline-flex items-center">
-                            <input id="remember_me" type="checkbox"
-                                class="rounded border-gray-300 text-green-600 shadow-sm focus:ring-green-500"
-                                name="remember">
-                            <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
-                        </label>
-
-                        @if (Route::has('password.request'))
-                            <a class="text-sm text-green-600 hover:text-green-800 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                                href="{{ route('password.request') }}">
-                                {{ __('Lupa password?') }}
-                            </a>
-                        @endif
-                    </div>
-
-                    {{-- Tombol Login Hijau --}}
-                    <div class="flex items-center justify-end mt-4">
-                        <x-primary-button class="w-full justify-center text-lg py-3 
-                                                    bg-green-700 hover:bg-green-800 
-                                                    focus:bg-green-700 active:bg-green-900 
-                                                    focus:ring-green-500">
-                            {{ __('Masuk') }}
-                        </x-primary-button>
-                    </div>
-                </form>
-            </div>
-        </div>
+    <div class="mb-8 text-center">
+        <h2 class="text-3xl font-bold text-gray-900">Selamat Datang</h2>
+        <p class="text-sm text-gray-600 mt-2">Silakan masuk ke akun Anda</p>
     </div>
-</body>
 
-</html>
+    <x-auth-session-status class="mb-4" :status="session('status')" />
+
+    <form method="POST" action="{{ route('login') }}" class="space-y-6">
+        @csrf
+
+        <div>
+            <x-input-label for="email" :value="__('Email')" />
+            <x-text-input id="email"
+                class="block mt-1 w-full py-3 px-4 rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 shadow-sm transition-colors"
+                type="email" name="email" :value="old('email')" required autofocus placeholder="nama@email.com" />
+            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        </div>
+
+        <div x-data="{ show: false }">
+            <x-input-label for="password" :value="__('Kata Sandi')" />
+            <div class="relative mt-1">
+                <x-text-input id="password"
+                    class="block w-full py-3 px-4 pr-10 rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 shadow-sm transition-colors"
+                    x-bind:type="show ? 'text' : 'password'" name="password" required autocomplete="current-password"
+                    placeholder="••••••••" />
+
+                <button type="button" @click="show = !show"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                    tabindex="-1">
+                    <svg x-show="!show" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <svg x-show="show" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        style="display: none;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.057 10.057 0 01-3.955 3.844m-4.106-4.106L19 19" />
+                    </svg>
+                </button>
+            </div>
+            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+        </div>
+
+        <div class="flex items-center justify-between">
+            <label for="remember_me" class="inline-flex items-center cursor-pointer">
+                <input id="remember_me" type="checkbox"
+                    class="rounded border-gray-300 text-green-600 shadow-sm focus:ring-green-500" name="remember">
+                <span class="ms-2 text-sm text-gray-600">{{ __('Ingat saya') }}</span>
+            </label>
+
+            @if (Route::has('password.request'))
+                <a class="text-sm text-green-600 hover:text-green-800 font-medium hover:underline"
+                    href="{{ route('password.request') }}">
+                    {{ __('Lupa kata sandi?') }}
+                </a>
+            @endif
+        </div>
+
+        <x-primary-button
+            class="w-full justify-center py-3 text-lg bg-green-700 hover:bg-green-800 focus:ring-green-500 shadow-lg transition-transform transform hover:-translate-y-0.5">
+            {{ __('Masuk') }}
+        </x-primary-button>
+    </form>
+</x-guest-layout>
