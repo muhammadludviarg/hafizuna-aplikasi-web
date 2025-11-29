@@ -281,7 +281,7 @@
                                 class="border-t border-green-700 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-green-200 gap-2">
                                 <p>© {{ date('Y') }} Hafizuna App. All rights reserved.</p>
                                 <div class="flex items-center gap-2">
-                                    <a href="https://www.instagram.com/sdia27cibinong/" target="_blank"
+                                    <a href="https://www.instagram.com/sdialazhar27cibinong/" target="_blank"
                                         rel="noopener noreferrer"
                                         class="flex items-center gap-2 hover:text-white transition-colors group">
                                         <svg class="w-4 h-4 text-green-300 group-hover:text-white" fill="currentColor"
@@ -290,7 +290,7 @@
                                                 d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772 4.902 4.902 0 011.772-1.153c.636-.247 1.363-.416 2.427-.465 1.067-.047 1.407-.06 4.123-.06h.08zm-1.634 9a2.634 2.634 0 100 5.268 2.634 2.634 0 000-5.268zM12 7.333a4.667 4.667 0 110 9.334 4.667 4.667 0 010-9.334zm7.333-3.083a1.25 1.25 0 11-2.5 0 1.25 1.25 0 012.5 0z"
                                                 clip-rule="evenodd"></path>
                                         </svg>
-                                        <span class="font-medium">@sdia27cibinong</span>
+                                        <span class="font-medium">@sdialazhar27cibinong</span>
                                     </a>
                                 </div>
                             </div>

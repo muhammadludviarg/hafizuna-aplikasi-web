@@ -1,22 +1,24 @@
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-        
+
         <!-- Header Greeting -->
-        <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-lg shadow-lg p-8 text-white flex items-center justify-between">
-            <div>
-                <h2 class="text-3xl font-bold">Assalamu'alaikum, {{ $namaGuru }}!</h2>
-                <p class="text-green-100 mt-2">Semoga Allah memberkahi usaha kita dalam membimbing para penghafal Al-Qur'an</p>
+
+        <div class="bg-green-600 rounded-xl p-6 mb-8 text-white shadow-lg relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-white opacity-10"></div>
+            <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-32 h-32 rounded-full bg-white opacity-10"></div>
+
+            <div class="relative z-10">
+                <h2 class="text-2xl md:text-3xl font-bold mb-2">Assalamu'alaikum, {{ Auth::user()->nama_lengkap }}!</h2>
+                <p class="text-green-100 text-sm md:text-base">
+                    Selamat beraktivitas kembali. Mari bimbing para santri menjadi penghafal Al-Qur'an terbaik.
+                </p>
             </div>
-            <div class="text-green-200 opacity-50">
-                <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-            </div>
+
         </div>
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            
+
             <!-- Kelas Diampu -->
             <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
                 <div class="flex items-center justify-between">
@@ -27,7 +29,8 @@
                     </div>
                     <div class="p-3 bg-green-100 rounded-lg">
                         <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747c5.5 0 10-4.998 10-10.747S17.5 6.253 12 6.253z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747c5.5 0 10-4.998 10-10.747S17.5 6.253 12 6.253z" />
                         </svg>
                     </div>
                 </div>
@@ -43,7 +46,8 @@
                     </div>
                     <div class="p-3 bg-blue-100 rounded-lg">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                     </div>
                 </div>
@@ -59,7 +63,8 @@
                     </div>
                     <div class="p-3 bg-yellow-100 rounded-lg">
                         <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
                 </div>
@@ -75,7 +80,8 @@
                     </div>
                     <div class="p-3 bg-purple-100 rounded-lg">
                         <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
                 </div>
@@ -84,12 +90,13 @@
 
         <!-- Charts Section -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
+
             <!-- Chart Progress Hafalan Per Kelas -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div class="flex items-center gap-3 mb-2">
                     <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                     </svg>
                     <h3 class="text-lg font-semibold text-gray-900">Progress Hafalan Per Kelas</h3>
                 </div>
@@ -101,7 +108,8 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div class="flex items-center gap-3 mb-2">
                     <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <h3 class="text-lg font-semibold text-gray-900">Tren Nilai 7 Hari Terakhir</h3>
                 </div>
@@ -112,12 +120,13 @@
 
         <!-- Charts Section Row 2 -->
         <div class="grid grid-cols-1 gap-6">
-            
+
             <!-- Pie Chart Distribusi Nilai -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div class="flex items-center gap-3 mb-2">
                     <svg class="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                     </svg>
                     <h3 class="text-lg font-semibold text-gray-900">Distribusi Nilai Siswa</h3>
                 </div>
@@ -131,15 +140,18 @@
                 <p class="text-gray-600 text-sm mb-6">Riwayat setoran hafalan terbaru</p>
                 <div class="space-y-3">
                     @forelse($setorTerbaru as $idx => $setor)
-                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-sm transition">
+                        <div
+                            class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-sm transition">
                             <div class="flex items-center gap-4 flex-1">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                                     style="background-color: {{ ['#22C55E', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'][$idx] }}">
+                                    style="background-color: {{ ['#22C55E', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'][$idx] }}">
                                     {{ $idx + 1 }}
                                 </div>
                                 <div class="flex-1">
                                     <p class="font-semibold text-gray-900 text-sm">{{ $setor->nama_siswa }}</p>
-                                    <p class="text-xs text-gray-500 mt-1">{{ $setor->nama_surah }} • {{ $setor->tanggal_setor->format('d/m/Y') }}</p>
+                                    <p class="text-xs text-gray-500 mt-1">{{ $setor->nama_surah }} •
+                                        {{ $setor->tanggal_setor->format('d/m/Y') }}
+                                    </p>
                                 </div>
                             </div>
                             <div class="bg-green-500 text-white font-bold px-3 py-1 rounded-lg text-sm flex-shrink-0">
@@ -158,7 +170,7 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
     <script>
-        (function() {
+        (function () {
             function initCharts() {
                 if (typeof ApexCharts === 'undefined') {
                     console.error('ApexCharts library is not loaded.');

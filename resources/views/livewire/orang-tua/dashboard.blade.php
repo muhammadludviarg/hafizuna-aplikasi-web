@@ -1,20 +1,19 @@
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <!-- Header Greeting -->
 
-        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-lg p-8 mb-8 text-white">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-4xl font-bold">Assalamu'alaikum!</h1>
-                    <p class="text-green-100 mt-2">Pantau perkembangan hafalan putra-putri Anda</p>
-                </div>
-                <div class="bg-white bg-opacity-20 p-6 rounded-full">
-                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747c5.5 0 10-4.998 10-10.747S17.5 6.253 12 6.253z">
-                        </path>
-                    </svg>
-                </div>
+        <div class="bg-green-600 rounded-xl p-6 mb-8 text-white shadow-lg relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-white opacity-10"></div>
+            <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-32 h-32 rounded-full bg-white opacity-10"></div>
+
+            <div class="relative z-10">
+                <h2 class="text-2xl md:text-3xl font-bold mb-2">Assalamu'alaikum, {{ Auth::user()->nama_lengkap }}!
+                </h2>
+                <p class="text-green-100 text-sm md:text-base">
+                    Pantau perkembangan hafalan buah hati Anda dengan mudah di sini.
+                </p>
             </div>
+
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -53,7 +52,8 @@
                         <div class="bg-gray-50 p-3 rounded border">
                             <p class="text-gray-600 text-xs">Rata-rata</p>
                             <p class="text-2xl font-bold {{ $index % 2 === 0 ? 'text-green-600' : 'text-blue-600' }}">
-                                {{ $anak['rata_rata'] }}</p>
+                                {{ $anak['rata_rata'] }}
+                            </p>
                         </div>
                     </div>
 
