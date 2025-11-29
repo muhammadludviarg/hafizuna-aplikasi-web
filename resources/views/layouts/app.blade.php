@@ -12,202 +12,238 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
     @livewireStyles
+
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
 </head>
 
-<body class="font-sans antialiased">
-    <div class="flex h-screen bg-gray-100">
+<body class="font-sans antialiased bg-gray-50 text-gray-900">
 
-        <aside class="z-20 flex-shrink-0 hidden w-64 overflow-y-auto bg-green-800 md:block">
-            {{-- Updated sidebar structure to use flexbox layout for proper spacing --}}
-            <div class="relative flex flex-col h-full py-4 text-gray-200">
+    <div x-data="{ sidebarOpen: false }" class="flex h-screen overflow-hidden bg-gray-100" x-cloak>
 
-                <a class="flex items-center justify-center text-lg font-bold text-white"
-                    href="{{ route('dashboard') }}"> <svg class="w-8 h-8 mr-2 bg-white text-green-800 p-1 rounded"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18s-3.332.477-4.5 1.253">
+        <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0" @click="sidebarOpen = false"
+            class="fixed inset-0 z-30 bg-gray-900 bg-opacity-50 backdrop-blur-sm md:hidden" aria-hidden="true">
+        </div>
+
+        <aside
+            class="fixed inset-y-0 left-0 z-40 flex flex-col h-full bg-green-800 border-r border-green-900 shadow-2xl transition-all duration-300 ease-in-out transform md:relative md:translate-x-0"
+            :class="sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 md:w-0 md:translate-x-0 md:overflow-hidden'">
+
+            <div class="flex items-center justify-between h-16 px-4 bg-green-900 md:hidden shrink-0">
+                <span class="text-lg font-bold text-white">Menu</span>
+                <button @click="sidebarOpen = false" class="text-green-200 hover:text-white focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
                         </path>
                     </svg>
-                    <span>HAFIZUNA</span>
-                </a>
+                </button>
+            </div>
 
-                <div class="flex flex-col items-center mt-6">
-                    <div class="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center font-bold text-xl">
-                        A </div>
-                    <span class="mt-2 text-md font-semibold">{{ Auth::user()->nama_lengkap ?? 'Admin Hafizuna' }}</span>
-                    <span class="text-xs text-green-300">Admin</span>
-                </div>
+            <div class="flex-1 overflow-y-auto py-6 flex flex-col">
+                <ul class="space-y-2 px-3 transition-opacity duration-200"
+                    :class="sidebarOpen ? 'opacity-100' : 'opacity-100 md:opacity-0'">
 
-                {{-- Added flex-grow to push logout button to bottom --}}
-                <ul class="mt-8 space-y-2 flex-grow">
-
-                    <li class="relative px-6 py-1.5">
-                        @php $isActive = request()->routeIs('dashboard'); @endphp
-                        <span
-                            class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
-                            aria-hidden="true"></span>
-                        <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 {{ $isActive ? 'text-white' : 'text-green-300 hover:text-white' }}"
-                            href="{{ route('dashboard') }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6-4h.01M12 12h.01M15 12h.01M12 9h.01M15 9h.01M9 9h.01">
-                                </path>
-                            </svg>
-                            <span class="ml-4">Beranda</span>
+                    <li>
+                        <a href="{{ route('dashboard') }}" class="group flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-r-lg rounded-bl-lg whitespace-nowrap
+                           {{ request()->routeIs('dashboard')
+    ? 'bg-green-900 text-white border-l-4 border-yellow-400 shadow-inner'
+    : 'text-green-100 hover:bg-green-700 hover:text-white hover:pl-6' }}">
+                            Beranda
                         </a>
                     </li>
 
-                    <li class="relative px-6 py-1.5">
-                        @php $isActive = false; @endphp <span
-                            class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
-                            aria-hidden="true"></span>
-                        <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 {{ $isActive ? 'text-white' : 'text-green-300 hover:text-white' }}"
-                            href="/admin/data-master"> <svg class="w-5 h-5" fill="none" stroke="currentColor" 
-                                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 4h.01M12 17h.01">
-                                </path>
-                            </svg>
-                            <span class="ml-4">Data Master</span>
+                    <li>
+                        <a href="/admin/data-master" class="group flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-r-lg rounded-bl-lg whitespace-nowrap
+                           {{ request()->is('admin/data-master*')
+    ? 'bg-green-900 text-white border-l-4 border-yellow-400 shadow-inner'
+    : 'text-green-100 hover:bg-green-700 hover:text-white hover:pl-6' }}">
+                            Data Master
                         </a>
                     </li>
 
-                    <li class="relative px-6 py-1.5">
-                        @php $isActive = request()->routeIs('admin.target-hafalan'); @endphp
-                        <span class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
-                            aria-hidden="true"></span>
-                        <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 {{ $isActive ? 'text-white' : 'text-green-300 hover:text-white' }}"
-                            href="{{ route('admin.target-hafalan') }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
-                                </path>
-                            </svg>
-                            <span class="ml-4">Target Hafalan</span>
+                    <li>
+                        <a href="{{ route('admin.target-hafalan') }}" class="group flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-r-lg rounded-bl-lg whitespace-nowrap
+                           {{ request()->routeIs('admin.target-hafalan')
+    ? 'bg-green-900 text-white border-l-4 border-yellow-400 shadow-inner'
+    : 'text-green-100 hover:bg-green-700 hover:text-white hover:pl-6' }}">
+                            Target Hafalan
                         </a>
                     </li>
 
-                    <li class="relative px-6 py-1.5">
-                        <a class="inline-flex items-center w-full text-sm font-medium text-green-300 hover:text-white transition-colors duration-150"
-                            href="{{ route('admin.kelola-kelompok') }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.084-1.284-.24-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.084-1.284.24-1.857m0 0a5.002 5.002 0 019.52 0M12 12a5 5 0 110-10 5 5 0 010 10z">
-                                </path>
-                            </svg>
-                            <span class="ml-4">Kelola Siswa dan Kelompok</span>
+                    <li>
+                        <a href="{{ route('admin.kelola-kelompok') }}" class="group flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-r-lg rounded-bl-lg whitespace-nowrap
+                           {{ request()->routeIs('admin.kelola-kelompok')
+    ? 'bg-green-900 text-white border-l-4 border-yellow-400 shadow-inner'
+    : 'text-green-100 hover:bg-green-700 hover:text-white hover:pl-6' }}">
+                            Siswa & Kelompok
                         </a>
                     </li>
 
-                    <li class="relative px-6 py-1.5">
-                        @php $isActive = request()->routeIs('admin.laporan-hafalan'); @endphp
-                        <span class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
-                            aria-hidden="true"></span>
-                        <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 {{ $isActive ? 'text-white' : 'text-green-300 hover:text-white' }}"
-                            href="{{ route('admin.laporan-hafalan') }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
-                            <span class="ml-4">Laporan Hafalan</span>
+                    <li>
+                        <a href="{{ route('admin.laporan-hafalan') }}" class="group flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-r-lg rounded-bl-lg whitespace-nowrap
+                           {{ request()->routeIs('admin.laporan-hafalan')
+    ? 'bg-green-900 text-white border-l-4 border-yellow-400 shadow-inner'
+    : 'text-green-100 hover:bg-green-700 hover:text-white hover:pl-6' }}">
+                            Laporan Hafalan
                         </a>
                     </li>
 
-                    <li class="relative px-6 py-1.5">
-                        @php $isActive = request()->routeIs('admin.pengaturan-nilai'); @endphp
-                        <span class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
-                            aria-hidden="true"></span>
-                        <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 {{ $isActive ? 'text-white' : 'text-green-300 hover:text-white' }}"
-                            href="{{ route('admin.pengaturan-nilai') }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
-                                </path>
-                            </svg>
-                            <span class="ml-4">Pengaturan Nilai</span>
+                    <li>
+                        <a href="{{ route('admin.pengaturan-nilai') }}" class="group flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-r-lg rounded-bl-lg whitespace-nowrap
+                           {{ request()->routeIs('admin.pengaturan-nilai')
+    ? 'bg-green-900 text-white border-l-4 border-yellow-400 shadow-inner'
+    : 'text-green-100 hover:bg-green-700 hover:text-white hover:pl-6' }}">
+                            Pengaturan Nilai
                         </a>
                     </li>
 
-                    {{-- MENU LOG AKTIVITAS - HANYA UNTUK ADMIN --}}
                     @if(Auth::check())
-                    <li class="relative px-6 py-1.5">
-                        @php $isActive = request()->routeIs('admin.log-aktivitas'); @endphp
-                        <span class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}"
-                            aria-hidden="true"></span>
-                        <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 {{ $isActive ? 'text-white' : 'text-green-300 hover:text-white' }}"
-                            href="{{ route('admin.log-aktivitas') }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
-                            <span class="ml-4">Log Aktivitas</span>
-                        </a>
-                    </li>
+                                    <li>
+                                        <a href="{{ route('admin.log-aktivitas') }}" class="group flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-r-lg rounded-bl-lg whitespace-nowrap
+                                           {{ request()->routeIs('admin.log-aktivitas')
+                        ? 'bg-green-900 text-white border-l-4 border-yellow-400 shadow-inner'
+                        : 'text-green-100 hover:bg-green-700 hover:text-white hover:pl-6' }}">
+                                            Log Aktivitas
+                                        </a>
+                                    </li>
                     @endif
-
-                    {{-- LINK GANTI PASSWORD (ADMIN) --}}
-                    @php $isActive = request()->routeIs('admin.ganti-password'); @endphp
-                    <li class="relative px-6 py-1.5">
-                        <span class="absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg {{ $isActive ? 'bg-white' : '' }}" aria-hidden="true"></span>
-                        <a class="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 {{ $isActive ? 'text-white' : 'text-green-300 hover:text-white' }}"
-                            href="{{ route('admin.ganti-password') }}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-                            </svg>
-                            <span class="ml-4">Ganti Password</span>
-                        </a>
-                    </li>
-
                 </ul>
-
-                {{-- Improved logout button spacing - moved outside flex-grow and added proper margin --}}
-                <div class="px-6 my-6">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();"
-                            class="inline-flex items-center w-full px-4 py-2 text-sm font-medium text-green-300 hover:text-white transition-colors duration-150">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
-                                </path>
-                            </svg>
-                            <span class="ml-4">Keluar</span>
-                        </a>
-                    </form>
-                </div>
             </div>
         </aside>
-        <div class="flex flex-col flex-1 w-full">
 
-            <header class="z-10 py-4 bg-white shadow-md">
-                <div class="container flex items-center justify-end h-full px-6 mx-auto text-green-600">
-                    <button class="relative align-middle rounded-full focus:outline-none" aria-label="Account"
-                        aria-haspopup="true">
-                        <div
-                            class="w-8 h-8 rounded-full bg-green-800 text-white flex items-center justify-center font-bold text-sm">
-                            A </div>
+        <div class="flex flex-col flex-1 min-w-0 transition-all duration-300">
+
+            <header
+                class="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 bg-white shadow-md border-b border-gray-100 sticky top-0 z-30">
+
+                <div class="flex items-center gap-3 md:gap-4">
+
+                    <button x-show="!sidebarOpen" @click.stop="sidebarOpen = true"
+                        class="p-2 -ml-2 md:ml-0 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-green-700 focus:outline-none transition-colors">
+                        <svg class="w-6 h-6 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h7"></path>
+                        </svg>
                     </button>
+
+                    <div class="flex items-center gap-2">
+                        <div class="bg-green-700 text-white p-1 md:p-1.5 rounded-md shadow-sm">
+                            <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18s-3.332.477-4.5 1.253">
+                                </path>
+                            </svg>
+                        </div>
+                        <h1 class="text-lg md:text-xl font-bold tracking-tight text-green-800">HAFIZUNA</h1>
+                    </div>
+                </div>
+
+                <div class="flex items-center" @click.stop>
+                    <div x-data="{ dropdownOpen: false }" class="relative">
+                        <button @click="dropdownOpen = !dropdownOpen"
+                            class="flex items-center space-x-2 md:space-x-3 focus:outline-none group">
+                            <div class="hidden md:block text-right">
+                                <div class="text-sm font-semibold text-gray-700 group-hover:text-green-700">
+                                    {{ Auth::user()->nama_lengkap ?? 'Admin' }}</div>
+                                <div class="text-xs text-gray-400">Administrator</div>
+                            </div>
+                            <div
+                                class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-green-600 to-green-400 text-white flex items-center justify-center font-bold text-base md:text-lg shadow-md ring-2 ring-white group-hover:ring-green-100 transition-all">
+                                {{ substr(Auth::user()->nama_lengkap ?? 'A', 0, 1) }}
+                            </div>
+                        </button>
+
+                        <div x-show="dropdownOpen" @click.away="dropdownOpen = false"
+                            class="absolute right-0 w-48 md:w-56 mt-3 origin-top-right bg-white rounded-xl shadow-xl py-2 ring-1 ring-black ring-opacity-5 z-50 transform transition-all"
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                            style="display: none;">
+
+                            <div class="px-4 py-2 border-b border-gray-100 mb-1">
+                                <p class="text-xs text-gray-400 uppercase tracking-wider">Akun Anda</p>
+                                <p class="text-sm font-bold text-gray-800 truncate">{{ Auth::user()->email }}</p>
+                            </div>
+
+                            <a href="{{ route('admin.ganti-password') }}"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
+                                        </path>
+                                    </svg>
+                                    Ganti Password
+                                </div>
+                            </a>
+
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <a href="{{ route('logout') }}"
+                                    onclick="event.preventDefault(); this.closest('form').submit();"
+                                    class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer rounded-b-xl">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                                            </path>
+                                        </svg>
+                                        Keluar
+                                    </div>
+                                </a>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </header>
 
-            <main class="h-full overflow-y-auto">
-                <div class="container px-6 py-8 mx-auto grid">
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 relative z-0"
+                @click="if(window.innerWidth >= 768 && sidebarOpen) sidebarOpen = false">
 
-                    {{ $slot }}
+                <div class="flex flex-col min-h-full">
+
+                    <div class="flex-grow container px-4 md:px-6 py-6 md:py-8 mx-auto">
+                        @if(trim($__env->yieldContent('header')))
+                            <div class="mb-4 md:mb-6 pb-2 md:pb-4 border-b border-gray-200">
+                                <h2 class="text-xl md:text-2xl font-bold text-gray-800">
+                                    @yield('header')
+                                </h2>
+                            </div>
+                        @endif
+
+                        <div class="w-full overflow-x-auto">
+                            {{ $slot }}
+                        </div>
+                    </div>
+
+                    <footer class="bg-white border-t border-gray-200 py-6 mt-auto">
+                        <div
+                            class="container mx-auto px-4 md:px-6 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500 gap-2 md:gap-0">
+                            <div class="text-center md:text-left">
+                                <span class="font-semibold text-gray-700">Sekolah Islam Terpadu Hafizuna</span>
+                                <span class="hidden md:inline mx-2">|</span>
+                                <span class="block md:inline mt-1 md:mt-0">&copy; {{ date('Y') }} All rights
+                                    reserved.</span>
+                            </div>
+                            <div class="text-center md:text-right">
+                                Developed with <span class="text-red-500">❤</span> by <span
+                                    class="text-green-600 font-medium hover:underline cursor-pointer">Tim
+                                    Developer</span>
+                            </div>
+                        </div>
+                    </footer>
 
                 </div>
             </main>
+
         </div>
     </div>
 
