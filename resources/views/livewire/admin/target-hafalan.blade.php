@@ -37,7 +37,7 @@
                 <!-- Pilih Kelompok -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Kelompok</label>
-                    <select wire:model="selectedKelompok" id="kelompok"
+                    <select wire:model="id_kelompok" id="kelompok"
                         class="w-full rounded-lg border-gray-300 focus:border-green-500 focus:ring focus:ring-green-200 transition duration-200">
                         <option value="">-- Pilih Kelompok --</option>
                         @foreach ($kelompokList as $kelompok)
