@@ -124,7 +124,6 @@
                 class="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 bg-white shadow-md border-b border-gray-100 sticky top-0 z-30">
 
                 <div class="flex items-center gap-3 md:gap-4">
-
                     <button x-show="!sidebarOpen" @click.stop="sidebarOpen = true"
                         class="p-2 -ml-2 md:ml-0 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-green-700 focus:outline-none transition-colors">
                         <svg class="w-6 h-6 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,7 +204,7 @@
                 </div>
             </header>
 
-            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 relative z-0"
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50"
                 @click="if(window.innerWidth >= 768 && sidebarOpen) sidebarOpen = false">
 
                 <div class="flex flex-col min-h-full">
@@ -224,20 +223,78 @@
                         </div>
                     </div>
 
-                    <footer class="bg-white border-t border-gray-200 py-6 mt-auto">
-                        <div
-                            class="container mx-auto px-4 md:px-6 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500 gap-2 md:gap-0">
-                            <div class="text-center md:text-left">
-                                <span class="font-semibold text-gray-700">Sekolah Islam Terpadu Hafizuna</span>
-                                <span class="hidden md:inline mx-2">|</span>
-                                <span class="block md:inline mt-1 md:mt-0">&copy; {{ date('Y') }} All rights
-                                    reserved.</span>
+                    <footer class="bg-green-800 text-white border-t border-green-700 pt-8 pb-6 mt-auto">
+                        <div class="container mx-auto px-4 md:px-6">
+
+                            <div class="flex flex-col md:flex-row justify-between gap-8 mb-8">
+
+                                <div class="flex-1">
+                                    <h5 class="font-bold text-white text-lg mb-2">SD Islam Al-Azhar 27 Cibinong</h5>
+
+                                    <div class="text-sm text-green-100 mb-4 max-w-md leading-relaxed">
+                                        <span class="block font-medium text-white">Aplikasi Manajemen Hafalan
+                                            Al-Qur'an</span>
+                                        <a href="https://www.google.com/maps/search/SD+Islam+Al-Azhar+27+Cibinong"
+                                            target="_blank" rel="noopener noreferrer"
+                                            class="hover:text-white hover:underline transition-colors block mt-1 flex items-center gap-1">
+                                            Jl. Raya Jakarta - Bogor Km. 44, Pakansari, Cibinong, Bogor 16915
+                                        </a>
+                                    </div>
+
+                                    <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 text-sm text-green-100">
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-green-300" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z">
+                                                </path>
+                                            </svg>
+                                            (021) 87915527
+                                        </div>
+                                        <a href="mailto:sdia27@al-azhar.sch.id"
+                                            class="flex items-center gap-2 hover:text-white hover:underline transition-colors group">
+                                            <svg class="w-4 h-4 text-green-300 group-hover:text-white" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                                </path>
+                                            </svg>
+                                            sdia27@al-azhar.sch.id
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="text-left md:text-right flex flex-col justify-end">
+                                    <p class="text-xs text-green-300 uppercase tracking-wider mb-1 font-semibold">
+                                        Dikembangkan oleh
+                                    </p>
+                                    <p class="font-bold text-white text-base">
+                                        Tim Hafizuna
+                                    </p>
+                                    <p class="text-sm text-green-100 font-medium">
+                                        Politeknik Statistika STIS
+                                    </p>
+                                </div>
                             </div>
-                            <div class="text-center md:text-right">
-                                Developed with <span class="text-red-500">❤</span> by <span
-                                    class="text-green-600 font-medium hover:underline cursor-pointer">Tim
-                                    Developer</span>
+
+                            <div
+                                class="border-t border-green-700 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-green-200 gap-2">
+                                <p>© {{ date('Y') }} Hafizuna App. All rights reserved.</p>
+                                <div class="flex items-center gap-2">
+                                    <a href="https://www.instagram.com/sdia27cibinong/" target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="flex items-center gap-2 hover:text-white transition-colors group">
+                                        <svg class="w-4 h-4 text-green-300 group-hover:text-white" fill="currentColor"
+                                            viewBox="0 0 24 24" aria-hidden="true">
+                                            <path fill-rule="evenodd"
+                                                d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772 4.902 4.902 0 011.772-1.153c.636-.247 1.363-.416 2.427-.465 1.067-.047 1.407-.06 4.123-.06h.08zm-1.634 9a2.634 2.634 0 100 5.268 2.634 2.634 0 000-5.268zM12 7.333a4.667 4.667 0 110 9.334 4.667 4.667 0 010-9.334zm7.333-3.083a1.25 1.25 0 11-2.5 0 1.25 1.25 0 012.5 0z"
+                                                clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span class="font-medium">@sdia27cibinong</span>
+                                    </a>
+                                </div>
                             </div>
+
                         </div>
                     </footer>
 
