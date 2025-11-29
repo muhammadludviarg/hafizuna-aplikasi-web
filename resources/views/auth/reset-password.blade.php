@@ -1,4 +1,5 @@
 <x-guest-layout bg-image="reset-bg.jpg">
+
     <div class="mb-8 text-center">
         <h2 class="text-2xl font-bold text-gray-900">Atur Ulang Kata Sandi</h2>
         <p class="text-sm text-gray-600 mt-2">Silakan buat kata sandi baru untuk akun Anda.</p>
@@ -22,8 +23,8 @@
             <div class="relative mt-1">
                 <x-text-input id="password"
                     class="block w-full py-3 px-4 pr-10 rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 shadow-sm transition-colors"
-                    x-bind:type="show ? 'text' : 'password'" name="password" required autocomplete="new-password"
-                    placeholder="Minimal 8 karakter" />
+                    type="password" x-bind:type="show ? 'text' : 'password'" name="password" required
+                    autocomplete="new-password" placeholder="Minimal 8 karakter" />
 
                 <button type="button" @click="show = !show"
                     class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
@@ -49,7 +50,7 @@
             <div class="relative mt-1">
                 <x-text-input id="password_confirmation"
                     class="block w-full py-3 px-4 pr-10 rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 shadow-sm transition-colors"
-                    x-bind:type="show ? 'text' : 'password'" name="password_confirmation" required
+                    type="password" x-bind:type="show ? 'text' : 'password'" name="password_confirmation" required
                     autocomplete="new-password" placeholder="Ulangi kata sandi" />
 
                 <button type="button" @click="show = !show"
@@ -72,12 +73,12 @@
         </div>
 
         <div class="pt-2">
-            <x-primary-button class="w-full justify-center text-lg py-3 
-                                                    bg-green-700 hover:bg-green-800 
-                                                    focus:bg-green-700 active:bg-green-900 
-                                                    focus:ring-green-500">
+            <x-primary-button
+                class="w-full justify-center py-3 text-lg bg-green-700 hover:bg-green-800 focus:ring-green-500 shadow-lg transition-transform transform hover:-translate-y-0.5">
                 {{ __('Reset Kata Sandi') }}
-            </x-primary-button>
+                </x-primary-button>
+
+
         </div>
     </form>
 </x-guest-layout>

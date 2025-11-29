@@ -21,13 +21,14 @@
         <div x-data="{ show: false }">
             <x-input-label for="password" :value="__('Kata Sandi')" />
             <div class="relative mt-1">
+
                 <x-text-input id="password"
                     class="block w-full py-3 px-4 pr-10 rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 shadow-sm transition-colors"
-                    x-bind:type="show ? 'text' : 'password'" name="password" required autocomplete="current-password"
-                    placeholder="••••••••" />
+                    type="password" x-bind:type="show ? 'text' : 'password'" name="password" required
+                    autocomplete="current-password" placeholder="••••••••" />
 
                 <button type="button" @click="show = !show"
-                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
                     tabindex="-1">
                     <svg x-show="!show" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
