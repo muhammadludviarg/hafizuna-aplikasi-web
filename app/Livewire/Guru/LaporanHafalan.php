@@ -17,6 +17,7 @@ class LaporanHafalan extends Component
     public $selectedKelompokId = null;
 
     // Properti lainnya sama seperti Admin
+    public $selectedKelasId = null;
     public $selectedSiswaId = null;
     public $selectedSurahId = null;
     public $selectedSesiDetail = null;
@@ -378,6 +379,27 @@ class LaporanHafalan extends Component
 
     // --- DOWNLOAD ---
     // Sekarang menggunakan route umum (tanpa prefix 'admin.')
+
+    // TAMBAHKAN METHOD INI (Untuk Download Laporan Kelas)
+    public function downloadPdf()
+    {
+        if ($this->selectedKelompokId) {
+            $kelompok = Kelompok::find($this->selectedKelompokId);
+            if ($kelompok && $kelompok->id_kelas) {
+                return redirect()->route('export.laporan-hafalan.pdf', ['kelasId' => $kelompok->id_kelas]);
+            }
+        }
+    }
+
+    public function downloadExcel()
+    {
+        if ($this->selectedKelompokId) {
+            $kelompok = Kelompok::find($this->selectedKelompokId);
+            if ($kelompok && $kelompok->id_kelas) {
+                return redirect()->route('export.laporan-hafalan.excel', ['kelasId' => $kelompok->id_kelas]);
+            }
+        }
+    }
 
     public function downloadPdfSiswa()
     {
