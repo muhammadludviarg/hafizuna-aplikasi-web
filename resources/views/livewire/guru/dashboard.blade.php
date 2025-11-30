@@ -23,9 +23,8 @@
             <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-600 text-sm">Kelas Diampu</p>
+                        <p class="text-gray-600 text-sm">Kelompok Diampu</p>
                         <p class="text-3xl font-bold text-gray-800 mt-2">{{ $kelasCount }}</p>
-                        <p class="text-gray-500 text-xs mt-2">5 Firdaus</p>
                     </div>
                     <div class="p-3 bg-green-100 rounded-lg">
                         <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +41,6 @@
                     <div>
                         <p class="text-gray-600 text-sm">Total Siswa</p>
                         <p class="text-3xl font-bold text-gray-800 mt-2">{{ $siswaCount }}</p>
-                        <p class="text-gray-500 text-xs mt-2">Siswa bimbingan aktif</p>
                     </div>
                     <div class="p-3 bg-blue-100 rounded-lg">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +57,6 @@
                     <div>
                         <p class="text-gray-600 text-sm">Rata-rata Nilai</p>
                         <p class="text-3xl font-bold text-gray-800 mt-2">{{ $rataRataNilai }}</p>
-                        <p class="text-gray-500 text-xs mt-2">Dari semua sesi hafalan</p>
                     </div>
                     <div class="p-3 bg-yellow-100 rounded-lg">
                         <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,7 +73,6 @@
                     <div>
                         <p class="text-gray-600 text-sm">Sesi Bulan Ini</p>
                         <p class="text-3xl font-bold text-gray-800 mt-2">{{ $sesiBlnIni }}</p>
-                        <p class="text-gray-500 text-xs mt-2">Total setoran hafalan</p>
                     </div>
                     <div class="p-3 bg-purple-100 rounded-lg">
                         <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

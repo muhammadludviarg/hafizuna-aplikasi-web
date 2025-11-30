@@ -1,19 +1,22 @@
+<x-slot name="header">
+    <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+        {{ __('Dashboard Orang Tua') }}
+    </h2>
+</x-slot>
+
 <div class="py-12">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <!-- Header Greeting -->
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
         <div class="bg-green-600 rounded-xl p-6 mb-8 text-white shadow-lg relative overflow-hidden">
             <div class="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-white opacity-10"></div>
             <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-32 h-32 rounded-full bg-white opacity-10"></div>
 
             <div class="relative z-10">
-                <h2 class="text-2xl md:text-3xl font-bold mb-2">Assalamu'alaikum, {{ Auth::user()->nama_lengkap }}!
-                </h2>
+                <h2 class="text-2xl md:text-3xl font-bold mb-2">Assalamu'alaikum, {{ Auth::user()->nama_lengkap }}!</h2>
                 <p class="text-green-100 text-sm md:text-base">
                     Pantau perkembangan hafalan buah hati Anda dengan mudah di sini.
                 </p>
             </div>
-
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -56,21 +59,6 @@
                             </p>
                         </div>
                     </div>
-
-                    @if (!empty($anak['setoran_terakhir']))
-                        <div class="bg-gray-50 p-4 rounded border-t">
-                            <p class="text-xs text-gray-600 mb-3 font-semibold">Setoran Terakhir:</p>
-                            <div class="space-y-2">
-                                @foreach ($anak['setoran_terakhir'] as $setoran)
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="text-gray-700">{{ $setoran['surah'] }}</span>
-                                        <span
-                                            class="font-semibold {{ $index % 2 === 0 ? 'text-green-600' : 'text-blue-600' }}">{{ $setoran['nilai'] }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
                 </div>
             @endforeach
         </div>
@@ -91,7 +79,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8" wire:ignore>
 
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-2">Perkembangan Nilai</h3>
@@ -157,8 +145,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
     <script>
         document.addEventListener('livewire:init', () => {
             let chartPerkembangan = null;
@@ -168,8 +154,13 @@
                 // 1. Render Chart Perkembangan
                 const elPerkembangan = document.querySelector("#chartPerkembangan");
                 if (elPerkembangan) {
-                    // Hapus chart lama jika ada agar tidak menumpuk
-                    if (chartPerkembangan) chartPerkembangan.destroy();
+                    // Hapus chart lama jika ada (untuk menghindari duplikasi saat update)
+                    if (chartPerkembangan) {
+                        chartPerkembangan.destroy();
+                    } else {
+                        // Jika chart belum ada, bersihkan isi div (untuk kasus inisialisasi ulang)
+                        elPerkembangan.innerHTML = '';
+                    }
 
                     const optionsPerkembangan = {
                         series: [
@@ -180,7 +171,7 @@
                         chart: { type: 'line', height: 300, toolbar: { show: false } },
                         stroke: { curve: 'smooth', width: 2 },
                         xaxis: { categories: data.perkembangan.labels },
-                        yaxis: { min: 50, max: 100 }, // Agar grafik tidak terlalu gepeng
+                        yaxis: { min: 50, max: 100 },
                         colors: ['#10B981', '#EF4444', '#3B82F6'],
                         grid: { show: true, borderColor: '#e5e7eb' }
                     };
@@ -192,7 +183,11 @@
                 // 2. Render Chart Target
                 const elTarget = document.querySelector("#chartTarget");
                 if (elTarget) {
-                    if (chartTarget) chartTarget.destroy();
+                    if (chartTarget) {
+                        chartTarget.destroy();
+                    } else {
+                        elTarget.innerHTML = '';
+                    }
 
                     const optionsTarget = {
                         series: [
@@ -211,8 +206,8 @@
                 }
             }
 
-            // Inisialisasi Awal (Ambil data dari PHP Blade saat pertama load)
-            renderCharts({
+            // Inisialisasi Awal (Render grafik pertama kali saat halaman dimuat)
+            const initialData = {
                 perkembangan: {
                     labels: @json($chartPerkembanganLabels),
                     tajwid: @json($chartPerkembanganTajwid),
@@ -224,12 +219,20 @@
                     pencapaian: @json($chartTargetPencapaian),
                     target: @json($chartTargetTarget)
                 }
-            });
+            };
 
-            // Event Listener: Update saat anak diganti
+            // Pastikan DOM sudah siap sebelum render pertama kali
+            setTimeout(() => {
+                renderCharts(initialData);
+            }, 100);
+
+
+            // Event Listener: Update grafik saat Livewire mengirim event 'update-charts'
             Livewire.on('update-charts', (eventData) => {
-                // Livewire mengirim data dalam array [payload], jadi ambil index 0
-                renderCharts(eventData[0]);
+                // Livewire 3 kadang membungkus data event dalam array.
+                // Kita cek apakah eventData adalah array atau objek langsung.
+                const data = Array.isArray(eventData) ? eventData[0] : eventData;
+                renderCharts(data);
             });
         });
     </script>
