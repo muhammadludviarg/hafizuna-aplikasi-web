@@ -63,22 +63,96 @@
 
     @if($step == 2)
         <div class="bg-white p-6 rounded-lg shadow-md">
+            <!-- Header -->
             <div class="flex justify-between items-center border-b pb-2 mb-4">
                 <h3 class="text-lg font-semibold text-gray-700">Langkah 2: Pilih Siswa</h3>
-                <button wire:click="backStep(1)"class="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold mb-4">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
-                            </path>
-                        </svg> Kembali ke Kelompok</button>
+                <button wire:click="backStep(1)" class="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg> 
+                    Kembali ke Kelompok
+                </button>
             </div>
+
+            <div class="mb-6">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    
+                    <input 
+                        type="text" 
+                        wire:model.live.debounce.300ms="searchSiswa"
+                        placeholder="Cari nama siswa..."
+                        class="w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                    >
+                    
+                    <!-- Clear Button -->
+                    @if($searchSiswa)
+                        <button 
+                            wire:click="$set('searchSiswa', '')" 
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    @endif
+                </div>
+                
+                <!-- Info Hasil -->
+                @if($searchSiswa)
+                    <p class="text-sm text-gray-600 mt-2">
+                        Menampilkan <strong class="text-green-600">{{ $this->filteredSiswa->count() }}</strong> dari {{ $daftarSiswa->count() }} siswa
+                    </p>
+                @endif
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @forelse ($daftarSiswa as $siswa)
+                @forelse ($this->filteredSiswa as $siswa)
                     <button wire:click="selectSiswa({{ $siswa->id_siswa }})"
-                        class="p-4 bg-gray-50 rounded-lg shadow border border-gray-200 hover:bg-green-100 hover:border-green-400 transition-all text-left">
-                        <p class="text-xl font-semibold text-gray-800">{{ $siswa->nama_siswa }}</p>
+                        class="p-4 bg-gray-50 rounded-lg shadow border border-gray-200 hover:bg-green-100 hover:border-green-400 transition-all text-left group">
+                        
+                        <div class="flex items-center gap-3">
+                            <!-- Avatar -->
+                            <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-green-700 transition-colors shadow-md">
+                                {{ strtoupper(substr($siswa->nama_siswa, 0, 1)) }}
+                            </div>
+                            
+                            <!-- Info -->
+                            <div class="flex-1">
+                                <p class="text-lg font-semibold text-gray-800 group-hover:text-green-700">
+                                    {{ $siswa->nama_siswa }}
+                                </p>
+                                <p class="text-sm text-gray-500">
+                                    {{ $siswa->kelas->nama_kelas ?? 'Tanpa Kelas' }}
+                                </p>
+                            </div>
+
+                            <!-- Arrow Icon -->
+                            <svg class="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
                     </button>
                 @empty
-                    <p class="text-gray-500 col-span-3">Tidak ada siswa di kelompok ini.</p>
+                    <div class="col-span-full text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        
+                        @if($searchSiswa)
+                            <p class="text-gray-600 font-medium">Tidak ditemukan siswa dengan nama</p>
+                            <p class="text-green-600 font-bold text-lg">"{{ $searchSiswa }}"</p>
+                            <button wire:click="$set('searchSiswa', '')" class="mt-3 text-sm text-green-600 hover:text-green-700 underline">
+                                Tampilkan semua siswa
+                            </button>
+                        @else
+                            <p class="text-gray-600">Tidak ada siswa di kelompok ini.</p>
+                        @endif
+                    </div>
                 @endforelse
             </div>
         </div>

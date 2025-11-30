@@ -16,7 +16,7 @@ class Kelompok extends Model
         'nama_kelompok', 
         'id_kelas',
         'id_guru',
-        'tahun_ajaran', 
+        //'tahun_ajaran', 
     ];
     public function kelas()
     {

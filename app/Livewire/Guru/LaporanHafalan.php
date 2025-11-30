@@ -82,7 +82,7 @@ class LaporanHafalan extends Component
 
         $this->kelompokDetail = [
             'nama_kelompok' => "Kelompok " . ($kelompok->nama_kelompok ?? '-') . " - " . ($kelompok->kelas->nama_kelas ?? '-'),
-            'tahun_ajaran' => $kelompok->tahun_ajaran ?? 'Tidak Ada',
+            'tahun_ajaran' => $kelompok->kelas->tahun_ajaran ?? 'Tidak Ada',
         ];
 
         // 1. Ambil Target Kelompok
