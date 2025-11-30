@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class, 
 
             // 3. Seed data dummy transaksional
-            DummyDataSeeder::class,
+            // DummyDataSeeder::class,
         ]);
     }
 }
