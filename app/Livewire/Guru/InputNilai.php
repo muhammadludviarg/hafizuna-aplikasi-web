@@ -11,10 +11,10 @@ use App\Models\Ayat;
 use App\Models\SesiHafalan;
 use App\Models\Koreksi;
 use App\Models\Guru;
+use App\Models\TargetHafalanKelompok;
 use App\Jobs\SendNotifikasiOrtuJob;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\Log;
 
@@ -34,33 +34,32 @@ class InputNilai extends Component
     public $selectedSiswaId;
     public $selectedSiswaNama;
 
+    // (BARU) Info Target Hafalan untuk ditampilkan di UI
+    public $targetHafalanInfo = null;
+
     // Data Form Surah (Step 3)
     public $id_surah, $ayat_mulai, $ayat_selesai;
 
-    // (BARU) Properti untuk menampilkan jumlah ayat
+    // Properti untuk menampilkan jumlah ayat
     public $jumlahAyatSurah = null;
 
     // Data untuk Penilaian (Step 4)
     public $ayatsToReview = [];
     public $koreksi = [];
 
-    // Aturan validasi baru
+    // Aturan validasi
     protected $rules = [
         'id_surah' => 'required|integer|exists:surah,id_surah',
         'ayat_mulai' => 'required|integer|min:1',
         'ayat_selesai' => 'required|integer|min:1|gte:ayat_mulai',
     ];
 
-    /**
-     * Mount: (Dijalankan sekali saat load)
-     */
     public function mount()
     {
-        // Mode Development: Ambil guru pertama jika tidak login
         if (!Auth::check()) {
             $this->guru = Guru::first();
             if (!$this->guru) {
-                session()->flash('error', 'MODE DEVELOPMENT: Tabel guru kosong, tidak bisa mengambil data tes.');
+                session()->flash('error', 'MODE DEVELOPMENT: Tabel guru kosong.');
                 return;
             }
         } else {
@@ -71,19 +70,33 @@ class InputNilai extends Component
             }
         }
 
-        $this->daftarKelompok = Kelompok::where('id_guru', $this->guru->id_guru)
-            ->with('kelas')
-            ->get();
+        $this->daftarKelompok = Kelompok::with(['kelas', 'siswa'])
+            ->where('id_guru', $this->guru->id_guru)
+            ->get()
+            ->map(function ($kelompok) {
+                $jumlahSiswa = $kelompok->siswa->count();
+                $namaKelas = $kelompok->kelas ? $kelompok->kelas->nama_kelas : 'Tanpa Kelas';
+                $tahunAjaran = $kelompok->kelas ? $kelompok->kelas->tahun_ajaran : '-'; // Ambil dari Kelas
+    
+                return [
+                    'id' => $kelompok->id_kelompok,
+                    'nama_kelompok_utama' => $kelompok->nama_kelompok ?? 'Kelompok',
+                    'nama_kelas_kecil' => $namaKelas,
+                    'tahun_ajaran' => $tahunAjaran,
+                    'jumlah_siswa' => $jumlahSiswa,
+                ];
+            })
+            ->toArray();
+
+        // Load awal semua surah
         $this->daftarSurah = Surah::orderBy('nomor_surah')->get();
     }
 
-    // (BARU) Lifecycle Hook. Dijalankan SETIAP KALI $id_surah berubah.
     public function updatedIdSurah($value)
     {
         if ($value) {
             $surah = Surah::find($value);
             $this->jumlahAyatSurah = $surah->jumlah_ayat;
-            // Validasi otomatis ayat_selesai jika melebihi
             if ($this->ayat_selesai > $this->jumlahAyatSurah) {
                 $this->ayat_selesai = $this->jumlahAyatSurah;
             }
@@ -92,8 +105,6 @@ class InputNilai extends Component
         }
     }
 
-
-    /** STEP 1: Pilih Kelompok **/
     public function selectKelompok($kelompokId)
     {
         $this->selectedKelompokId = $kelompokId;
@@ -104,15 +115,56 @@ class InputNilai extends Component
         $this->step = 2;
     }
 
-    /** STEP 2: Pilih Siswa **/
     public function selectSiswa($siswaId)
     {
         $this->selectedSiswaId = $siswaId;
         $this->selectedSiswaNama = Siswa::find($siswaId)->nama_siswa;
+
+        // Load status hafalan & Info Target
+        $this->loadStatusHafalanSiswa();
+
         $this->step = 3;
     }
 
-    /** STEP 3: Load Ayat **/
+    // PERBAIKAN UTAMA DISINI:
+    public function loadStatusHafalanSiswa()
+    {
+        // 1. Ambil Target Hafalan untuk Info UI
+        $target = TargetHafalanKelompok::where('id_kelompok', $this->selectedKelompokId)->first();
+
+        if ($target && $target->surahAwal && $target->surahAkhir) {
+            $this->targetHafalanInfo = "Target: " . $target->surahAwal->nama_surah . " s.d " . $target->surahAkhir->nama_surah;
+        } else {
+            $this->targetHafalanInfo = "Belum ada target hafalan yang diatur.";
+        }
+
+        // 2. Load SEMUA Surah + Status Hafalan (Tanpa Filter Range Target)
+        $this->daftarSurah = Surah::orderBy('nomor_surah')->get()->map(function ($surah) {
+            $sesi = SesiHafalan::where('id_siswa', $this->selectedSiswaId)
+                ->where(function ($q) use ($surah) {
+                    $q->where('id_surah_mulai', $surah->id_surah)
+                        ->orWhere('id_surah_selesai', $surah->id_surah);
+                })
+                ->latest('tanggal_setor')
+                ->first();
+
+            if (!$sesi) {
+                $surah->status_hafalan = 'Belum';
+                $surah->status_color = 'text-gray-500'; // Abu-abu
+            } else {
+                if ($sesi->ayat_selesai >= $surah->jumlah_ayat) {
+                    $surah->status_hafalan = 'Selesai';
+                    $surah->status_color = 'text-green-600 font-bold'; // Hijau Tebal
+                } else {
+                    $surah->status_hafalan = 'Sedang';
+                    $surah->status_color = 'text-yellow-600 font-bold'; // Kuning Tebal
+                }
+            }
+
+            return $surah;
+        });
+    }
+
     public function loadAyats()
     {
         $this->validate();
@@ -120,9 +172,10 @@ class InputNilai extends Component
         $this->ayatsToReview = Ayat::where('id_surah', $this->id_surah)
             ->whereBetween('nomor_ayat', [$this->ayat_mulai, $this->ayat_selesai])
             ->orderBy('nomor_ayat')
-            ->get();
+            ->get()
+            ->toArray();
 
-        if ($this->ayatsToReview->isEmpty()) {
+        if (empty($this->ayatsToReview)) {
             session()->flash('error', 'Ayat tidak ditemukan. Periksa kembali rentang yang Anda masukkan.');
             return;
         }
@@ -131,7 +184,6 @@ class InputNilai extends Component
         $this->step = 4;
     }
 
-    /** STEP 4: Tambah Koreksi **/
     public function addKoreksi($idAyat, $kataKe, $kategori, $kataArab)
     {
         $key = 'id_ayat_' . $idAyat . '_kata_' . $kataKe;
@@ -148,13 +200,12 @@ class InputNilai extends Component
         }
     }
 
-    /** Computed Property untuk Statistik Real-time **/
     #[Computed]
     public function statistik()
     {
         $totalKata = 0;
         foreach ($this->ayatsToReview as $ayat) {
-            $totalKata += $ayat->jumlah_kata;
+            $totalKata += $ayat['jumlah_kata'];
         }
         if ($totalKata == 0)
             $totalKata = 1;
@@ -189,17 +240,11 @@ class InputNilai extends Component
         ];
     }
 
-    /** * STEP 4: Simpan Sesi
-     * LOGIKA INI SUDAH BENAR!
-     */
     public function simpanSesi($kirimNotifikasi = false)
     {
         $statistik = $this->statistik();
         $sesi = null;
 
-        // 1. Jalankan Transaksi Database
-        // Ini akan menyimpan SesiHafalan dan Koreksi.
-        // Jika salah satu gagal, keduanya akan di-rollback. Ini SUDAH BENAR.
         DB::transaction(function () use (&$sesi, $statistik) {
             $sesi = SesiHafalan::create([
                 'id_siswa' => $this->selectedSiswaId,
@@ -235,16 +280,11 @@ class InputNilai extends Component
             }
         });
 
-        // 2. Coba Kirim Notifikasi (HANYA JIKA 'kirimNotifikasi' true DAN $sesi berhasil dibuat)
         if ($kirimNotifikasi && $sesi) {
             try {
-                // 3. Dispatch ke Antrean (Queue)
                 SendNotifikasiOrtuJob::dispatch($sesi);
-
                 session()->flash('message', 'Sesi berhasil disimpan. Nilai Akhir: ' . $statistik['nilaiAkhir'] . '. Notifikasi sedang dikirim.');
-
             } catch (\Exception $e) {
-
                 Log::error('Gagal dispatch SendNotifikasiOrtuJob: ' . $e->getMessage());
                 session()->flash('error', 'Sesi disimpan, TAPI gagal mengirim notifikasi. Cek log.');
             }
@@ -255,19 +295,20 @@ class InputNilai extends Component
         $this->resetAll();
     }
 
-    /** Navigasi & Reset **/
     public function backStep($step)
     {
         $this->step = $step;
     }
+
     public function resetAll()
     {
-        $this->reset('step', 'selectedKelompokId', 'selectedSiswaId', 'selectedSiswaNama', 'id_surah', 'ayat_mulai', 'ayat_selesai', 'ayatsToReview', 'koreksi', 'jumlahAyatSurah');
+        $this->reset('step', 'selectedKelompokId', 'selectedSiswaId', 'selectedSiswaNama', 'id_surah', 'ayat_mulai', 'ayat_selesai', 'ayatsToReview', 'koreksi', 'jumlahAyatSurah', 'targetHafalanInfo');
         $this->mount();
     }
+
     public function render()
     {
         return view('livewire.guru.input-nilai')
-        ->layout('layouts.guru');
+            ->layout('layouts.guru');
     }
 }

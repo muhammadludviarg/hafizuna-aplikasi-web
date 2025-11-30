@@ -20,35 +20,14 @@ class ExportLaporanHafalanController extends Controller
 {
     public function exportPdf($kelasId)
     {
-        $kelas = Kelas::with('siswa')->find($kelasId);
+        $kelas = Kelas::with(['siswa.kelompok'])->find($kelasId);
 
         if (!$kelas) {
             return abort(404);
         }
 
-        // Prepare data siswa
-        $siswaDetail = $kelas->siswa->map(function ($siswa) {
-            $sesiHafalan = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
-
-            $jumlahSesi = $sesiHafalan->count();
-            $nilaiRataRata = $jumlahSesi > 0
-                ? round($sesiHafalan->avg('nilai_rata'), 2)
-                : 0;
-
-            $totalAyat = 0;
-            foreach ($sesiHafalan as $sesi) {
-                $totalAyat += ($sesi->ayat_selesai - $sesi->ayat_mulai + 1);
-            }
-
-            return [
-                'nama_siswa' => $siswa->nama_siswa,
-                'total_ayat' => $totalAyat,
-                'jumlah_sesi' => $jumlahSesi,
-                'nilai_rata_rata' => $nilaiRataRata,
-            ];
-        })->sortByDesc('nilai_rata_rata')
-            ->values()
-            ->toArray();
+        // Prepare data siswa dengan Progress Target
+        $siswaDetail = $this->getSiswaDetailForKelas($kelas);
 
         $data = [
             'sekolah' => 'HAFIZUNA',
@@ -69,7 +48,7 @@ class ExportLaporanHafalanController extends Controller
 
     public function exportExcel($kelasId)
     {
-        $kelas = Kelas::with('siswa')->find($kelasId);
+        $kelas = Kelas::with(['siswa.kelompok'])->find($kelasId);
         if (!$kelas)
             return abort(404);
 
@@ -85,8 +64,8 @@ class ExportLaporanHafalanController extends Controller
         $sheet->setCellValue('A3', 'Tanggal: ' . date('d/m/Y'));
         $sheet->mergeCells('A1:E1');
 
-        // Header Tabel
-        $headers = ['No', 'Nama Siswa', 'Total Ayat', 'Jumlah Sesi', 'Nilai Rata-rata'];
+        // Header Tabel (Updated: Total Ayat -> Progress Target)
+        $headers = ['No', 'Nama Siswa', 'Progress Target', 'Jumlah Sesi', 'Nilai Rata-rata'];
         $sheet->fromArray($headers, NULL, 'A5');
 
         // Styling Header
@@ -102,7 +81,7 @@ class ExportLaporanHafalanController extends Controller
         foreach ($siswaDetail as $index => $siswa) {
             $sheet->setCellValue('A' . $row, $index + 1);
             $sheet->setCellValue('B' . $row, $siswa['nama_siswa']);
-            $sheet->setCellValue('C' . $row, $siswa['total_ayat']);
+            $sheet->setCellValue('C' . $row, $siswa['progress_target']); // Updated
             $sheet->setCellValue('D' . $row, $siswa['jumlah_sesi']);
             $sheet->setCellValue('E' . $row, $siswa['nilai_rata_rata']);
             $row++;
@@ -118,6 +97,56 @@ class ExportLaporanHafalanController extends Controller
         return $this->downloadXlsx($spreadsheet, $filename);
     }
 
+    // FUNGSI UTAMA: Menghitung Progress Target (Reused Logic dari Livewire)
+    private function getSiswaDetailForKelas($kelas)
+    {
+        return $kelas->siswa->map(function ($siswa) {
+            // 1. Cari Kelompok & Target
+            $kelompok = $siswa->kelompok->first(); // Asumsi 1 siswa 1 kelompok
+            $target = $kelompok ? TargetHafalanKelompok::where('id_kelompok', $kelompok->id_kelompok)->first() : null;
+
+            $surahSelesaiCount = 0;
+            $totalTargetSurah = 0;
+
+            if ($target) {
+                $totalTargetSurah = abs($target->id_surah_akhir - $target->id_surah_awal) + 1;
+                $rangeSurah = range(min($target->id_surah_awal, $target->id_surah_akhir), max($target->id_surah_awal, $target->id_surah_akhir));
+
+                foreach ($rangeSurah as $idSurah) {
+                    $surah = Surah::find($idSurah);
+                    if (!$surah)
+                        continue;
+
+                    // Cek apakah sudah ada setoran yang tuntas (ayat_selesai >= jumlah_ayat)
+                    $cekSesi = SesiHafalan::where('id_siswa', $siswa->id_siswa)
+                        ->where(function ($q) use ($idSurah) {
+                            $q->where('id_surah_mulai', $idSurah)
+                                ->orWhere('id_surah_selesai', $idSurah);
+                        })
+                        ->orderByDesc('ayat_selesai')
+                        ->first();
+
+                    if ($cekSesi && $cekSesi->ayat_selesai >= $surah->jumlah_ayat) {
+                        $surahSelesaiCount++;
+                    }
+                }
+            }
+
+            $progressTarget = $target ? "$surahSelesaiCount / $totalTargetSurah Surah" : "Belum ada target";
+
+            // Statistik Nilai
+            $sesiHafalan = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
+            $jumlahSesi = $sesiHafalan->count();
+            $nilaiRataRata = $jumlahSesi > 0 ? round($sesiHafalan->avg('nilai_rata'), 2) : 0;
+
+            return [
+                'nama_siswa' => $siswa->nama_siswa,
+                'progress_target' => $progressTarget, // Field baru
+                'jumlah_sesi' => $jumlahSesi,
+                'nilai_rata_rata' => $nilaiRataRata,
+            ];
+        })->sortByDesc('nilai_rata_rata')->values()->toArray();
+    }
     private function generateCsv($kelas, $siswaDetail)
     {
         $output = fopen('php://temp', 'r+');
@@ -678,25 +707,6 @@ class ExportLaporanHafalanController extends Controller
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Cache-Control' => 'max-age=0',
         ]);
-    }
-
-    private function getSiswaDetailForKelas($kelas)
-    {
-        return $kelas->siswa->map(function ($siswa) {
-            $sesiHafalan = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
-            $jumlahSesi = $sesiHafalan->count();
-            $nilaiRataRata = $jumlahSesi > 0 ? round($sesiHafalan->avg('nilai_rata'), 2) : 0;
-            $totalAyat = 0;
-            foreach ($sesiHafalan as $sesi) {
-                $totalAyat += ($sesi->ayat_selesai - $sesi->ayat_mulai + 1);
-            }
-            return [
-                'nama_siswa' => $siswa->nama_siswa,
-                'total_ayat' => $totalAyat,
-                'jumlah_sesi' => $jumlahSesi,
-                'nilai_rata_rata' => $nilaiRataRata,
-            ];
-        })->sortByDesc('nilai_rata_rata')->values()->toArray();
     }
     private function getGradeDescription($nilai)
     {
