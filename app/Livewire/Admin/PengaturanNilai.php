@@ -47,9 +47,6 @@ class PengaturanNilai extends Component
             'settings.*.*.proporsi_max' => 'required|numeric|min:0|max:100|gte:settings.*.*.proporsi_min',
         ]);
 
-        // =======================================================
-        // ▼▼▼ TAMBAHKAN LOGIKA PENGECEKAN BENTROK DI SINI ▼▼▼
-        // =======================================================
         foreach ($this->settings as $aspek => $grades) {
             // $grades akan berisi ['A' => [...], 'B' => [...], 'C' => [...]]
             

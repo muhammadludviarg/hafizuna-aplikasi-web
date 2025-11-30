@@ -51,7 +51,7 @@ class ManajemenKelompok extends Component
     {
         $kelompok = Kelompok::with(['siswa', 'kelas'])->findOrFail($id);
         
-        // ✅ Cek apakah kelompok ini milik guru yang login
+        // Cek apakah kelompok ini milik guru yang login
         if ($kelompok->id_guru != Auth::user()->guru->id_guru) {
             session()->flash('error', 'Anda tidak memiliki akses ke kelompok ini!');
             return;
@@ -73,13 +73,19 @@ class ManajemenKelompok extends Component
         // Set siswa yang sudah terpilih
         $this->siswa_dipilih = $kelompok->siswa->pluck('id_siswa')->toArray();
         
-        // Set tanggal
+        // Set tanggal (tanpa fallback)
         $pivotData = $kelompok->siswa->first()?->pivot;
-        $this->tgl_mulai = $pivotData?->tgl_mulai ?? now()->format('Y-m-d');
-        $this->tgl_selesai = $pivotData?->tgl_selesai ?? now()->addYear()->format('Y-m-d');
         
-        $this->isModalOpen = true;
-    }
+        if ($pivotData && $pivotData->tgl_mulai) {
+            $this->tgl_mulai = \Carbon\Carbon::parse($pivotData->tgl_mulai)->format('Y-m-d');
+        }
+        
+        if ($pivotData && $pivotData->tgl_selesai) {
+            $this->tgl_selesai = \Carbon\Carbon::parse($pivotData->tgl_selesai)->format('Y-m-d');
+        }
+            
+            $this->isModalOpen = true;
+        }
 
     /**
      * Update kelompok (pindahkan siswa)
@@ -93,7 +99,7 @@ class ManajemenKelompok extends Component
         try {
             $kelompok = Kelompok::findOrFail($this->kelompok_id);
             
-            // ✅ Cek akses lagi
+            // Cek akses lagi
             if ($kelompok->id_guru != Auth::user()->guru->id_guru) {
                 throw new \Exception('Anda tidak memiliki akses ke kelompok ini!');
             }
@@ -156,24 +162,21 @@ class ManajemenKelompok extends Component
         $this->id_guru = null;
         $this->siswa_dipilih = [];
         $this->daftar_siswa = [];
-        $this->tgl_mulai = now()->format('Y-m-d');
-        $this->tgl_selesai = now()->addYear()->format('Y-m-d');
+        $this->tgl_mulai = null; 
+        $this->tgl_selesai = null; 
     }
 
-    /**
-     * Render view
-     */
     public function render()
     {
-        // ✅ Ambil ID guru yang login
+        // Ambil ID guru yang login
         $guruId = Auth::user()->guru->id_guru;
 
-        // ✅ Hanya tampilkan kelompok milik guru yang login
+        // Hanya tampilkan kelompok milik guru yang login
         $query = Kelompok::with(['kelas', 'guru.akun', 'siswa'])
             ->where('id_guru', $guruId)
             ->orderBy('nama_kelompok');
 
-        // ✅ Search: nama kelompok atau kelas
+        // Search: nama kelompok atau kelas
         if ($this->search) {
             $query->where(function($q) {
                 $q->where('nama_kelompok', 'like', '%' . $this->search . '%')

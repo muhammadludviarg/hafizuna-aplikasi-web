@@ -55,9 +55,11 @@
                 <!-- Periode -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Periode</label>
-                    <input type="text" wire:model="periode" value="{{ $periode }}"
+                    <input 
+                        type="text" 
+                        wire:model="periode"
                         class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                        placeholder="Semester 1 2024/2025">
+                        placeholder="Contoh: Semester 1 2025/2026">
                     @error('periode') <span class="text-xs text-red-500">{{ $message }}</span> @enderror
                 </div>
 

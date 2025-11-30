@@ -40,13 +40,9 @@ class Siswa extends Model
             'siswa_kelompok',
             'id_siswa',
             'id_kelompok'
-        );
+        )->withPivot('tgl_mulai', 'tgl_selesai');
     }
 
-    /**
-     * Relasi ke Orang Tua (One-to-Many / BelongsTo)
-     * ✅ UBAH DARI belongsToMany JADI belongsTo
-     */
     public function ortu()
     {
         return $this->belongsTo(OrangTua::class, 'id_ortu', 'id_ortu');

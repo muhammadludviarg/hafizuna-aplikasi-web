@@ -39,8 +39,8 @@ class KelolaKelompok extends Component
         'id_guru' => 'required|exists:guru,id_guru',
         'siswa_dipilih' => 'required|array|min:1',
         'siswa_dipilih.*' => 'exists:siswa,id_siswa',
-        'tgl_mulai' => 'required|date',        // ✅ TAMBAHKAN
-        'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai', // ✅ TAMBAHKAN
+        'tgl_mulai' => 'required|date',        
+        'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai', 
     ];
 
     protected $messages = [
@@ -60,10 +60,6 @@ class KelolaKelompok extends Component
     {
         $this->loadKelas();
         $this->loadGuru();
-        
-        // ✅ Set default tanggal hari ini dan akhir tahun ajaran
-        $this->tgl_mulai = now()->format('Y-m-d');
-        $this->tgl_selesai = now()->addYear()->format('Y-m-d');
     }
 
     public function loadKelas()
@@ -79,7 +75,7 @@ class KelolaKelompok extends Component
     public function updatedIdKelas($value)
     {
         if ($value) {
-            // ✅ Load SEMUA siswa di kelas ini (dengan info kelompok mereka)
+            // Load SEMUA siswa di kelas ini (dengan info kelompok mereka)
             $this->daftar_siswa = Siswa::where('id_kelas', $value)
                 ->with(['kelompok' => function($query) {
                     // Load kelompok aktif (yang bukan kelompok yang sedang diedit)
@@ -103,10 +99,6 @@ class KelolaKelompok extends Component
         $this->resetForm();
         $this->isEditMode = false;
         $this->isModalOpen = true;
-        
-        // ✅ Set default tanggal saat buat baru
-        $this->tgl_mulai = now()->format('Y-m-d');
-        $this->tgl_selesai = now()->addYear()->format('Y-m-d');
     }
 
     public function editKelompok($id)
@@ -121,10 +113,16 @@ class KelolaKelompok extends Component
         $this->updatedIdKelas($this->id_kelas);
         $this->siswa_dipilih = $kelompok->siswa->pluck('id_siswa')->toArray();
         
-        // ✅ Ambil tanggal dari pivot table (ambil salah satu siswa sebagai referensi)
+        // Ambil tanggal dari pivot table (jika ada)
         $pivotData = $kelompok->siswa->first()?->pivot;
-        $this->tgl_mulai = $pivotData?->tgl_mulai ?? now()->format('Y-m-d');
-        $this->tgl_selesai = $pivotData?->tgl_selesai ?? now()->addYear()->format('Y-m-d');
+        
+        if ($pivotData && $pivotData->tgl_mulai) {
+            $this->tgl_mulai = \Carbon\Carbon::parse($pivotData->tgl_mulai)->format('Y-m-d');
+        }
+        
+        if ($pivotData && $pivotData->tgl_selesai) {
+            $this->tgl_selesai = \Carbon\Carbon::parse($pivotData->tgl_selesai)->format('Y-m-d');
+        }
         
         $this->isEditMode = true;
         $this->isModalOpen = true;
@@ -146,7 +144,7 @@ class KelolaKelompok extends Component
                     'id_guru' => $this->id_guru,
                 ]);
 
-                // ✅ PINDAHKAN SISWA: Detach dari kelompok lain, attach ke kelompok ini
+                // PINDAHKAN SISWA: Detach dari kelompok lain, attach ke kelompok ini
                 $this->pindahkanSiswa($kelompok);
 
                 session()->flash('success', 'Kelompok berhasil diperbarui!');
@@ -159,7 +157,7 @@ class KelolaKelompok extends Component
                     'id_guru' => $this->id_guru,
                 ]);
 
-                // ✅ PINDAHKAN SISWA: Detach dari kelompok lain, attach ke kelompok baru
+                // PINDAHKAN SISWA: Detach dari kelompok lain, attach ke kelompok baru
                 $this->pindahkanSiswa($kelompok);
 
                 session()->flash('success', 'Kelompok berhasil dibuat!');
@@ -179,7 +177,7 @@ class KelolaKelompok extends Component
         $attachData = [];
         
         foreach ($this->siswa_dipilih as $id_siswa) {
-            // ✅ Detach siswa dari SEMUA kelompok lain terlebih dahulu
+            // Detach siswa dari SEMUA kelompok lain terlebih dahulu
             DB::table('siswa_kelompok')
                 ->where('id_siswa', $id_siswa)
                 ->where('id_kelompok', '!=', $kelompok->id_kelompok)
@@ -192,7 +190,7 @@ class KelolaKelompok extends Component
             ];
         }
         
-        // ✅ Sync siswa ke kelompok ini
+        // Sync siswa ke kelompok ini
         $kelompok->siswa()->sync($attachData);
     }
 
@@ -229,8 +227,8 @@ class KelolaKelompok extends Component
         $this->id_guru = null;
         $this->siswa_dipilih = [];
         $this->daftar_siswa = [];
-        $this->tgl_mulai = now()->format('Y-m-d');
-        $this->tgl_selesai = now()->addYear()->format('Y-m-d');
+        $this->tgl_mulai = null;
+        $this->tgl_selesai = null;
     }
 
     public function resetFilter()
@@ -245,7 +243,7 @@ class KelolaKelompok extends Component
         $query = Kelompok::with(['kelas', 'guru.akun', 'siswa'])
             ->orderBy('nama_kelompok');
 
-        // ✅ Search universal: nama kelompok, kelas, atau guru
+        // Search universal: nama kelompok, kelas, atau guru
         if ($this->search) {
             $query->where(function($q) {
                 // Cari di nama kelompok

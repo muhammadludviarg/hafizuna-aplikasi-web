@@ -28,6 +28,7 @@ class Kelompok extends Model
     }
     public function siswa()
     {
-        return $this->belongsToMany(Siswa::class, 'siswa_kelompok', 'id_kelompok', 'id_siswa');
+        return $this->belongsToMany(Siswa::class, 'siswa_kelompok', 'id_kelompok', 'id_siswa')
+                    ->withPivot('tgl_mulai', 'tgl_selesai');
     }
 }
