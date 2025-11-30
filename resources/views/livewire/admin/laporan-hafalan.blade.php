@@ -9,6 +9,7 @@
         <div class="p-4 md:p-6 text-gray-900 dark:text-gray-100">
 
             @if (!$selectedKelasId)
+                {{-- ... KODE VIEW KELAS TETAP SAMA ... --}}
                 <div wire:key="view-kelas">
                     <h3 class="text-xl md:text-2xl font-bold text-gray-800 mb-2">Laporan Hafalan</h3>
                     <p class="text-sm md:text-base text-gray-600 mb-6">Pilih kelas untuk melihat laporan</p>
@@ -87,20 +88,16 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-green-600 text-white">
                                 <tr>
-                                    <th
-                                        class="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
+                                    <th class="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
                                         No</th>
-                                    <th
-                                        class="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
+                                    <th class="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
                                         Nama Siswa</th>
-                                    <th
-                                        class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
+                                    <th class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
                                         Jml Sesi</th>
-                                    <th
-                                        class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
-                                        Total Ayat</th>
-                                    <th
-                                        class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
+                                    {{-- UPDATE KOLOM DISINI: Total Ayat -> Progress Target --}}
+                                    <th class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
+                                        Progress Target</th>
+                                    <th class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
                                         Rata-rata</th>
                                 </tr>
                             </thead>
@@ -114,8 +111,9 @@
                                         </td>
                                         <td class="px-4 md:px-6 py-4 text-center text-sm text-gray-700">
                                             {{ $siswa['jumlah_sesi'] }}</td>
+                                        {{-- UPDATE ISI DISINI --}}
                                         <td class="px-4 md:px-6 py-4 text-center text-sm text-gray-700">
-                                            {{ $siswa['total_ayat'] }}</td>
+                                            {{ $siswa['progress_target'] }}</td>
                                         <td class="px-4 md:px-6 py-4 text-center text-sm font-semibold">
                                             <span
                                                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -288,6 +286,53 @@
                         </div>
                     </div>
 
+                    {{-- TAMBAHAN BARU: SURAH SUDAH DIHAFAL (TUNTAS) --}}
+                    <div class="mb-8">
+                        <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <span class="w-1 h-6 bg-blue-600 rounded-full block"></span>
+                            Surah Sudah Dihafal (Tuntas)
+                        </h4>
+                        
+                        <div class="w-full overflow-x-auto rounded-lg border border-gray-200">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-blue-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-blue-800 uppercase tracking-wider whitespace-nowrap">No</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-blue-800 uppercase tracking-wider whitespace-nowrap">Surah</th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold text-blue-800 uppercase tracking-wider whitespace-nowrap">Total Sesi</th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold text-blue-800 uppercase tracking-wider whitespace-nowrap">Tajwid</th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold text-blue-800 uppercase tracking-wider whitespace-nowrap">Lancar</th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold text-blue-800 uppercase tracking-wider whitespace-nowrap">Makhroj</th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold text-blue-800 uppercase tracking-wider whitespace-nowrap">Nilai Akhir</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @forelse ($siswaDetail['surah_sudah_dihafal'] as $index => $item)
+                                        <tr class="hover:bg-blue-50 transition-colors">
+                                            <td class="px-4 py-3 text-sm text-gray-600">{{ $index + 1 }}</td>
+                                            <td class="px-4 py-3 text-sm font-bold text-gray-800">{{ $item['nama_surah'] }}</td>
+                                            <td class="px-4 py-3 text-sm text-center text-gray-600">{{ $item['jumlah_sesi'] }}x</td>
+                                            <td class="px-4 py-3 text-sm text-center text-gray-600">{{ $item['nilai_tajwid'] }}</td>
+                                            <td class="px-4 py-3 text-sm text-center text-gray-600">{{ $item['nilai_kelancaran'] }}</td>
+                                            <td class="px-4 py-3 text-sm text-center text-gray-600">{{ $item['nilai_makhroj'] }}</td>
+                                            <td class="px-4 py-3 text-center">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                                                    {{ $item['nilai_rata'] }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="px-4 py-6 text-center text-gray-500 italic">
+                                                Belum ada surah yang tuntas 100%.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <div>
                         <h4 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                             <span class="w-1 h-6 bg-orange-500 rounded-full block"></span>
@@ -351,6 +396,7 @@
                             Kembali
                         </button>
 
+                        {{-- Tombol Download Sesi PDF/Excel Tetap Sama --}}
                         <div class="flex gap-2 w-full md:w-auto">
                             <button wire:click="downloadPdfSesi()"
                                 class="flex-1 md:flex-none justify-center items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold shadow-sm text-sm">
@@ -373,6 +419,7 @@
                         </div>
                     </div>
 
+                    {{-- DETAIL SURAH SEPERTI SEBELUMNYA --}}
                     <div
                         class="bg-white border-l-4 border-green-600 rounded-r-lg shadow-sm p-4 mb-6 flex items-center justify-between">
                         <div>
@@ -389,6 +436,7 @@
                         </div>
                     </div>
 
+                    {{-- GRID NILAI --}}
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                         <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
                             <p class="text-[10px] uppercase text-gray-500 font-semibold">Tajwid</p>
@@ -408,6 +456,7 @@
                         </div>
                     </div>
 
+                    {{-- DETAIL SETORAN --}}
                     <div>
                         <h4 class="text-base font-bold text-gray-800 mb-3">Detail Setoran</h4>
                         <div class="space-y-3">
