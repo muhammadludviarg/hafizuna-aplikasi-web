@@ -48,7 +48,6 @@ class TargetHafalan extends Component
     public function mount()
     {
         $this->loadData();
-        $this->generatePeriodeOtomatis();
     }
 
     public function loadData()
@@ -157,8 +156,7 @@ class TargetHafalan extends Component
         $this->id_kelompok = $target->id_kelompok;
         $this->periode = $target->periode;
 
-        // PENTING: Format tanggal HARUS Y-m-d untuk input type="date"
-        // Gunakan Carbon parse untuk handle berbagai format dari database
+        // Format tanggal HARUS Y-m-d untuk input type="date"
         $this->tanggal_mulai = \Carbon\Carbon::parse($target->tanggal_mulai)->format('Y-m-d');
         $this->tanggal_selesai = \Carbon\Carbon::parse($target->tanggal_selesai)->format('Y-m-d');
 
@@ -190,10 +188,10 @@ class TargetHafalan extends Component
             'id_surah_awal',
             'id_surah_akhir',
             'isEditing',
-            'editingId'
+            'editingId',
+            'periode'
         ]);
         $this->daftarKelompok = [];
-        $this->generatePeriodeOtomatis();
     }
 
     public function render()

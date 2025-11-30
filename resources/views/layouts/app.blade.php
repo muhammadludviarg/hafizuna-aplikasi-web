@@ -69,20 +69,20 @@
                     </li>
 
                     <li>
+                        <a href="{{ route('admin.kelola-kelompok') }}" class="group flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-r-lg rounded-bl-lg whitespace-nowrap
+                           {{ request()->routeIs('admin.kelola-kelompok')
+    ? 'bg-green-900 text-white border-l-4 border-yellow-400 shadow-inner'
+    : 'text-green-100 hover:bg-green-700 hover:text-white hover:pl-6' }}">
+                            Kelola Siswa & Kelompok
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="{{ route('admin.target-hafalan') }}" class="group flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-r-lg rounded-bl-lg whitespace-nowrap
                            {{ request()->routeIs('admin.target-hafalan')
     ? 'bg-green-900 text-white border-l-4 border-yellow-400 shadow-inner'
     : 'text-green-100 hover:bg-green-700 hover:text-white hover:pl-6' }}">
                             Target Hafalan
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="{{ route('admin.kelola-kelompok') }}" class="group flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-r-lg rounded-bl-lg whitespace-nowrap
-                           {{ request()->routeIs('admin.kelola-kelompok')
-    ? 'bg-green-900 text-white border-l-4 border-yellow-400 shadow-inner'
-    : 'text-green-100 hover:bg-green-700 hover:text-white hover:pl-6' }}">
-                            Siswa & Kelompok
                         </a>
                     </li>
 

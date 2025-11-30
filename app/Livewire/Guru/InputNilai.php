@@ -28,6 +28,8 @@ class InputNilai extends Component
     public $daftarSiswa = [];
     public $daftarSurah = [];
 
+    public $searchSiswa = '';
+
     // Data Sesi yang Dipilih
     public $guru;
     public $selectedKelompokId;
@@ -108,6 +110,7 @@ class InputNilai extends Component
     public function selectKelompok($kelompokId)
     {
         $this->selectedKelompokId = $kelompokId;
+        $this->searchSiswa = ''; 
         $this->daftarSiswa = Siswa::whereHas('kelompok', function ($query) use ($kelompokId) {
             $query->where('siswa_kelompok.id_kelompok', $kelompokId);
         })->with('kelas')->get();
@@ -126,43 +129,53 @@ class InputNilai extends Component
         $this->step = 3;
     }
 
-    // PERBAIKAN UTAMA DISINI:
+    // PERBAIKAN UTAMA: Filter Surah berdasarkan Target
     public function loadStatusHafalanSiswa()
     {
-        // 1. Ambil Target Hafalan untuk Info UI
+        // 1. Ambil Target Hafalan kelompok
         $target = TargetHafalanKelompok::where('id_kelompok', $this->selectedKelompokId)->first();
 
         if ($target && $target->surahAwal && $target->surahAkhir) {
+            // Tampilkan info target
             $this->targetHafalanInfo = "Target: " . $target->surahAwal->nama_surah . " s.d " . $target->surahAkhir->nama_surah;
+            
+            // 2. FILTER Surah - HANYA tampilkan yang ada di range target
+            $minSurah = min($target->id_surah_awal, $target->id_surah_akhir);
+            $maxSurah = max($target->id_surah_awal, $target->id_surah_akhir);
+            
+            $this->daftarSurah = Surah::whereBetween('id_surah', [$minSurah, $maxSurah])
+                ->orderBy('nomor_surah')
+                ->get()
+                ->map(function ($surah) {
+                    // Cek status hafalan siswa untuk surah ini
+                    $sesi = SesiHafalan::where('id_siswa', $this->selectedSiswaId)
+                        ->where(function ($q) use ($surah) {
+                            $q->where('id_surah_mulai', $surah->id_surah)
+                                ->orWhere('id_surah_selesai', $surah->id_surah);
+                        })
+                        ->latest('tanggal_setor')
+                        ->first();
+
+                    if (!$sesi) {
+                        $surah->status_hafalan = 'Belum';
+                        $surah->status_color = 'text-gray-500';
+                    } else {
+                        if ($sesi->ayat_selesai >= $surah->jumlah_ayat) {
+                            $surah->status_hafalan = 'Selesai';
+                            $surah->status_color = 'text-green-600 font-bold';
+                        } else {
+                            $surah->status_hafalan = 'Sedang';
+                            $surah->status_color = 'text-yellow-600 font-bold';
+                        }
+                    }
+
+                    return $surah;
+                });
         } else {
-            $this->targetHafalanInfo = "Belum ada target hafalan yang diatur.";
+            // Jika TIDAK ADA target, tampilkan peringatan
+            $this->targetHafalanInfo = "⚠️ Belum ada target hafalan. Silakan hubungi admin untuk mengatur target kelompok ini.";
+            $this->daftarSurah = collect([]); // Kosongkan dropdown surah
         }
-
-        // 2. Load SEMUA Surah + Status Hafalan (Tanpa Filter Range Target)
-        $this->daftarSurah = Surah::orderBy('nomor_surah')->get()->map(function ($surah) {
-            $sesi = SesiHafalan::where('id_siswa', $this->selectedSiswaId)
-                ->where(function ($q) use ($surah) {
-                    $q->where('id_surah_mulai', $surah->id_surah)
-                        ->orWhere('id_surah_selesai', $surah->id_surah);
-                })
-                ->latest('tanggal_setor')
-                ->first();
-
-            if (!$sesi) {
-                $surah->status_hafalan = 'Belum';
-                $surah->status_color = 'text-gray-500'; // Abu-abu
-            } else {
-                if ($sesi->ayat_selesai >= $surah->jumlah_ayat) {
-                    $surah->status_hafalan = 'Selesai';
-                    $surah->status_color = 'text-green-600 font-bold'; // Hijau Tebal
-                } else {
-                    $surah->status_hafalan = 'Sedang';
-                    $surah->status_color = 'text-yellow-600 font-bold'; // Kuning Tebal
-                }
-            }
-
-            return $surah;
-        });
     }
 
     public function loadAyats()
@@ -238,6 +251,19 @@ class InputNilai extends Component
             'skorKelancaran' => round($skorKelancaran, 2),
             'nilaiAkhir' => round($nilaiAkhir, 2),
         ];
+    }
+
+    #[Computed]
+    public function filteredSiswa()
+    {
+        if (empty($this->searchSiswa)) {
+            return $this->daftarSiswa; // Tampilkan semua
+        }
+        
+        // Filter berdasarkan nama
+        return $this->daftarSiswa->filter(function ($siswa) {
+            return stripos($siswa->nama_siswa, $this->searchSiswa) !== false;
+        });
     }
 
     public function simpanSesi($kirimNotifikasi = false)

@@ -16,7 +16,7 @@ class Kelompok extends Model
         'nama_kelompok', 
         'id_kelas',
         'id_guru',
-        'tahun_ajaran', 
+        //'tahun_ajaran', 
     ];
     public function kelas()
     {
@@ -28,6 +28,7 @@ class Kelompok extends Model
     }
     public function siswa()
     {
-        return $this->belongsToMany(Siswa::class, 'siswa_kelompok', 'id_kelompok', 'id_siswa');
+        return $this->belongsToMany(Siswa::class, 'siswa_kelompok', 'id_kelompok', 'id_siswa')
+                    ->withPivot('tgl_mulai', 'tgl_selesai');
     }
 }

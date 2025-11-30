@@ -64,7 +64,7 @@
                            {{ request()->routeIs('guru.kelompok.index') || request()->routeIs('guru.kelompok.detail')
     ? 'bg-green-900 text-white border-l-4 border-yellow-400 shadow-inner'
     : 'text-green-100 hover:bg-green-700 hover:text-white hover:pl-6' }}">
-                            Manajemen Kelompok
+                            Kelola Siswa & Kelompok
                         </a>
                     </li>
 

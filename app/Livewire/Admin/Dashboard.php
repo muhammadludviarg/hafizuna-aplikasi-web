@@ -135,7 +135,7 @@ class Dashboard extends Component
                     'guru' => $sesi->guru_nama ?? 'N/A',
                     'tanggal' => $sesi->tanggal_setor ? Carbon::parse($sesi->tanggal_setor)->format('d M Y') : 'N/A',
                     'nilai' => round($sesi->nilai_rata ?? 0, 0),
-                    'warna_avatar' => ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500'][$index] ?? 'bg-blue-500'
+                    'warna_avatar' => ['bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-orange-600', 'bg-pink-600'][$index]
                 ];
             });
     }
