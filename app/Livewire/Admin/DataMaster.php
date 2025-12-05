@@ -6,7 +6,7 @@ use Livewire\Component;
 
 class DataMaster extends Component
 {
-    public $activeTab = 'siswa';
+    public $activeTab = 'kelas';
 
     public function setTab($tab)
     {

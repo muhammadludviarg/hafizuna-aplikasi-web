@@ -18,17 +18,25 @@ class Kelompok extends Model
         'id_guru',
         //'tahun_ajaran', 
     ];
+
     public function kelas()
     {
         return $this->belongsTo(Kelas::class, 'id_kelas');
     }
+
     public function guru()
     {
         return $this->belongsTo(Guru::class, 'id_guru');
     }
+
     public function siswa()
     {
         return $this->belongsToMany(Siswa::class, 'siswa_kelompok', 'id_kelompok', 'id_siswa')
                     ->withPivot('tgl_mulai', 'tgl_selesai');
+    }
+
+    public function targetHafalan()
+    {
+        return $this->hasMany(TargetHafalanKelompok::class, 'id_kelompok');
     }
 }

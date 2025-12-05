@@ -1,5 +1,4 @@
 <?php
-// app/Livewire/Admin/TargetHafalan.php
 
 namespace App\Livewire\Admin;
 
@@ -8,6 +7,7 @@ use App\Models\Kelompok;
 use App\Models\Kelas;
 use App\Models\Surah;
 use App\Models\Admin;
+use App\Models\Periode;
 use Livewire\Component;
 
 class TargetHafalan extends Component
@@ -15,13 +15,13 @@ class TargetHafalan extends Component
     // Form fields
     public $id_kelas;
     public $id_kelompok;
-    public $periode;
+    public $id_periode;
     public $tanggal_mulai;
     public $tanggal_selesai;
     public $id_surah_awal;
     public $id_surah_akhir;
 
-    public $selectedKelompok;
+    public $showModal = false;
 
     // Edit mode
     public $isEditing = false;
@@ -31,14 +31,18 @@ class TargetHafalan extends Component
     public $daftarKelas = [];
     public $daftarKelompok = [];
     public $daftarSurah = [];
+    public $daftarPeriode = [];
 
     // Data target yang sudah dibuat
     public $daftarTarget = [];
 
+    public $showSuccessToast = false;
+    public $successMessage = '';
+    public $toastType = 'success';
 
     protected $rules = [
         'id_kelompok' => 'required|exists:kelompok,id_kelompok',
-        'periode' => 'required|string|max:255',
+        'id_periode' => 'required|exists:periode,id_periode',
         'tanggal_mulai' => 'required|date',
         'tanggal_selesai' => 'required|date|after:tanggal_mulai',
         'id_surah_awal' => 'required|exists:surah,id_surah',
@@ -54,6 +58,9 @@ class TargetHafalan extends Component
     {
         $this->daftarKelas = Kelas::orderBy('nama_kelas')->get();
         $this->daftarSurah = Surah::orderBy('nomor_surah')->get();
+        $this->daftarPeriode = Periode::orderBy('tahun_ajaran', 'desc')
+            ->orderBy('semester', 'asc')
+            ->get();
 
         if ($this->id_kelas) {
             $this->loadKelompok();
@@ -64,9 +71,22 @@ class TargetHafalan extends Component
 
     public function loadKelompok()
     {
-        $this->daftarKelompok = Kelompok::with(['kelas', 'guru.akun'])
-            ->where('id_kelas', $this->id_kelas)
-            ->get();
+        $query = Kelompok::with(['kelas', 'guru.akun'])
+            ->where('id_kelas', $this->id_kelas);
+
+        $this->daftarKelompok = $query->get()
+            ->map(function ($kelompok) {
+                // Cek apakah kelompok ini sudah punya target di periode terpilih
+                $hasTarget = false;
+                if ($this->id_periode && !$this->isEditing) {
+                    $hasTarget = TargetHafalanKelompok::where('id_kelompok', $kelompok->id_kelompok)
+                        ->where('id_periode', $this->id_periode)
+                        ->exists();
+                }
+                
+                $kelompok->has_target = $hasTarget;
+                return $kelompok;
+            });
     }
 
     public function loadDaftarTarget()
@@ -75,34 +95,19 @@ class TargetHafalan extends Component
             'kelompok.kelas',
             'kelompok.guru.akun',
             'surahAwal',
-            'surahAkhir'
+            'surahAkhir',
+            'periode'
         ])
-            ->orderBy('tanggal_mulai', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function ($target) {
-                // Format nama kelompok
-                $target->nama_kelompok_display = $target->kelompok->kelas->nama_kelas .
-                    ' - Kelompok ' .
-                    ($target->kelompok->guru->akun->nama_lengkap ?? 'N/A');
-                return $target;
-            });
-    }
-
-    public function generatePeriodeOtomatis()
-    {
-        $tahun = now()->year;
-        $bulan = now()->month;
-
-        if ($bulan >= 7) {
-            $this->periode = "Semester 1 {$tahun}/" . ($tahun + 1);
-        } else {
-            $this->periode = "Semester 2 " . ($tahun - 1) . "/{$tahun}";
-        }
+            ->sortBy(function ($target) {
+                return $target->kelompok->kelas->nama_kelas ?? '';
+            })
+            ->values();
     }
 
     public function updatedIdKelas($value)
     {
-        // Jangan reset kelompok saat edit mode
         if (!$this->isEditing) {
             $this->id_kelompok = null;
         }
@@ -114,13 +119,34 @@ class TargetHafalan extends Component
         }
     }
 
+    public function updatedIdPeriode($value)
+    {
+        if (!$this->isEditing && $this->id_kelas) {
+            $this->loadKelompok();
+        }
+    }
+
     public function simpanTarget()
     {
         $this->validate();
 
+        $exists = TargetHafalanKelompok::where('id_kelompok', $this->id_kelompok)
+            ->where('id_periode', $this->id_periode)
+            ->when(!$this->isEditing, function ($query) {
+                return $query;
+            }, function ($query) {
+                return $query->where('id_target', '!=', $this->editingId);
+            })
+            ->exists();
+
+        if ($exists) {
+            $this->showToast('Kelompok ini sudah memiliki target untuk periode ini', 'error');
+            return;
+        }
+
         $data = [
             'id_kelompok' => $this->id_kelompok,
-            'periode' => $this->periode,
+            'id_periode' => $this->id_periode,
             'tanggal_mulai' => $this->tanggal_mulai,
             'tanggal_selesai' => $this->tanggal_selesai,
             'id_surah_awal' => $this->id_surah_awal,
@@ -130,52 +156,58 @@ class TargetHafalan extends Component
 
         if ($this->isEditing) {
             TargetHafalanKelompok::find($this->editingId)->update($data);
-            session()->flash('success', 'Target hafalan berhasil diperbarui!');
+            $this->showToast('Target hafalan berhasil diperbarui!', 'success');
         } else {
             TargetHafalanKelompok::create($data);
-            session()->flash('success', 'Target hafalan berhasil ditambahkan!');
+            $this->showToast('Target hafalan berhasil ditambahkan!', 'success');
         }
 
         $this->resetForm();
         $this->loadDaftarTarget();
+        $this->loadKelompok();
+    }
+
+    public function openCreateForm()
+    {
+        $this->resetForm();
+        $this->isEditing = false;
+        $this->showModal = true;
     }
 
     public function edit($id)
     {
         $target = TargetHafalanKelompok::with(['kelompok', 'surahAwal', 'surahAkhir'])->findOrFail($id);
 
-        // Set editing mode FIRST
         $this->isEditing = true;
         $this->editingId = $id;
+        $this->showModal = true;
 
-        // Load kelas dulu untuk populate dropdown kelompok
         $this->id_kelas = $target->kelompok->id_kelas;
         $this->loadKelompok();
 
-        // Set semua field
         $this->id_kelompok = $target->id_kelompok;
-        $this->periode = $target->periode;
-
-        // Format tanggal HARUS Y-m-d untuk input type="date"
+        $this->id_periode = $target->id_periode;
         $this->tanggal_mulai = \Carbon\Carbon::parse($target->tanggal_mulai)->format('Y-m-d');
         $this->tanggal_selesai = \Carbon\Carbon::parse($target->tanggal_selesai)->format('Y-m-d');
-
         $this->id_surah_awal = $target->id_surah_awal;
         $this->id_surah_akhir = $target->id_surah_akhir;
-
-        // DEBUG: Uncomment untuk cek format tanggal
-        // dd([
-        //     'tanggal_mulai' => $this->tanggal_mulai,
-        //     'tanggal_selesai' => $this->tanggal_selesai,
-        //     'raw_mulai' => $target->tanggal_mulai,
-        // ]);
     }
 
     public function hapus($id)
     {
         TargetHafalanKelompok::destroy($id);
-        session()->flash('success', 'Target hafalan berhasil dihapus!');
+        $this->showToast('Target hafalan berhasil dihapus!', 'success');
         $this->loadDaftarTarget();
+        $this->loadKelompok();
+    }
+
+    public function showToast($message, $type = 'success')
+    {
+        $this->successMessage = $message;
+        $this->toastType = $type;
+        $this->showSuccessToast = true;
+        
+        $this->dispatch('toast-timer', delay: 3000);
     }
 
     public function resetForm()
@@ -183,59 +215,20 @@ class TargetHafalan extends Component
         $this->reset([
             'id_kelas',
             'id_kelompok',
+            'id_periode',
             'tanggal_mulai',
             'tanggal_selesai',
             'id_surah_awal',
             'id_surah_akhir',
             'isEditing',
             'editingId',
-            'periode'
+            'showModal'
         ]);
         $this->daftarKelompok = [];
     }
 
     public function render()
     {
-        // 1. Ambil Data Kelas untuk Dropdown Kelas
-        $daftarKelas = Kelas::orderBy('nama_kelas', 'asc')->get();
-
-        // 2. Ambil Data Kelompok berdasarkan Kelas yang dipilih (Dynamic Dropdown)
-        // Jika id_kelas sudah dipilih, ambil kelompoknya. Jika belum, kosong.
-        $kelompokList = [];
-        if ($this->id_kelas) {
-            $kelompokList = \App\Models\Kelompok::with('kelas')
-                ->where('id_kelas', $this->id_kelas)
-                ->get();
-        }
-
-        // 3. Ambil Data Target Hafalan (List Bawah)
-        $daftarTarget = TargetHafalanKelompok::with(['kelompok.kelas', 'surahAwal', 'surahAkhir'])
-            ->orderBy('tanggal_mulai', 'desc')
-            ->get()
-            ->map(function ($target) {
-                // Manipulasi nama untuk tampilan list bawah
-                $namaKelompok = $target->kelompok ?
-                    ($target->kelompok->nama_kelompok ?? 'Kelompok ' . $target->kelompok->id_kelompok) : '-';
-
-                $namaKelas = $target->kelompok && $target->kelompok->kelas ?
-                    $target->kelompok->kelas->nama_kelas : '';
-
-                $target->nama_kelompok_display = $namaKelompok . ' - ' . $namaKelas;
-
-                // Format periode string
-                $target->periode = $target->tanggal_mulai->format('d M Y') . ' - ' . $target->tanggal_selesai->format('d M Y');
-
-                return $target;
-            });
-
-        // 4. Ambil Data Surah untuk Dropdown Surah
-        $daftarSurah = Surah::orderBy('nomor_surah', 'asc')->get();
-
-        return view('livewire.admin.target-hafalan', [
-            'daftarKelas' => $daftarKelas,
-            'kelompokList' => $kelompokList, // <--- INI YANG HILANG TADI
-            'daftarTarget' => $daftarTarget,
-            'daftarSurah' => $daftarSurah
-        ])->layout('layouts.app');
+        return view('livewire.admin.target-hafalan')->layout('layouts.app');
     }
 }

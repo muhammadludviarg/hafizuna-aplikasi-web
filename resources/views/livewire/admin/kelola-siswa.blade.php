@@ -49,29 +49,32 @@
     </div>
 
     <!-- Flash Messages Success -->
-    @if (session()->has('message'))
-        <div
-            class="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center justify-between">
-            <span>{{ session('message') }}</span>
-            <button onclick="this.parentElement.remove()" class="text-green-700 hover:text-green-900">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-    @endif
+    <!-- Moved flash messages to top-right fixed position for consistency -->
+    <div class="fixed top-6 right-6 z-[9999] w-96 space-y-4 pointer-events-none">
+        @if (session()->has('message'))
+            <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg flex justify-between items-start animate-fade-in-down transition-all duration-500 pointer-events-auto">
+                <div class="flex items-center">
+                    <svg class="h-6 w-6 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <p>{{ session('message') }}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-green-700 hover:text-green-900 font-bold ml-2">×</button>
+            </div>
+        @endif
 
-    <!-- Flash Messages Error -->
-    @if (session()->has('error'))
-        <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center justify-between">
-            <span>{!! session('error') !!}</span>
-            <button onclick="this.parentElement.remove()" class="text-red-700 hover:text-red-900">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-    @endif
+        @if (session()->has('error'))
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg flex justify-between items-start animate-fade-in-down transition-all duration-500 pointer-events-auto">
+                <div class="flex items-center">
+                    <svg class="h-6 w-6 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                    <p>{!! session('error') !!}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-red-700 hover:text-red-900 font-bold ml-2">×</button>
+            </div>
+        @endif
+    </div>
 
     <!-- Search Bar -->
     <div class="mb-4">
@@ -300,7 +303,7 @@
                                 <svg class="w-5 h-5 text-red-400 mr-2 flex-shrink-0 mt-0.5" fill="currentColor"
                                     viewBox="0 0 20 20">
                                     <path fill-rule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                                         clip-rule="evenodd" />
                                 </svg>
                                 <span class="flex-1">{!! session('error') !!}</span>

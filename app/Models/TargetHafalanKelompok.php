@@ -12,14 +12,13 @@ class TargetHafalanKelompok extends Model
     protected $primaryKey = 'id_target';
     public $timestamps = false;
 
-    // SESUAIKAN $fillable
     protected $fillable = [
-        'periode', 
+        'id_periode',
         'tanggal_mulai',
         'tanggal_selesai', 
         'id_kelompok', 
-        'id_surah_awal', // <-- BARU
-        'id_surah_akhir', // <-- BARU
+        'id_surah_awal',
+        'id_surah_akhir',
         'id_admin'
     ];
 
@@ -31,6 +30,11 @@ class TargetHafalanKelompok extends Model
     public function kelompok() 
     { 
         return $this->belongsTo(Kelompok::class, 'id_kelompok'); 
+    }
+
+    public function periode()
+    {
+        return $this->belongsTo(Periode::class, 'id_periode');
     }
 
     public function surahAwal() 
