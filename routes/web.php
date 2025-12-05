@@ -13,6 +13,7 @@ use App\Livewire\Admin\KelolaKelas;
 use App\Livewire\Admin\KelolaKelompok;
 use App\Livewire\Admin\PengaturanNilai;
 use App\Livewire\Admin\TargetHafalan;
+use App\Livewire\Admin\ManajePeriode;
 use App\Livewire\Admin\GantiPassword as AdminGantiPassword;
 use App\Livewire\Admin\DataMaster;
 use App\Livewire\Admin\LogAktivitasAdmin;
@@ -130,6 +131,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::get('/kelola-kelompok', KelolaKelompok::class)->name('kelola-kelompok');
 
     Route::get('/pengaturan-nilai', PengaturanNilai::class)->name('pengaturan-nilai');
+    Route::get('/manaje-periode', ManajePeriode::class)->name('manaje-periode');
     Route::get('/target-hafalan', TargetHafalan::class)->name('target-hafalan');
 
     // ROUTE LOG AKTIVITAS - DIPERBAIKI (tanpa duplikat /admin)
@@ -139,7 +141,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
 
     Route::get('/laporan-hafalan', AdminLaporanHafalan::class)->name('laporan-hafalan');
 
-    Route::get('/laporan-hafalan', AdminLaporanHafalan::class)->name('laporan-hafalan');
 });
 
 /*

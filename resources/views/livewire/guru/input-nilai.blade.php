@@ -4,18 +4,23 @@
         Pilih kelompok, siswa, dan masukkan penilaian hafalan.
     </h4>
 
-    @if (session()->has('message'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline">{{ session('message') }}</span>
-        </div>
-    @endif
-    @if (session()->has('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline">{{ session('error') }}</span>
-        </div>
-    @endif
+    <!-- Moved flash messages to top-right fixed position for consistency -->
+    <div class="fixed top-6 right-6 z-[9999] w-96 space-y-4 pointer-events-none">
+        @if (session()->has('message'))
+            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded shadow-lg flex justify-between items-start animate-fade-in-down transition-all duration-500 pointer-events-auto" role="alert">
+                <span class="block sm:inline">{{ session('message') }}</span>
+                <button onclick="this.parentElement.remove()" class="ml-auto font-bold">×</button>
+            </div>
+        @endif
+        @if (session()->has('error'))
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded shadow-lg flex justify-between items-start animate-fade-in-down transition-all duration-500 pointer-events-auto" role="alert">
+                <span class="block sm:inline">{{ session('error') }}</span>
+                <button onclick="this.parentElement.remove()" class="ml-auto font-bold">×</button>
+            </div>
+        @endif
+    </div>
 
-   @if($step == 1)
+    @if($step == 1)
         <div class="bg-white p-6 rounded-lg shadow-md">
             <h3 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">Langkah 1: Pilih Kelompok</h3>
             
