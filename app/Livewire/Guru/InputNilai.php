@@ -186,20 +186,47 @@ class InputNilai extends Component
         $this->step = 4;
     }
 
-    public function addKoreksi($idAyat, $kataKe, $kategori, $kataArab)
+    /**
+     * FUNGSI BARU: Toggle kesalahan (support multiple kategori per kata)
+     */
+    public function toggleKoreksi($idAyat, $kataKe, $kategori, $kataArab)
     {
         $key = 'id_ayat_' . $idAyat . '_kata_' . $kataKe;
 
-        if (isset($this->koreksi[$key]) && $this->koreksi[$key]['kategori'] == $kategori) {
-            unset($this->koreksi[$key]);
-        } else {
+        // Inisialisasi array jika belum ada
+        if (!isset($this->koreksi[$key])) {
             $this->koreksi[$key] = [
                 'id_ayat' => $idAyat,
                 'kata_ke' => $kataKe,
-                'kategori' => $kategori,
                 'kata_arab' => $kataArab,
+                'kategori' => [], // Array untuk multiple kategori
             ];
         }
+
+        // Toggle kategori (tambah jika belum ada, hapus jika sudah ada)
+        if (in_array($kategori, $this->koreksi[$key]['kategori'])) {
+            // Hapus kategori
+            $this->koreksi[$key]['kategori'] = array_values(
+                array_filter($this->koreksi[$key]['kategori'], fn($k) => $k !== $kategori)
+            );
+            
+            // Hapus entry jika tidak ada kategori lagi
+            if (empty($this->koreksi[$key]['kategori'])) {
+                unset($this->koreksi[$key]);
+            }
+        } else {
+            // Tambah kategori
+            $this->koreksi[$key]['kategori'][] = $kategori;
+        }
+    }
+
+    /**
+     * FUNGSI BARU: Helper untuk mengecek apakah kategori tertentu sudah dipilih
+     */
+    public function isKoreksiChecked($idAyat, $kataKe, $kategori)
+    {
+        $key = 'id_ayat_' . $idAyat . '_kata_' . $kataKe;
+        return isset($this->koreksi[$key]) && in_array($kategori, $this->koreksi[$key]['kategori']);
     }
 
     #[Computed]
@@ -212,10 +239,22 @@ class InputNilai extends Component
         if ($totalKata == 0)
             $totalKata = 1;
 
-        $koreksiCol = collect($this->koreksi);
-        $totalKesalahanTajwid = $koreksiCol->where('kategori', 'tajwid')->count();
-        $totalKesalahanMakhroj = $koreksiCol->where('kategori', 'makhroj')->count();
-        $totalKesalahanKelancaran = $koreksiCol->where('kategori', 'kelancaran')->count();
+        // REVISI: Hitung kesalahan dari struktur data baru
+        $totalKesalahanTajwid = 0;
+        $totalKesalahanMakhroj = 0;
+        $totalKesalahanKelancaran = 0;
+
+        foreach ($this->koreksi as $k) {
+            if (in_array('tajwid', $k['kategori'])) {
+                $totalKesalahanTajwid++;
+            }
+            if (in_array('makhroj', $k['kategori'])) {
+                $totalKesalahanMakhroj++;
+            }
+            if (in_array('kelancaran', $k['kategori'])) {
+                $totalKesalahanKelancaran++;
+            }
+        }
 
         $proporsiTajwid = ($totalKesalahanTajwid / $totalKata) * 100;
         $proporsiMakhroj = ($totalKesalahanMakhroj / $totalKata) * 100;
@@ -284,14 +323,17 @@ class InputNilai extends Component
                 'nilai_rata' => $statistik['nilaiAkhir'],
             ]);
 
+            // REVISI: Simpan setiap kategori kesalahan sebagai record terpisah
             foreach ($this->koreksi as $k) {
-                Koreksi::create([
-                    'id_sesi' => $sesi->id_sesi,
-                    'id_ayat' => $k['id_ayat'],
-                    'kata_ke' => $k['kata_ke'] + 1,
-                    'kategori_kesalahan' => $k['kategori'],
-                    'catatan' => "Kesalahan kata: " . $k['kata_arab'],
-                ]);
+                foreach ($k['kategori'] as $kategori) {
+                    Koreksi::create([
+                        'id_sesi' => $sesi->id_sesi,
+                        'id_ayat' => $k['id_ayat'],
+                        'kata_ke' => $k['kata_ke'] + 1,
+                        'kategori_kesalahan' => $kategori,
+                        'catatan' => "Kesalahan {$kategori} pada kata: " . $k['kata_arab'],
+                    ]);
+                }
             }
         });
 

@@ -117,41 +117,34 @@
                         
                         <div class="flex items-center gap-3">
                             <!-- Avatar -->
-                            <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:bg-green-700 transition-colors shadow-md">
+                            <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:scale-105 transition-transform">
                                 {{ strtoupper(substr($siswa->nama_siswa, 0, 1)) }}
                             </div>
                             
                             <!-- Info -->
                             <div class="flex-1">
-                                <p class="text-lg font-semibold text-gray-800 group-hover:text-green-700">
-                                    {{ $siswa->nama_siswa }}
-                                </p>
-                                <p class="text-sm text-gray-500">
-                                    {{ $siswa->kelas->nama_kelas ?? 'Tanpa Kelas' }}
-                                </p>
+                                <h5 class="font-semibold text-gray-800 group-hover:text-green-700 transition-colors">{{ $siswa->nama_siswa }}</h5>
+                                <p class="text-xs text-gray-500">{{ $siswa->kelas ? $siswa->kelas->nama_kelas : 'Tanpa Kelas' }}</p>
                             </div>
-
-                            <!-- Arrow Icon -->
-                            <svg class="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            
+                            <!-- Arrow -->
+                            <svg class="w-5 h-5 text-gray-400 group-hover:text-green-600 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
                         </div>
                     </button>
                 @empty
-                    <div class="col-span-full text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <div class="col-span-full text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
-                        
-                        @if($searchSiswa)
-                            <p class="text-gray-600 font-medium">Tidak ditemukan siswa dengan nama</p>
-                            <p class="text-green-600 font-bold text-lg">"{{ $searchSiswa }}"</p>
-                            <button wire:click="$set('searchSiswa', '')" class="mt-3 text-sm text-green-600 hover:text-green-700 underline">
-                                Tampilkan semua siswa
-                            </button>
-                        @else
-                            <p class="text-gray-600">Tidak ada siswa di kelompok ini.</p>
-                        @endif
+                        <p class="mt-2 text-sm text-gray-500">
+                            @if($searchSiswa)
+                                Tidak ada siswa yang sesuai dengan pencarian "{{ $searchSiswa }}"
+                            @else
+                                Tidak ada siswa dalam kelompok ini.
+                            @endif
+                        </p>
                     </div>
                 @endforelse
             </div>
@@ -161,62 +154,61 @@
     @if($step == 3)
         <div class="bg-white p-6 rounded-lg shadow-md">
             <div class="flex justify-between items-center border-b pb-2 mb-4">
-                <h3 class="text-lg font-semibold text-gray-700">Langkah 3: Tentukan Rentang Setoran</h3>
-                <button wire:click="backStep(2)" class="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold mb-4">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7">
-                            </path>
-                        </svg> Kembali ke Siswa</button>
+                <h3 class="text-lg font-semibold text-gray-700">Langkah 3: Pilih Rentang Ayat (Siswa: {{ $selectedSiswaNama }})</h3>
+                <button wire:click="backStep(2)" class="text-sm text-gray-500 hover:text-gray-800">&larr; Ganti Siswa</button>
             </div>
 
-            <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
-                <p class="text-gray-700">Siswa: <span class="font-bold text-gray-900 text-lg">{{ $selectedSiswaNama }}</span></p>
-                @if($targetHafalanInfo)
-                    <p class="text-sm text-blue-700 mt-1 font-medium">{{ $targetHafalanInfo }}</p>
-                @endif
+            @if($targetHafalanInfo)
+                <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <strong>Info:</strong> {{ $targetHafalanInfo }}
+                    </p>
+                </div>
+            @endif
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Surah</label>
+                    <select wire:model.live="id_surah"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <option value="">-- Pilih Surah --</option>
+                        @foreach($daftarSurah as $surah)
+                            <option value="{{ $surah->id_surah }}">
+                                {{ $surah->nomor_surah }}. {{ $surah->nama_surah }} ({{ $surah->jumlah_ayat }} ayat) 
+                                <span class="{{ $surah->status_color ?? '' }}">{{ $surah->status_hafalan ?? '' }}</span>
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('id_surah') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ayat Mulai</label>
+                    <input type="number" wire:model.live="ayat_mulai" min="1" max="{{ $jumlahAyatSurah }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="-- Pilih Ayat Mulai --">
+                    @error('ayat_mulai') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ayat Selesai</label>
+                    <input type="number" wire:model.live="ayat_selesai" min="1" max="{{ $jumlahAyatSurah }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="-- Pilih Ayat Selesai --">
+                    @error('ayat_selesai') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </div>
             </div>
 
-            <form wire:submit.prevent="loadAyats">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="md:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700">Pilih Surah</label>
-                        <select wire:model.live="id_surah" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                            <option value="">Pilih Surah</option>
-                            @foreach($daftarSurah as $surah)
-                                <option value="{{ $surah->id_surah }}" class="{{ $surah->status_color ?? '' }}">
-                                    {{ $surah->nomor_surah }}. {{ $surah->nama_surah }}
-                                    @if(isset($surah->status_hafalan))
-                                        ({{ $surah->status_hafalan }})
-                                    @endif
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('id_surah') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                        @if($jumlahAyatSurah)
-                            <span class="text-xs text-gray-500">(Total Ayat: {{ $jumlahAyatSurah }})</span>
-                        @endif
-                    </div>
-                    <div class="md:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700">Ayat Mulai</label>
-                        <input wire:model="ayat_mulai" type="number" min="1"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                        @error('ayat_mulai') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="md:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700">Ayat Selesai</label>
-                        <input wire:model="ayat_selesai" type="number" min="1"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                        @error('ayat_selesai') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                    </div>
-                </div>
+            @if($jumlahAyatSurah)
+                <p class="text-sm text-gray-600 mb-4">
+                    <strong>Jumlah ayat dalam surah:</strong> {{ $jumlahAyatSurah }}
+                </p>
+            @endif
 
-                <div class="mt-6 text-right">
-                    <button type="submit" wire:loading.attr="disabled"
-                        class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow hover:shadow-md transition-all">
-                        Mulai Menilai &rarr;
-                    </button>
-                </div>
-            </form>
+            <button wire:click="loadAyats"
+                class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg">
+                Lanjutkan ke Penilaian
+            </button>
         </div>
     @endif
 
@@ -228,7 +220,7 @@
             </div>
 
             <div class="mb-4 p-3 bg-gray-50 rounded-lg flex flex-wrap justify-center gap-4">
-                <span class="font-medium">Klik Kesalahan:</span>
+                <span class="font-medium">Klik kata untuk pilih kesalahan:</span>
                 <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">Tajwid</span>
                 <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">Makhroj</span>
                 <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">Kelancaran</span>
@@ -250,14 +242,27 @@
                                 $key = 'id_ayat_' . $idAyat . '_kata_' . $index;
                                 $koreksiKata = $koreksi[$key] ?? null;
 
-                                $bgColor = ''; // Default
-                                if ($koreksiKata) {
-                                    if ($koreksiKata['kategori'] == 'tajwid')
-                                        $bgColor = 'bg-red-200';
-                                    elseif ($koreksiKata['kategori'] == 'makhroj')
-                                        $bgColor = 'bg-blue-200';
-                                    elseif ($koreksiKata['kategori'] == 'kelancaran')
-                                        $bgColor = 'bg-yellow-200';
+                                // Background color berdasarkan kesalahan yang dipilih
+                                $bgColors = [];
+                                if ($koreksiKata && isset($koreksiKata['kategori'])) {
+                                    if (in_array('tajwid', $koreksiKata['kategori'])) {
+                                        $bgColors[] = 'bg-red-200';
+                                    }
+                                    if (in_array('makhroj', $koreksiKata['kategori'])) {
+                                        $bgColors[] = 'bg-blue-200';
+                                    }
+                                    if (in_array('kelancaran', $koreksiKata['kategori'])) {
+                                        $bgColors[] = 'bg-yellow-200';
+                                    }
+                                }
+                                
+                                // Jika ada multiple kesalahan, tampilkan gradient atau kombinasi
+                                if (count($bgColors) > 1) {
+                                    $bgColor = 'bg-gradient-to-r from-red-200 via-blue-200 to-yellow-200';
+                                } elseif (count($bgColors) == 1) {
+                                    $bgColor = $bgColors[0];
+                                } else {
+                                    $bgColor = '';
                                 }
                             @endphp
 
@@ -265,22 +270,58 @@
                                 class="relative inline-block p-1 rounded cursor-pointer {{ $bgColor }} hover:bg-gray-200 mx-1 select-none">
                                 <span @click="open = !open">{{ $word }}</span>
 
-                                <span x-show="open" @click.away="open = false" x-transition
-                                    class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10 p-1 bg-white shadow-lg rounded-lg flex flex-col space-y-1 min-w-[100px]"
-                                    style="direction: ltr; display: none;">
+                                {{-- REVISI: Popup dengan CHECKBOX --}}
+                                <div x-show="open" 
+                                     @click.away="open = false" 
+                                     x-transition
+                                     class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10 p-3 bg-white shadow-lg rounded-lg min-w-[140px]"
+                                     style="direction: ltr; display: none;">
                                     
-                                    <button @click="open = false"
-                                        wire:click="addKoreksi({{ $idAyat }}, {{ $index }}, 'tajwid', '{{ $word }}')"
-                                        class="px-2 py-1 bg-red-100 hover:bg-red-200 rounded text-xs font-bold text-red-800 w-full text-center">Tajwid</button>
+                                    <div class="text-xs font-bold text-gray-700 mb-2 text-center border-b pb-2">
+                                        Pilih Kesalahan
+                                    </div>
 
-                                    <button @click="open = false"
-                                        wire:click="addKoreksi({{ $idAyat }}, {{ $index }}, 'makhroj', '{{ $word }}')"
-                                        class="px-2 py-1 bg-blue-100 hover:bg-blue-200 rounded text-xs font-bold text-blue-800 w-full text-center">Makhroj</button>
+                                    {{-- Checkbox Tajwid --}}
+                                    <label class="flex items-center gap-2 p-2 hover:bg-red-50 rounded cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            wire:click="toggleKoreksi({{ $idAyat }}, {{ $index }}, 'tajwid', '{{ $word }}')"
+                                            @if($this->isKoreksiChecked($idAyat, $index, 'tajwid')) checked @endif
+                                            class="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+                                        >
+                                        <span class="text-sm font-medium text-red-700">Tajwid</span>
+                                    </label>
 
-                                    <button @click="open = false"
-                                        wire:click="addKoreksi({{ $idAyat }}, {{ $index }}, 'kelancaran', '{{ $word }}')"
-                                        class="px-2 py-1 bg-yellow-100 hover:bg-yellow-200 rounded text-xs font-bold text-yellow-800 w-full text-center">Kelancaran</button>
-                                </span>
+                                    {{-- Checkbox Makhroj --}}
+                                    <label class="flex items-center gap-2 p-2 hover:bg-blue-50 rounded cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            wire:click="toggleKoreksi({{ $idAyat }}, {{ $index }}, 'makhroj', '{{ $word }}')"
+                                            @if($this->isKoreksiChecked($idAyat, $index, 'makhroj')) checked @endif
+                                            class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                                        >
+                                        <span class="text-sm font-medium text-blue-700">Makhroj</span>
+                                    </label>
+
+                                    {{-- Checkbox Kelancaran --}}
+                                    <label class="flex items-center gap-2 p-2 hover:bg-yellow-50 rounded cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            wire:click="toggleKoreksi({{ $idAyat }}, {{ $index }}, 'kelancaran', '{{ $word }}')"
+                                            @if($this->isKoreksiChecked($idAyat, $index, 'kelancaran')) checked @endif
+                                            class="w-4 h-4 text-yellow-600 rounded focus:ring-yellow-500"
+                                        >
+                                        <span class="text-sm font-medium text-yellow-700">Kelancaran</span>
+                                    </label>
+
+                                    {{-- Tombol Tutup --}}
+                                    <button 
+                                        @click="open = false"
+                                        class="w-full mt-2 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs font-medium text-gray-700 border-t pt-2"
+                                    >
+                                        Tutup
+                                    </button>
+                                </div>
                             </span>
                         @endforeach
                         <span class="text-green-700 text-lg font-bold inline-block mr-2 border border-green-700 rounded-full w-8 h-8 text-center leading-7 text-base"> {{ $nomorAyat }} </span>
