@@ -474,22 +474,20 @@ class LaporanHafalan extends Component
     // TAMBAHKAN METHOD INI (Untuk Download Laporan Kelas)
     public function downloadPdf()
     {
-        if ($this->selectedKelompokId) {
-            $kelompok = Kelompok::find($this->selectedKelompokId);
-            if ($kelompok && $kelompok->id_kelas) {
-                return redirect()->route('export.laporan-hafalan.pdf', ['kelasId' => $kelompok->id_kelas]);
-            }
+        if (!$this->selectedKelompokId) {
+            session()->flash('error', 'Pilih kelompok terlebih dahulu');
+            return;
         }
+        return redirect()->away(route('export.laporan-hafalan.pdf-kelompok', ['kelompokId' => $this->selectedKelompokId]));
     }
 
     public function downloadExcel()
     {
-        if ($this->selectedKelompokId) {
-            $kelompok = Kelompok::find($this->selectedKelompokId);
-            if ($kelompok && $kelompok->id_kelas) {
-                return redirect()->route('export.laporan-hafalan.excel', ['kelasId' => $kelompok->id_kelas]);
-            }
+        if (!$this->selectedKelompokId) {
+            session()->flash('error', 'Pilih kelompok terlebih dahulu');
+            return;
         }
+        return redirect()->away(route('export.laporan-hafalan.excel-kelompok', ['kelompokId' => $this->selectedKelompokId]));
     }
 
     public function downloadPdfSiswa()

@@ -62,6 +62,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/export/laporan-hafalan/excel/{kelasId}', [ExportLaporanHafalanController::class, 'exportExcel'])
         ->name('export.laporan-hafalan.excel'); // Digunakan oleh Admin saja
 
+    Route::get('/export/laporan-hafalan/pdf-kelompok/{kelompokId}', [ExportLaporanHafalanController::class, 'exportPdfKelompok'])
+        ->name('export.laporan-hafalan.pdf-kelompok');
+
+    Route::get('/export/laporan-hafalan/excel-kelompok/{kelompokId}', [ExportLaporanHafalanController::class, 'exportExcelKelompok'])
+        ->name('export.laporan-hafalan.excel-kelompok');
+
     // Rute Siswa & Sesi (Digunakan Admin, Guru, Ortu)
     Route::get('/export/laporan-hafalan/pdf-siswa/{siswaId}', [ExportLaporanHafalanController::class, 'exportPdfSiswa'])
         ->name('export.laporan-hafalan.pdf-siswa');

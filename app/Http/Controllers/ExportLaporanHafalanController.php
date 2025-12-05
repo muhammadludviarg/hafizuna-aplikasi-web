@@ -720,4 +720,174 @@ class ExportLaporanHafalanController extends Controller
             return 'Kurang';
         }
     }
+
+    public function exportPdfKelompok($kelompokId)
+    {
+        $kelompok = Kelompok::with(['kelas', 'siswa'])->find($kelompokId);
+
+        if (!$kelompok) {
+            return abort(404);
+        }
+
+        // Ambil HANYA siswa yang tergabung dalam kelompok ini
+        $siswaList = $kelompok->siswa;
+        
+        // Prepare data siswa dengan Progress Target
+        $siswaDetail = $siswaList->map(function ($siswa) use ($kelompok) {
+            // 1. Ambil target dari kelompok ini
+            $target = TargetHafalanKelompok::where('id_kelompok', $kelompok->id_kelompok)->first();
+
+            $surahSelesaiCount = 0;
+            $totalTargetSurah = 0;
+
+            if ($target) {
+                $totalTargetSurah = abs($target->id_surah_akhir - $target->id_surah_awal) + 1;
+                $rangeSurah = range(min($target->id_surah_awal, $target->id_surah_akhir), max($target->id_surah_awal, $target->id_surah_akhir));
+
+                foreach ($rangeSurah as $idSurah) {
+                    $surah = Surah::find($idSurah);
+                    if (!$surah)
+                        continue;
+
+                    $cekSesi = SesiHafalan::where('id_siswa', $siswa->id_siswa)
+                        ->where(function ($q) use ($idSurah) {
+                            $q->where('id_surah_mulai', $idSurah)
+                                ->orWhere('id_surah_selesai', $idSurah);
+                        })
+                        ->orderByDesc('ayat_selesai')
+                        ->first();
+
+                    if ($cekSesi && $cekSesi->ayat_selesai >= $surah->jumlah_ayat) {
+                        $surahSelesaiCount++;
+                    }
+                }
+            }
+
+            $progressTarget = $target ? "$surahSelesaiCount / $totalTargetSurah Surah" : "Belum ada target";
+
+            // Statistik Nilai
+            $sesiHafalan = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
+            $jumlahSesi = $sesiHafalan->count();
+            $nilaiRataRata = $jumlahSesi > 0 ? round($sesiHafalan->avg('nilai_rata'), 2) : 0;
+
+            return [
+                'nama_siswa' => $siswa->nama_siswa,
+                'progress_target' => $progressTarget,
+                'jumlah_sesi' => $jumlahSesi,
+                'nilai_rata_rata' => $nilaiRataRata,
+            ];
+        })->sortByDesc('nilai_rata_rata')->values()->toArray();
+
+        $data = [
+            'sekolah' => 'HAFIZUNA',
+            'nama_sekolah_lengkap' => 'SD Islam Al-Azhar 27',
+            'lokasi' => 'Cibinong Bogor',
+            'judul' => 'Laporan Hafalan Per Kelompok',
+            'nama_kelas' => "Kelompok " . ($kelompok->nama_kelompok ?? '-') . " - " . ($kelompok->kelas->nama_kelas ?? '-'),
+            'tahun_ajaran' => $kelompok->kelas->tahun_ajaran ?? '',
+            'tanggal' => date('d/m/Y'),
+            'jumlah_siswa' => count($siswaDetail),
+            'siswa_data' => $siswaDetail,
+        ];
+
+        $pdf = Pdf::loadView('exports.laporan-hafalan-pdf', $data);
+
+        return $pdf->download('Laporan-Hafalan-Kelompok-' . str_replace(' ', '-', $kelompok->nama_kelompok) . '-' . date('dmY') . '.pdf');
+    }
+
+    public function exportExcelKelompok($kelompokId)
+    {
+        $kelompok = Kelompok::with(['kelas', 'siswa'])->find($kelompokId);
+        if (!$kelompok)
+            return abort(404);
+
+        // Ambil HANYA siswa yang tergabung dalam kelompok ini
+        $siswaList = $kelompok->siswa;
+
+        // Prepare data siswa dengan Progress Target
+        $siswaDetail = $siswaList->map(function ($siswa) use ($kelompok) {
+            $target = TargetHafalanKelompok::where('id_kelompok', $kelompok->id_kelompok)->first();
+
+            $surahSelesaiCount = 0;
+            $totalTargetSurah = 0;
+
+            if ($target) {
+                $totalTargetSurah = abs($target->id_surah_akhir - $target->id_surah_awal) + 1;
+                $rangeSurah = range(min($target->id_surah_awal, $target->id_surah_akhir), max($target->id_surah_awal, $target->id_surah_akhir));
+
+                foreach ($rangeSurah as $idSurah) {
+                    $surah = Surah::find($idSurah);
+                    if (!$surah)
+                        continue;
+
+                    $cekSesi = SesiHafalan::where('id_siswa', $siswa->id_siswa)
+                        ->where(function ($q) use ($idSurah) {
+                            $q->where('id_surah_mulai', $idSurah)
+                                ->orWhere('id_surah_selesai', $idSurah);
+                        })
+                        ->orderByDesc('ayat_selesai')
+                        ->first();
+
+                    if ($cekSesi && $cekSesi->ayat_selesai >= $surah->jumlah_ayat) {
+                        $surahSelesaiCount++;
+                    }
+                }
+            }
+
+            $progressTarget = $target ? "$surahSelesaiCount / $totalTargetSurah Surah" : "Belum ada target";
+
+            $sesiHafalan = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
+            $jumlahSesi = $sesiHafalan->count();
+            $nilaiRataRata = $jumlahSesi > 0 ? round($sesiHafalan->avg('nilai_rata'), 2) : 0;
+
+            return [
+                'nama_siswa' => $siswa->nama_siswa,
+                'progress_target' => $progressTarget,
+                'jumlah_sesi' => $jumlahSesi,
+                'nilai_rata_rata' => $nilaiRataRata,
+            ];
+        })->sortByDesc('nilai_rata_rata')->values()->toArray();
+
+        // Buat Spreadsheet Baru
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header Judul
+        $sheet->setCellValue('A1', 'Laporan Hafalan Per Kelompok');
+        $sheet->setCellValue('A2', 'Kelompok: ' . ($kelompok->nama_kelompok ?? '-') . ' - ' . ($kelompok->kelas->nama_kelas ?? '-'));
+        $sheet->setCellValue('A3', 'Tanggal: ' . date('d/m/Y'));
+        $sheet->mergeCells('A1:E1');
+
+        // Header Tabel
+        $headers = ['No', 'Nama Siswa', 'Progress Target', 'Jumlah Sesi', 'Nilai Rata-rata'];
+        $sheet->fromArray($headers, NULL, 'A5');
+
+        // Styling Header
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '16A34A']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ];
+        $sheet->getStyle('A5:E5')->applyFromArray($headerStyle);
+
+        // Isi Data
+        $row = 6;
+        foreach ($siswaDetail as $index => $siswa) {
+            $sheet->setCellValue('A' . $row, $index + 1);
+            $sheet->setCellValue('B' . $row, $siswa['nama_siswa']);
+            $sheet->setCellValue('C' . $row, $siswa['progress_target']);
+            $sheet->setCellValue('D' . $row, $siswa['jumlah_sesi']);
+            $sheet->setCellValue('E' . $row, $siswa['nilai_rata_rata']);
+            $row++;
+        }
+
+        // Auto Size Columns
+        foreach (range('A', 'E') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Download File
+        $filename = 'Laporan-Hafalan-Kelompok-' . str_replace(' ', '-', $kelompok->nama_kelompok) . '.xlsx';
+        return $this->downloadXlsx($spreadsheet, $filename);
+    }
 }
