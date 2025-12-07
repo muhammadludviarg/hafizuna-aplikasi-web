@@ -160,7 +160,12 @@
         <div class="bg-white p-6 rounded-lg shadow-md">
             <div class="flex justify-between items-center border-b pb-2 mb-4">
                 <h3 class="text-lg font-semibold text-gray-700">Langkah 3: Pilih Rentang Ayat (Siswa: {{ $selectedSiswaNama }})</h3>
-                <button wire:click="backStep(2)" class="text-sm text-gray-500 hover:text-gray-800">&larr; Ganti Siswa</button>
+                <button wire:click="backStep(2)" class="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg> 
+                    Ganti Siswa
+                </button>
             </div>
 
             @if($targetHafalanInfo)
@@ -178,13 +183,37 @@
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
                         <option value="">-- Pilih Surah --</option>
                         @foreach($daftarSurah as $surah)
-                            <option value="{{ $surah->id_surah }}">
-                                {{ $surah->nomor_surah }}. {{ $surah->nama_surah }} ({{ $surah->jumlah_ayat }} ayat) 
-                                <span class="{{ $surah->status_color ?? '' }}">{{ $surah->status_hafalan ?? '' }}</span>
+                            <option value="{{ $surah['id_surah'] }}" 
+                                class="
+                                    @if($surah['status_hafalan'] === 'Selesai') bg-green-100 text-green-800 font-semibold
+                                    @elseif($surah['status_hafalan'] === 'Sedang') bg-yellow-100 text-yellow-800 font-semibold
+                                    @else text-gray-600
+                                    @endif
+                                ">
+                                {{ $surah['nomor_surah'] }}. {{ $surah['nama_surah'] }} ({{ $surah['jumlah_ayat'] }} ayat) 
+                                - [{{ $surah['status_hafalan'] }}]
                             </option>
                         @endforeach
                     </select>
                     @error('id_surah') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    
+                    @if($id_surah)
+                        @php
+                            $selectedSurah = collect($daftarSurah)->firstWhere('id_surah', $id_surah);
+                        @endphp
+                        @if($selectedSurah)
+                            <p class="mt-2 text-sm flex items-center gap-2">
+                                <span class="font-medium">Status:</span>
+                                <span class="px-2 py-1 rounded-full text-xs font-bold
+                                    @if($selectedSurah['status_hafalan'] === 'Selesai') bg-green-100 text-green-800
+                                    @elseif($selectedSurah['status_hafalan'] === 'Sedang') bg-yellow-100 text-yellow-800
+                                    @else bg-gray-100 text-gray-600
+                                    @endif">
+                                    {{ $selectedSurah['status_hafalan'] }}
+                                </span>
+                            </p>
+                        @endif
+                    @endif
                 </div>
 
                 <div>
@@ -221,7 +250,12 @@
         <div class="bg-white p-6 rounded-lg shadow-md">
             <div class="flex justify-between items-center border-b pb-2 mb-4">
                 <h3 class="text-lg font-semibold text-gray-700">Langkah 4: Penilaian (Siswa: {{ $selectedSiswaNama }})</h3>
-                <button wire:click="backStep(3)" class="text-sm text-gray-500 hover:text-gray-800">&larr; Ganti Rentang</button>
+                <button wire:click="backStep(3)" class="flex items-center gap-2 text-green-600 hover:text-green-700 font-semibold">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg> 
+                    Ganti Rentang Ayat
+                </button>
             </div>
 
             <div class="mb-4 p-3 bg-gray-50 rounded-lg flex flex-wrap justify-center gap-4">
@@ -234,7 +268,6 @@
             <div class="p-4 border rounded-lg bg-gray-50 mb-6"
                 style="direction: rtl; font-family: 'Times New Roman', Times, serif; font-size: 24px; line-height: 2.5;">
                 @foreach($ayatsToReview as $ayat)
-                    <p class="mb-4 border-b border-gray-200 pb-4 last:border-0">
                         @php 
                             $teksArab = is_array($ayat) ? $ayat['teks_arab'] : $ayat->teks_arab;
                             $idAyat = is_array($ayat) ? $ayat['id_ayat'] : $ayat->id_ayat;
@@ -330,7 +363,6 @@
                             </span>
                         @endforeach
                         <span class="text-green-700 text-lg font-bold inline-block mr-2 border border-green-700 rounded-full w-8 h-8 text-center leading-7 text-base"> {{ $nomorAyat }} </span>
-                    </p>
                 @endforeach
             </div>
 
