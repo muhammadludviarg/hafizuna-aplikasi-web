@@ -78,8 +78,8 @@ class InputNilai extends Component
             ->map(function ($kelompok) {
                 $jumlahSiswa = $kelompok->siswa->count();
                 $namaKelas = $kelompok->kelas ? $kelompok->kelas->nama_kelas : 'Tanpa Kelas';
-                $tahunAjaran = $kelompok->kelas ? $kelompok->kelas->tahun_ajaran : '-'; // Ambil dari Kelas
-    
+                $tahunAjaran = $kelompok->kelas ? $kelompok->kelas->tahun_ajaran : '-';
+
                 return [
                     'id' => $kelompok->id_kelompok,
                     'nama_kelompok_utama' => $kelompok->nama_kelompok ?? 'Kelompok',
@@ -90,17 +90,20 @@ class InputNilai extends Component
             })
             ->toArray();
 
-        // Load awal semua surah
-        $this->daftarSurah = Surah::orderBy('nomor_surah')->get();
+        // Load awal semua surah (tanpa status)
+        $this->daftarSurah = Surah::orderBy('nomor_surah')->get()->toArray();
     }
 
     public function updatedIdSurah($value)
     {
         if ($value) {
-            $surah = Surah::find($value);
-            $this->jumlahAyatSurah = $surah->jumlah_ayat;
-            if ($this->ayat_selesai > $this->jumlahAyatSurah) {
-                $this->ayat_selesai = $this->jumlahAyatSurah;
+            // Find surah from array
+            $surah = collect($this->daftarSurah)->firstWhere('id_surah', $value);
+            if ($surah) {
+                $this->jumlahAyatSurah = $surah['jumlah_ayat'];
+                if ($this->ayat_selesai > $this->jumlahAyatSurah) {
+                    $this->ayat_selesai = $this->jumlahAyatSurah;
+                }
             }
         } else {
             $this->jumlahAyatSurah = null;
@@ -110,7 +113,7 @@ class InputNilai extends Component
     public function selectKelompok($kelompokId)
     {
         $this->selectedKelompokId = $kelompokId;
-        $this->searchSiswa = ''; 
+        $this->searchSiswa = '';
         $this->daftarSiswa = Siswa::whereHas('kelompok', function ($query) use ($kelompokId) {
             $query->where('siswa_kelompok.id_kelompok', $kelompokId);
         })->with('kelas')->get();
@@ -140,7 +143,7 @@ class InputNilai extends Component
             $this->targetHafalanInfo = "Belum ada target hafalan yang diatur.";
         }
 
-        // 2. Load SEMUA Surah + Status Hafalan (Tanpa Filter)
+        // 2. Load SEMUA Surah + Status Hafalan (Tanpa Filter) - CONVERT TO ARRAY
         $this->daftarSurah = Surah::orderBy('nomor_surah')->get()->map(function ($surah) {
             $sesi = SesiHafalan::where('id_siswa', $this->selectedSiswaId)
                 ->where(function ($q) use ($surah) {
@@ -150,21 +153,29 @@ class InputNilai extends Component
                 ->latest('tanggal_setor')
                 ->first();
 
-            if (!$sesi) {
-                $surah->status_hafalan = 'Belum';
-                $surah->status_color = 'text-gray-500'; // Abu-abu
-            } else {
+            $statusHafalan = 'Belum';
+            $statusColor = 'text-gray-500';
+
+            if ($sesi) {
                 if ($sesi->ayat_selesai >= $surah->jumlah_ayat) {
-                    $surah->status_hafalan = 'Selesai';
-                    $surah->status_color = 'text-green-600 font-bold'; // Hijau Tebal
+                    $statusHafalan = 'Selesai';
+                    $statusColor = 'text-green-600 font-bold';
                 } else {
-                    $surah->status_hafalan = 'Sedang';
-                    $surah->status_color = 'text-yellow-600 font-bold'; // Kuning Tebal
+                    $statusHafalan = 'Sedang';
+                    $statusColor = 'text-yellow-600 font-bold';
                 }
             }
 
-            return $surah;
-        });
+            // Return as array to persist the data
+            return [
+                'id_surah' => $surah->id_surah,
+                'nomor_surah' => $surah->nomor_surah,
+                'nama_surah' => $surah->nama_surah,
+                'jumlah_ayat' => $surah->jumlah_ayat,
+                'status_hafalan' => $statusHafalan,
+                'status_color' => $statusColor,
+            ];
+        })->toArray();
     }
 
     public function loadAyats()
@@ -209,7 +220,7 @@ class InputNilai extends Component
             $this->koreksi[$key]['kategori'] = array_values(
                 array_filter($this->koreksi[$key]['kategori'], fn($k) => $k !== $kategori)
             );
-            
+
             // Hapus entry jika tidak ada kategori lagi
             if (empty($this->koreksi[$key]['kategori'])) {
                 unset($this->koreksi[$key]);
@@ -285,10 +296,9 @@ class InputNilai extends Component
     public function filteredSiswa()
     {
         if (empty($this->searchSiswa)) {
-            return $this->daftarSiswa; // Tampilkan semua
+            return $this->daftarSiswa;
         }
-        
-        // Filter berdasarkan nama
+
         return $this->daftarSiswa->filter(function ($siswa) {
             return stripos($siswa->nama_siswa, $this->searchSiswa) !== false;
         });
