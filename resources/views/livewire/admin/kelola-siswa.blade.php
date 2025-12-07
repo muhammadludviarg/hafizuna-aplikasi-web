@@ -1,4 +1,5 @@
 <div>
+    @include('components.admin.nav-data-master')
     <!-- Header Section -->
     <div class="flex justify-between items-center mb-6">
         <div>
@@ -145,8 +146,8 @@
                                     </path>
                                 </svg>
                             </button>
-                            <button
-                                onclick="confirmDeleteSiswa({{ $siswa->id_siswa }}, '{{ addslashes($siswa->nama_siswa) }}')"
+                            <button wire:click="delete({{ $siswa->id_siswa }})"
+                                wire:confirm="Yakin ingin menghapus siswa {{ addslashes($siswa->nama_siswa) }}?"
                                 type="button" class="text-red-600 hover:text-red-900">
                                 <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -362,14 +363,6 @@
         </div>
     @endif
 </div>
-
-<script>
-    function confirmDeleteSiswa(id, nama) {
-        if (confirm('Yakin ingin menghapus siswa ' + nama + '?')) {
-            Livewire.find('{{ $_instance->getId() }}').delete(id);
-        }
-    }
-</script>
 
 <script>
     // Fix z-index modal overlay

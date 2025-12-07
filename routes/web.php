@@ -10,12 +10,12 @@ use App\Livewire\Admin\DataAdmin;
 use App\Livewire\Admin\KelolaGuru;
 use App\Livewire\Admin\KelolaSiswa;
 use App\Livewire\Admin\KelolaKelas;
+use App\Livewire\Admin\KelolaOrangTua;
 use App\Livewire\Admin\KelolaKelompok;
 use App\Livewire\Admin\PengaturanNilai;
 use App\Livewire\Admin\TargetHafalan;
 use App\Livewire\Admin\ManajePeriode;
 use App\Livewire\Admin\GantiPassword as AdminGantiPassword;
-use App\Livewire\Admin\DataMaster;
 use App\Livewire\Admin\LogAktivitasAdmin;
 use App\Livewire\Admin\LaporanHafalan as AdminLaporanHafalan;
 
@@ -128,23 +128,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
-
     Route::get('/data-admin', DataAdmin::class)->name('data-admin');
-    Route::get('/data-master', DataMaster::class)->name('data-master');
-    Route::get('/kelola-guru', KelolaGuru::class)->name('kelola-guru');
-    Route::get('/kelola-siswa', KelolaSiswa::class)->name('kelola-siswa');
-    Route::get('/kelola-kelas', KelolaKelas::class)->name('kelola-kelas');
-    Route::get('/kelola-kelompok', KelolaKelompok::class)->name('kelola-kelompok');
+    Route::prefix('data-master')->name('master.')->group(function () {
+        // Jika user akses /admin/data-master, otomatis lempar ke tab pertama (kelas)
+        Route::get('/', function () {
+            return redirect()->route('admin.master.kelas');
+        })->name('index');
 
+        Route::get('/kelas', KelolaKelas::class)->name('kelas');
+        Route::get('/orang-tua', KelolaOrangTua::class)->name('ortu');
+        Route::get('/siswa', KelolaSiswa::class)->name('siswa');
+        Route::get('/guru', KelolaGuru::class)->name('guru');
+    });
+    Route::get('/kelola-kelompok', KelolaKelompok::class)->name('kelola-kelompok');
     Route::get('/pengaturan-nilai', PengaturanNilai::class)->name('pengaturan-nilai');
     Route::get('/manaje-periode', ManajePeriode::class)->name('manaje-periode');
     Route::get('/target-hafalan', TargetHafalan::class)->name('target-hafalan');
 
     // ROUTE LOG AKTIVITAS - DIPERBAIKI (tanpa duplikat /admin)
     Route::get('/log-aktivitas', LogAktivitasAdmin::class)->name('log-aktivitas');
-
     Route::get('/ganti-password', AdminGantiPassword::class)->name('ganti-password');
-
     Route::get('/laporan-hafalan', AdminLaporanHafalan::class)->name('laporan-hafalan');
 
 });

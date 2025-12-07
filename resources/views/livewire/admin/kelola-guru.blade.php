@@ -1,4 +1,5 @@
 <div>
+    @include('components.admin.nav-data-master')
     <div class="flex justify-between items-center mb-6">
         <div>
             <h3 class="text-lg font-semibold text-gray-700">Data Guru</h3>

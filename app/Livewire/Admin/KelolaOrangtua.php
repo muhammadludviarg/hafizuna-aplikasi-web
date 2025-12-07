@@ -40,8 +40,6 @@ class KelolaOrangTua extends Component
     public $importFile;
     public $showImportModal = false;
 
-    protected $listeners = ['refreshData' => '$refresh'];
-
     protected function rules()
     {
         $rules = [

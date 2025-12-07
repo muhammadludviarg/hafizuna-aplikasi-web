@@ -30,8 +30,6 @@ class KelolaGuru extends Component
     public $nama_lengkap;
     public $email;
 
-    protected $listeners = ['refreshData' => '$refresh'];
-
     // Import fields
     public $importFile;
     public $showImportModal = false;
