@@ -1,4 +1,4 @@
-<x-guest-layout bg-image="forgot-bg.jpg">
+<x-guest-layout bg-image="login3.jpg">
     <div class="mb-6 text-center">
         <h2 class="text-2xl font-bold text-gray-900">Lupa Kata Sandi?</h2>
         <p class="text-sm text-gray-600 mt-2 leading-relaxed">

@@ -32,7 +32,7 @@
     <br>
 
     <p>
-        <a href="#" class="btn">
+        <a href="{{ route('login') }}" class="btn">
             Buka Aplikasi Hafizuna
         </a>
     </p>

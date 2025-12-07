@@ -1,4 +1,4 @@
-<x-guest-layout bg-image="reset-bg.jpg">
+<x-guest-layout bg-image="login1.jpg">
 
     <div class="mb-8 text-center">
         <h2 class="text-2xl font-bold text-gray-900">Atur Ulang Kata Sandi</h2>
