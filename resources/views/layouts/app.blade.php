@@ -92,7 +92,7 @@
                            {{ request()->routeIs('admin.manaje-periode')
     ? 'bg-green-900 text-white border-l-4 border-yellow-400 shadow-inner'
     : 'text-green-100 hover:bg-green-700 hover:text-white hover:pl-6' }}">
-                            Manaje Periode
+                            Manajemen Periode
                         </a>
                     </li>
 

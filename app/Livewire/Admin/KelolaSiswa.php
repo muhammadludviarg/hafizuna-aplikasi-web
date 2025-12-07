@@ -152,10 +152,6 @@ class KelolaSiswa extends Component
         }
     }
 
-    // ==========================================
-    // IMPORT FUNCTIONS
-    // ==========================================
-
     public function downloadTemplate()
     {
         return Excel::download(new TemplateSiswaExport, 'template_siswa.xlsx');
