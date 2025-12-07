@@ -99,7 +99,7 @@ return [
             // menjadi 'password_resets' (yang Anda buat di migrasi).
             'table' => 'password_resets', 
             
-            'expire' => 60,
+            'expire' => 10,
             'throttle' => 60,
         ],
     ],

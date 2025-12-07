@@ -1,4 +1,4 @@
-<x-guest-layout bg-image="login-bg.jpg">
+<x-guest-layout bg-image="login2.jpg">
 
     <div class="mb-8 text-center">
         <h2 class="text-3xl font-bold text-gray-900">Selamat Datang</h2>
@@ -59,6 +59,13 @@
                     {{ __('Lupa kata sandi?') }}
                 </a>
             @endif
+        </div>
+
+        <div class="flex items-center justify-between">
+        </div>
+
+        <div class="mt-4 flex justify-center">
+            {!! app('captcha')->display() !!}
         </div>
 
         <x-primary-button
