@@ -10,14 +10,12 @@ return new class extends Migration
     {
         Schema::create('kelompok', function (Blueprint $table) {
             $table->increments('id_kelompok');
-            $table->string('nama_kelompok', 50)->comment('nama_kelompok'); // Sesuai SQL
-            $table->unsignedInteger('id_kelas');
-            $table->unsignedInteger('id_guru');
+            $table->string('nama_kelompok', 50)->comment('nama_kelompok');
+            $table->unsignedInteger('id_kelas'); 
+            $table->unsignedInteger('id_guru');  
 
-            $table->foreign('id_kelas')->references('id_kelas')->on('kelas')
-                  ->onDelete('cascade');
-            $table->foreign('id_guru')->references('id_guru')->on('guru')
-                  ->onDelete('cascade');
+            $table->foreign('id_kelas')->references('id_kelas')->on('kelas')->onDelete('cascade');
+            $table->foreign('id_guru')->references('id_guru')->on('guru')->onDelete('cascade');
         });
     }
 
