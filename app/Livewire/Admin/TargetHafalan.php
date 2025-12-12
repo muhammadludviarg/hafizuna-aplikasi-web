@@ -16,8 +16,6 @@ class TargetHafalan extends Component
     public $id_kelas;
     public $id_kelompok;
     public $id_periode;
-    public $tanggal_mulai;
-    public $tanggal_selesai;
     public $id_surah_awal;
     public $id_surah_akhir;
 
@@ -43,8 +41,6 @@ class TargetHafalan extends Component
     protected $rules = [
         'id_kelompok' => 'required|exists:kelompok,id_kelompok',
         'id_periode' => 'required|exists:periode,id_periode',
-        'tanggal_mulai' => 'required|date',
-        'tanggal_selesai' => 'required|date|after:tanggal_mulai',
         'id_surah_awal' => 'required|exists:surah,id_surah',
         'id_surah_akhir' => 'required|exists:surah,id_surah',
     ];
@@ -58,6 +54,8 @@ class TargetHafalan extends Component
     {
         $this->daftarKelas = Kelas::orderBy('nama_kelas')->get();
         $this->daftarSurah = Surah::orderBy('nomor_surah')->get();
+        
+        // Ambil data periode, urutkan dari yang terbaru
         $this->daftarPeriode = Periode::orderBy('tahun_ajaran', 'desc')
             ->orderBy('semester', 'asc')
             ->get();
@@ -76,7 +74,6 @@ class TargetHafalan extends Component
 
         $this->daftarKelompok = $query->get()
             ->map(function ($kelompok) {
-                // Cek apakah kelompok ini sudah punya target di periode terpilih
                 $hasTarget = false;
                 if ($this->id_periode && !$this->isEditing) {
                     $hasTarget = TargetHafalanKelompok::where('id_kelompok', $kelompok->id_kelompok)
@@ -96,7 +93,7 @@ class TargetHafalan extends Component
             'kelompok.guru.akun',
             'surahAwal',
             'surahAkhir',
-            'periode'
+            'periode' // Load periode untuk ambil namanya (label)
         ])
             ->orderBy('created_at', 'desc')
             ->get()
@@ -124,6 +121,7 @@ class TargetHafalan extends Component
         if (!$this->isEditing && $this->id_kelas) {
             $this->loadKelompok();
         }
+        // Tidak ada lagi update tanggal otomatis di sini
     }
 
     public function simpanTarget()
@@ -147,8 +145,6 @@ class TargetHafalan extends Component
         $data = [
             'id_kelompok' => $this->id_kelompok,
             'id_periode' => $this->id_periode,
-            'tanggal_mulai' => $this->tanggal_mulai,
-            'tanggal_selesai' => $this->tanggal_selesai,
             'id_surah_awal' => $this->id_surah_awal,
             'id_surah_akhir' => $this->id_surah_akhir,
             'id_admin' => Admin::where('id_akun', auth()->id())->first()->id_admin,
@@ -176,7 +172,7 @@ class TargetHafalan extends Component
 
     public function edit($id)
     {
-        $target = TargetHafalanKelompok::with(['kelompok', 'surahAwal', 'surahAkhir'])->findOrFail($id);
+        $target = TargetHafalanKelompok::with(['kelompok'])->findOrFail($id);
 
         $this->isEditing = true;
         $this->editingId = $id;
@@ -187,8 +183,6 @@ class TargetHafalan extends Component
 
         $this->id_kelompok = $target->id_kelompok;
         $this->id_periode = $target->id_periode;
-        $this->tanggal_mulai = \Carbon\Carbon::parse($target->tanggal_mulai)->format('Y-m-d');
-        $this->tanggal_selesai = \Carbon\Carbon::parse($target->tanggal_selesai)->format('Y-m-d');
         $this->id_surah_awal = $target->id_surah_awal;
         $this->id_surah_akhir = $target->id_surah_akhir;
     }
@@ -216,8 +210,6 @@ class TargetHafalan extends Component
             'id_kelas',
             'id_kelompok',
             'id_periode',
-            'tanggal_mulai',
-            'tanggal_selesai',
             'id_surah_awal',
             'id_surah_akhir',
             'isEditing',

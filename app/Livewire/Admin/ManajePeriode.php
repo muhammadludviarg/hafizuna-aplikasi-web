@@ -77,15 +77,47 @@ class ManajePeriode extends Component
     {
         $periode = Periode::findOrFail($id);
         
-        // Cek apakah ada target hafalan yang menggunakan periode ini
         if ($periode->targetHafalan()->count() > 0) {
-            $this->showToast('Tidak bisa menghapus periode yang sudah memiliki target hafalan', 'error');
+            $this->showToast('Tidak bisa menghapus periode "' . $periode->label . '" karena sudah memiliki target hafalan', 'error');
             return;
         }
 
         $periode->delete();
-        $this->showToast('Periode berhasil dihapus', 'success');
+        $this->showToast('Periode "' . $periode->label . '" berhasil dihapus', 'success');
         $this->loadPeriode();
+    }
+
+    public function tambahSemesterYangKurang($tahun_ajaran)
+    {
+        try {
+            // Check which semesters exist for this tahun_ajaran
+            $existingSemesters = Periode::where('tahun_ajaran', $tahun_ajaran)
+                ->pluck('semester')
+                ->toArray();
+
+            // Add missing semesters
+            $allSemesters = [1, 2];
+            $missingSemesters = array_diff($allSemesters, $existingSemesters);
+
+            foreach ($missingSemesters as $semester) {
+                Periode::create([
+                    'tahun_ajaran' => $tahun_ajaran,
+                    'semester' => $semester,
+                    'label' => 'Semester ' . $semester . ' ' . $tahun_ajaran,
+                    'is_active' => false,
+                ]);
+            }
+
+            if (!empty($missingSemesters)) {
+                $this->showToast('Semester yang kurang sudah ditambahkan', 'success');
+            } else {
+                $this->showToast('Semua semester sudah lengkap untuk tahun ajaran ini', 'info');
+            }
+            
+            $this->loadPeriode();
+        } catch (\Exception $e) {
+            $this->showToast('Gagal menambahkan semester: ' . $e->getMessage(), 'error');
+        }
     }
 
     public function showToast($message, $type = 'success')
