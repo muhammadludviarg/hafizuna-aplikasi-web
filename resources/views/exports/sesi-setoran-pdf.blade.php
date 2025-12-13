@@ -270,7 +270,7 @@
                     <th style="width: 15%; text-align: center;">Tajwid</th>
                     <th style="width: 15%; text-align: center;">Kelancaran</th>
                     <th style="width: 15%; text-align: center;">Makhroj</th>
-                    <th style="width: 22%; text-align: center;">Rata-rata</th>
+                    <th style="width: 22%; text-align: center;">Rata-Rata</th>
                 </tr>
             </thead>
             <tbody>
