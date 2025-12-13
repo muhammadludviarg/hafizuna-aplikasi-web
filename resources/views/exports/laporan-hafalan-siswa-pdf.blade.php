@@ -120,7 +120,7 @@
                 <th style="width: 12%;">Tajwid</th>
                 <th style="width: 12%;">Kelancaran</th>
                 <th style="width: 12%;">Makhroj</th>
-                <th style="width: 12%;">Nilai Rata-rata</th>
+                <th style="width: 12%;">Nilai Akhir</th>
             </tr>
         </thead>
         <tbody>

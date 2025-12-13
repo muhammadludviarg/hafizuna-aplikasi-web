@@ -264,8 +264,179 @@
                         </div>
                     </div>
 
-                    {{-- RIWAYAT SESI --}}
+                    {{-- URUTAN 1: SURAH SUDAH DIHAFAL (TUNTAS) --}}
                     <div class="mb-10">
+                        <h4 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-3">
+                            <div class="w-1.5 h-8 bg-blue-600 rounded-full"></div>
+                            Surah Tuntas (Sudah Dihafal)
+                        </h4>
+
+                        <div class="w-full overflow-x-auto rounded-xl border border-gray-300 shadow-sm">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-blue-600 text-white">
+                                    <tr>
+                                        <th
+                                            class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                            No</th>
+                                        <th
+                                            class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                            Surah</th>
+                                        <th
+                                            class="px-5 py-3.5 text-center text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                            Total Sesi</th>
+                                        <th
+                                            class="px-5 py-3.5 text-center text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                            Tajwid</th>
+                                        <th
+                                            class="px-5 py-3.5 text-center text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                            Lancar</th>
+                                        <th
+                                            class="px-5 py-3.5 text-center text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                            Makhroj</th>
+                                        <th
+                                            class="px-5 py-3.5 text-center text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                            Nilai Akhir</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @forelse ($siswaDetail['surah_sudah_dihafal'] as $index => $item)
+                                        <tr wire:click="selectSurah({{ $item['id_surah'] }})"
+                                            class="hover:bg-blue-50 transition-colors cursor-pointer group">
+                                            <td class="px-5 py-4 text-sm text-gray-600 font-medium">{{ $item['nomor_surah'] }}
+                                            </td>
+                                            <td
+                                                class="px-5 py-4 text-sm font-bold text-gray-800 whitespace-nowrap group-hover:text-blue-700">
+                                                {{ $item['nama_surah'] }}
+                                            </td>
+                                            <td class="px-5 py-4 text-sm text-center text-gray-600">
+                                                <span
+                                                    class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs font-bold">{{ $item['jumlah_sesi'] }}x</span>
+                                            </td>
+                                            <td class="px-5 py-4 text-sm text-center text-gray-600">{{ $item['nilai_tajwid'] }}
+                                            </td>
+                                            <td class="px-5 py-4 text-sm text-center text-gray-600">
+                                                {{ $item['nilai_kelancaran'] }}
+                                            </td>
+                                            <td class="px-5 py-4 text-sm text-center text-gray-600">{{ $item['nilai_makhroj'] }}
+                                            </td>
+                                            <td class="px-5 py-4 text-center">
+                                                <span
+                                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                                                    {{ $item['nilai_rata'] }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="px-4 py-8 text-center text-gray-500 italic">
+                                                Belum ada surah yang tuntas 100%.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {{-- PAGINATION SURAH TUNTAS --}}
+                        @if($totalPagesSurahSelesai > 1)
+                            <div
+                                class="mt-5 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 pt-4 gap-4">
+                                <div class="text-sm text-gray-600 font-medium text-center sm:text-left">
+                                    Halaman <span class="text-gray-900 font-bold">{{ $currentPageSurahSelesai }}</span> dari
+                                    {{ $totalPagesSurahSelesai }}
+                                </div>
+                                <div class="flex gap-2 w-full sm:w-auto justify-center">
+                                    <button wire:click="prevPageSurahSelesai" @if($currentPageSurahSelesai <= 1) disabled @endif
+                                        class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium shadow-sm w-1/2 sm:w-auto">
+                                        ← Sebelumnya
+                                    </button>
+                                    <button wire:click="nextPageSurahSelesai" @if($currentPageSurahSelesai >= $totalPagesSurahSelesai) disabled @endif
+                                        class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium shadow-sm w-1/2 sm:w-auto">
+                                        Selanjutnya →
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- URUTAN 2: TARGET BELUM TUNTAS --}}
+                    <div class="mb-10">
+                        <h4 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-3">
+                            <div class="w-1.5 h-8 bg-orange-500 rounded-full"></div>
+                            Target Belum Tuntas
+                        </h4>
+
+                        <div class="w-full overflow-x-auto rounded-xl border border-gray-300 shadow-sm">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-orange-500 text-white">
+                                    <tr>
+                                        <th
+                                            class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                            No</th>
+                                        <th
+                                            class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                            Surah</th>
+                                        <th
+                                            class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                            Status</th>
+                                        <th
+                                            class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                            Progress</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @forelse ($siswaDetail['target_belum_dihafalkan'] as $index => $target)
+                                        <tr class="hover:bg-orange-50 transition-colors">
+                                            <td class="px-5 py-4 text-sm text-gray-600 font-medium">{{ $target['no'] }}</td>
+                                            <td class="px-5 py-4 text-sm font-bold text-gray-800 whitespace-nowrap">
+                                                {{ $target['nama_surah'] }}
+                                            </td>
+                                            <td class="px-5 py-4 text-sm whitespace-nowrap">
+                                                <span
+                                                    class="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold bg-orange-100 text-orange-800 border border-orange-200">
+                                                    {{ $target['status'] }}
+                                                </span>
+                                            </td>
+                                            <td class="px-5 py-4 text-sm text-gray-600 font-medium whitespace-nowrap">
+                                                {{ $target['progress'] }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-4 py-8 text-center text-gray-500 italic">
+                                                Alhamdulillah, semua target sudah tuntas!
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {{-- PAGINATION TARGET --}}
+                        @if($totalPagesTarget > 1)
+                            <div
+                                class="mt-5 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 pt-4 gap-4">
+                                <div class="text-sm text-gray-600 font-medium text-center sm:text-left">
+                                    Halaman <span class="text-gray-900 font-bold">{{ $currentPageTarget }}</span> dari
+                                    {{ $totalPagesTarget }}
+                                </div>
+                                <div class="flex gap-2 w-full sm:w-auto justify-center">
+                                    <button wire:click="prevPageTarget" @if($currentPageTarget <= 1) disabled @endif
+                                        class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium shadow-sm w-1/2 sm:w-auto">
+                                        ← Sebelumnya
+                                    </button>
+                                    <button wire:click="nextPageTarget" @if($currentPageTarget >= $totalPagesTarget) disabled
+                                    @endif
+                                        class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium shadow-sm w-1/2 sm:w-auto">
+                                        Selanjutnya →
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- URUTAN 3: RIWAYAT SESI (LIST) --}}
+                    <div>
                         <h4 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-3">
                             <div class="w-1.5 h-8 bg-green-600 rounded-full"></div>
                             <div>
@@ -278,7 +449,7 @@
 
                         <div class="space-y-3">
                             @forelse ($siswaDetail['riwayat_sesi'] as $index => $sesi)
-                                <div wire:click="selectSurah({{ $sesi['id_surah_mulai'] }})"
+                                <div wire:click="selectSesi({{ $sesi['id_sesi'] }})"
                                     class="group bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg hover:border-green-400 cursor-pointer transition-all duration-200 active:bg-gray-50">
                                     <div class="flex flex-col sm:flex-row gap-4 items-center">
                                         <div class="flex items-start gap-4 flex-1 w-full">
@@ -339,7 +510,7 @@
                             @endforelse
                         </div>
 
-                        {{-- PAGINATION SESI (Sudah Selaras) --}}
+                        {{-- PAGINATION SESI --}}
                         @if($totalPagesSesi > 1)
                             <div
                                 class="mt-5 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 pt-4 gap-4">
@@ -361,171 +532,156 @@
                         @endif
                     </div>
 
-                    {{-- SURAH SUDAH DIHAFAL --}}
-                    <div class="mb-10">
-                        <h4 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-3">
-                            <div class="w-1.5 h-8 bg-blue-600 rounded-full"></div>
-                            Surah Tuntas
-                        </h4>
-
-                        {{-- Wrapper dengan Overflow X Auto (Scrollable) --}}
-                        <div class="w-full overflow-x-auto rounded-xl border border-gray-300 shadow-sm">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-blue-600 text-white">
-                                    <tr>
-                                        <th
-                                            class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                                            No</th>
-                                        <th
-                                            class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                                            Surah</th>
-                                        <th
-                                            class="px-5 py-3.5 text-center text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                                            Total Sesi</th>
-                                        <th
-                                            class="px-5 py-3.5 text-center text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                                            Tajwid</th>
-                                        <th
-                                            class="px-5 py-3.5 text-center text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                                            Lancar</th>
-                                        <th
-                                            class="px-5 py-3.5 text-center text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                                            Makhroj</th>
-                                        <th
-                                            class="px-5 py-3.5 text-center text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                                            Nilai Akhir</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    @forelse ($siswaDetail['surah_sudah_dihafal'] as $index => $item)
-                                        <tr class="hover:bg-blue-50 transition-colors">
-                                            <td class="px-5 py-4 text-sm text-gray-600 font-medium">{{ $item['nomor_surah'] }}
-                                            </td>
-                                            <td class="px-5 py-4 text-sm font-bold text-gray-800 whitespace-nowrap">
-                                                {{ $item['nama_surah'] }}</td>
-                                            <td class="px-5 py-4 text-sm text-center text-gray-600">
+                    {{-- MODAL DETAIL SESI (POPUP) --}}
+                    @if(isset($selectedSesiDetail) && $selectedSesiDetail)
+                        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+                            aria-modal="true">
+                            <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm"
+                                wire:click="closeSesiDetail"></div>
+                            <div class="flex min-h-full items-end justify-center p-0 md:p-4 text-center sm:items-center sm:p-0">
+                                <div
+                                    class="relative transform overflow-hidden rounded-t-2xl md:rounded-2xl bg-white text-left shadow-2xl transition-all w-full sm:max-w-2xl md:max-w-4xl max-h-[90vh] flex flex-col">
+                                    <div class="bg-green-700 px-4 py-4 md:px-6 flex items-center justify-between shrink-0">
+                                        <h3 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
+                                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                                                </path>
+                                            </svg>
+                                            Detail Sesi
+                                        </h3>
+                                        <button wire:click="closeSesiDetail"
+                                            class="text-green-200 hover:text-white transition-colors hover:bg-green-600 rounded-full p-1">
+                                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="p-6 overflow-y-auto">
+                                        <div class="grid grid-cols-2 gap-4 mb-6">
+                                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                                <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">Tanggal</p>
+                                                <p class="font-bold text-gray-800 text-lg">{{ $selectedSesiDetail['tanggal'] }}
+                                                </p>
+                                            </div>
+                                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                                <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">Guru
+                                                    Pengampu</p>
+                                                <p class="font-bold text-gray-800 text-sm md:text-base truncate">
+                                                    {{ $selectedSesiDetail['guru'] }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="mb-8 text-center bg-green-50 rounded-xl p-6 border border-green-100">
+                                            <p class="text-sm font-semibold text-green-700 uppercase tracking-wide mb-2">Capaian
+                                                Ayat</p>
+                                            <div class="inline-flex items-center gap-3">
                                                 <span
-                                                    class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs font-bold">{{ $item['jumlah_sesi'] }}x</span>
-                                            </td>
-                                            <td class="px-5 py-4 text-sm text-center text-gray-600">{{ $item['nilai_tajwid'] }}
-                                            </td>
-                                            <td class="px-5 py-4 text-sm text-center text-gray-600">
-                                                {{ $item['nilai_kelancaran'] }}</td>
-                                            <td class="px-5 py-4 text-sm text-center text-gray-600">{{ $item['nilai_makhroj'] }}
-                                            </td>
-                                            <td class="px-5 py-4 text-center">
+                                                    class="text-3xl font-extrabold text-gray-800">{{ $selectedSesiDetail['ayat_mulai'] }}</span>
+                                                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                                </svg>
                                                 <span
-                                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
-                                                    {{ $item['nilai_rata'] }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="px-4 py-8 text-center text-gray-500 italic">
-                                                Belum ada surah yang tuntas 100%.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {{-- PAGINATION SURAH TUNTAS (Diselaraskan) --}}
-                        @if($totalPagesSurahSelesai > 1)
-                            <div
-                                class="mt-5 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 pt-4 gap-4">
-                                <div class="text-sm text-gray-600 font-medium text-center sm:text-left">
-                                    Halaman <span class="text-gray-900 font-bold">{{ $currentPageSurahSelesai }}</span> dari
-                                    {{ $totalPagesSurahSelesai }}
-                                </div>
-                                <div class="flex gap-2 w-full sm:w-auto justify-center">
-                                    <button wire:click="prevPageSurahSelesai" @if($currentPageSurahSelesai <= 1) disabled @endif
-                                        class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium shadow-sm w-1/2 sm:w-auto">
-                                        ← Sebelumnya
-                                    </button>
-                                    <button wire:click="nextPageSurahSelesai" @if($currentPageSurahSelesai >= $totalPagesSurahSelesai) disabled @endif
-                                        class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium shadow-sm w-1/2 sm:w-auto">
-                                        Selanjutnya →
-                                    </button>
+                                                    class="text-3xl font-extrabold text-gray-800">{{ $selectedSesiDetail['ayat_selesai'] }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-4 gap-3 mb-8">
+                                            <div class="text-center p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
+                                                <span class="block text-[10px] text-gray-400 uppercase font-bold">Tajwid</span>
+                                                <span
+                                                    class="block text-xl font-bold text-gray-800">{{ $selectedSesiDetail['nilai_tajwid'] }}</span>
+                                            </div>
+                                            <div class="text-center p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
+                                                <span class="block text-[10px] text-gray-400 uppercase font-bold">Lancar</span>
+                                                <span
+                                                    class="block text-xl font-bold text-gray-800">{{ $selectedSesiDetail['nilai_kelancaran'] }}</span>
+                                            </div>
+                                            <div class="text-center p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
+                                                <span class="block text-[10px] text-gray-400 uppercase font-bold">Makhroj</span>
+                                                <span
+                                                    class="block text-xl font-bold text-gray-800">{{ $selectedSesiDetail['nilai_makhroj'] }}</span>
+                                            </div>
+                                            <div class="text-center p-3 bg-green-600 rounded-xl shadow-md">
+                                                <span class="block text-[10px] text-green-200 uppercase font-bold">Rata</span>
+                                                <span
+                                                    class="block text-xl font-bold text-white">{{ $selectedSesiDetail['nilai_rata'] }}</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800 mb-3 text-sm uppercase flex items-center gap-2">
+                                                <span class="w-2 h-2 bg-red-500 rounded-full block"></span>
+                                                Catatan Koreksi
+                                            </h4>
+                                            <div class="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                                <table class="min-w-full divide-y divide-gray-200">
+                                                    <thead class="bg-gray-50">
+                                                        <tr>
+                                                            <th
+                                                                class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                                                                Lokasi</th>
+                                                            <th
+                                                                class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                                                                Jenis</th>
+                                                            <th
+                                                                class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase">
+                                                                Lafadz</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="bg-white divide-y divide-gray-200">
+                                                        @forelse($selectedSesiDetail['koreksi'] as $kor)
+                                                            <tr>
+                                                                <td class="px-4 py-3 text-sm text-gray-800 font-bold">
+                                                                    {{ $kor['lokasi'] }}</td>
+                                                                <td class="px-4 py-3 text-sm text-red-600 font-medium bg-red-50">
+                                                                    {{ $kor['jenis_kesalahan'] }}</td>
+                                                                <td class="px-4 py-3 text-sm text-right font-arabic"
+                                                                    style="font-family: 'Amiri', serif; font-size: 1.4em; line-height: 1.6;">
+                                                                    {{ $kor['catatan'] }}</td>
+                                                            </tr>
+                                                        @empty
+                                                            <tr>
+                                                                <td colspan="3"
+                                                                    class="px-4 py-8 text-center text-sm text-gray-500 italic">Tidak
+                                                                    ada catatan koreksi.</td>
+                                                            </tr>
+                                                        @endforelse
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="bg-gray-50 px-4 py-4 sm:px-6 flex flex-col sm:flex-row sm:justify-end gap-3 border-t border-gray-200 shrink-0">
+                                        <button wire:click="downloadPdfDetailSesi()"
+                                            class="flex-1 sm:flex-none inline-flex justify-center items-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                                </path>
+                                            </svg>
+                                            PDF
+                                        </button>
+                                        <button wire:click="downloadExcelDetailSesi()"
+                                            class="flex-1 sm:flex-none inline-flex justify-center items-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                                </path>
+                                            </svg>
+                                            Excel
+                                        </button>
+                                        <button type="button" wire:click="closeSesiDetail"
+                                            class="flex-1 sm:flex-none inline-flex justify-center rounded-lg bg-white border border-gray-300 px-6 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-100 hover:text-gray-900 transition-all">
+                                            Tutup
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        @endif
-                    </div>
-
-                    {{-- TARGET BELUM TUNTAS --}}
-                    <div>
-                        <h4 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-3">
-                            <div class="w-1.5 h-8 bg-orange-500 rounded-full"></div>
-                            Target Belum Tuntas
-                        </h4>
-
-                        {{-- Wrapper dengan Overflow X Auto (Scrollable) --}}
-                        <div class="w-full overflow-x-auto rounded-xl border border-gray-300 shadow-sm">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-orange-500 text-white">
-                                    <tr>
-                                        <th
-                                            class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                                            No</th>
-                                        <th
-                                            class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                                            Surah</th>
-                                        <th
-                                            class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                                            Status</th>
-                                        <th
-                                            class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-                                            Progress</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    @forelse ($siswaDetail['target_belum_dihafalkan'] as $index => $target)
-                                        <tr class="hover:bg-orange-50 transition-colors">
-                                            <td class="px-5 py-4 text-sm text-gray-600 font-medium">{{ $target['no'] }}</td>
-                                            <td class="px-5 py-4 text-sm font-bold text-gray-800 whitespace-nowrap">
-                                                {{ $target['nama_surah'] }}</td>
-                                            <td class="px-5 py-4 text-sm whitespace-nowrap">
-                                                <span
-                                                    class="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold bg-orange-100 text-orange-800 border border-orange-200">
-                                                    {{ $target['status'] }}
-                                                </span>
-                                            </td>
-                                            <td class="px-5 py-4 text-sm text-gray-600 font-medium whitespace-nowrap">
-                                                {{ $target['progress'] }}</td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" class="px-4 py-8 text-center text-gray-500 italic">
-                                                Alhamdulillah, semua target sudah tuntas!
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
                         </div>
-                        {{-- PAGINATION TARGET (Diselaraskan) --}}
-                        @if($totalPagesTarget > 1)
-                            <div
-                                class="mt-5 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 pt-4 gap-4">
-                                <div class="text-sm text-gray-600 font-medium text-center sm:text-left">
-                                    Halaman <span class="text-gray-900 font-bold">{{ $currentPageTarget }}</span> dari
-                                    {{ $totalPagesTarget }}
-                                </div>
-                                <div class="flex gap-2 w-full sm:w-auto justify-center">
-                                    <button wire:click="prevPageTarget" @if($currentPageTarget <= 1) disabled @endif
-                                        class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium shadow-sm w-1/2 sm:w-auto">
-                                        ← Sebelumnya
-                                    </button>
-                                    <button wire:click="nextPageTarget" @if($currentPageTarget >= $totalPagesTarget) disabled
-                                    @endif
-                                        class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium shadow-sm w-1/2 sm:w-auto">
-                                        Selanjutnya →
-                                    </button>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
+                    @endif
+
                 </div>
 
                 {{-- ========================================================================
@@ -641,7 +797,7 @@
                         </div>
                     </div>
 
-                    {{-- MODAL DETAIL SESI (POPUP) --}}
+                    {{-- MODAL DETAIL SESI (POPUP) - DUPLICATE FOR CONTEXT SAFETY --}}
                     @if(isset($selectedSesiDetail) && $selectedSesiDetail)
                         <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
                             aria-modal="true">
@@ -652,6 +808,7 @@
                                 <div
                                     class="relative transform overflow-hidden rounded-t-2xl md:rounded-2xl bg-white text-left shadow-2xl transition-all w-full sm:max-w-2xl md:max-w-4xl max-h-[90vh] flex flex-col">
 
+                                    {{-- HEADER POPUP: Tombol download dihapus dari sini --}}
                                     <div class="bg-green-700 px-4 py-4 md:px-6 flex items-center justify-between shrink-0">
                                         <h3 class="text-lg md:text-xl font-bold text-white flex items-center gap-2">
                                             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -662,7 +819,7 @@
                                             Detail Sesi
                                         </h3>
                                         <button wire:click="closeSesiDetail"
-                                            class="text-green-200 hover:text-white transition-colors bg-green-800 hover:bg-green-600 rounded-full p-1">
+                                            class="text-green-200 hover:text-white transition-colors hover:bg-green-600 rounded-full p-1">
                                             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M6 18L18 6M6 6l12 12" />
@@ -671,6 +828,7 @@
                                     </div>
 
                                     <div class="p-6 overflow-y-auto">
+                                        {{-- ... (Isi grid nilai dan tabel koreksi SAMA PERSIS) ... --}}
                                         <div class="grid grid-cols-2 gap-4 mb-6">
                                             <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
                                                 <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">Tanggal</p>
@@ -681,7 +839,8 @@
                                                 <p class="text-xs text-gray-500 uppercase font-bold tracking-wider">Guru
                                                     Pengampu</p>
                                                 <p class="font-bold text-gray-800 text-sm md:text-base truncate">
-                                                    {{ $selectedSesiDetail['guru'] }}</p>
+                                                    {{ $selectedSesiDetail['guru'] }}
+                                                </p>
                                             </div>
                                         </div>
 
@@ -729,7 +888,6 @@
                                                 <span class="w-2 h-2 bg-red-500 rounded-full block"></span>
                                                 Catatan Koreksi
                                             </h4>
-
                                             <div class="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                                                 <table class="min-w-full divide-y divide-gray-200">
                                                     <thead class="bg-gray-50">
@@ -749,9 +907,11 @@
                                                         @forelse($selectedSesiDetail['koreksi'] as $kor)
                                                             <tr>
                                                                 <td class="px-4 py-3 text-sm text-gray-800 font-bold">
-                                                                    {{ $kor['lokasi'] }}</td>
+                                                                    {{ $kor['lokasi'] }}
+                                                                </td>
                                                                 <td class="px-4 py-3 text-sm text-red-600 font-medium bg-red-50">
-                                                                    {{ $kor['jenis_kesalahan'] }}</td>
+                                                                    {{ $kor['jenis_kesalahan'] }}
+                                                                </td>
                                                                 <td class="px-4 py-3 text-sm text-right font-arabic"
                                                                     style="font-family: 'Amiri', serif; font-size: 1.4em; line-height: 1.6;">
                                                                     {{ $kor['catatan'] }}
@@ -760,9 +920,8 @@
                                                         @empty
                                                             <tr>
                                                                 <td colspan="3"
-                                                                    class="px-4 py-8 text-center text-sm text-gray-500 italic">
-                                                                    Tidak ada catatan koreksi.
-                                                                </td>
+                                                                    class="px-4 py-8 text-center text-sm text-gray-500 italic">Tidak
+                                                                    ada catatan koreksi.</td>
                                                             </tr>
                                                         @endforelse
                                                     </tbody>
@@ -771,21 +930,44 @@
                                         </div>
                                     </div>
 
+                                    {{-- FOOTER POPUP: Tombol Download & Tutup di sini --}}
                                     <div
-                                        class="bg-gray-50 px-4 py-4 sm:px-6 flex flex-row-reverse border-t border-gray-200 shrink-0">
+                                        class="bg-gray-50 px-4 py-4 sm:px-6 flex flex-col sm:flex-row sm:justify-end gap-3 border-t border-gray-200 shrink-0">
+
+                                        {{-- Tombol PDF Merah --}}
+                                        <button wire:click="downloadPdfDetailSesi()"
+                                            class="flex-1 sm:flex-none inline-flex justify-center items-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                                </path>
+                                            </svg>
+                                            PDF
+                                        </button>
+
+                                        {{-- Tombol Excel Hijau --}}
+                                        <button wire:click="downloadExcelDetailSesi()"
+                                            class="flex-1 sm:flex-none inline-flex justify-center items-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition-all">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                                </path>
+                                            </svg>
+                                            Excel
+                                        </button>
+
+                                        {{-- Tombol Tutup --}}
                                         <button type="button" wire:click="closeSesiDetail"
-                                            class="w-full sm:w-auto inline-flex justify-center rounded-lg bg-gray-800 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-700 transition-all">
-                                            Tutup Detail
+                                            class="flex-1 sm:flex-none inline-flex justify-center rounded-lg bg-white border border-gray-300 px-6 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-100 hover:text-gray-900 transition-all">
+                                            Tutup
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     @endif
-
                 </div>
             @endif
-
         </div>
     </div>
 </div>

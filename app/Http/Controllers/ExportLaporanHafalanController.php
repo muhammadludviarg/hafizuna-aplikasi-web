@@ -65,7 +65,7 @@ class ExportLaporanHafalanController extends Controller
         $sheet->mergeCells('A1:F1');
 
         // Header Tabel (Updated: Total Ayat -> Progress Target)
-        $headers = ['No', 'Nama Siswa', 'Kelompok', 'Progress Target', 'Jumlah Sesi', 'Nilai Rata-rata'];
+        $headers = ['No', 'Nama Siswa', 'Kelompok', 'Progress Target', 'Jumlah Sesi', 'Nilai Akhir'];
         $sheet->fromArray($headers, NULL, 'A5');
 
         // Styling Header
@@ -150,40 +150,6 @@ class ExportLaporanHafalanController extends Controller
             ];
         })->sortByDesc('nilai_rata_rata')->values()->toArray();
     }
-    private function generateCsv($kelas, $siswaDetail)
-    {
-        $output = fopen('php://temp', 'r+');
-
-        // Add UTF-8 BOM untuk Excel
-        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-        // Header info
-        fputcsv($output, ['HAFIZUNA - SD Islam Al-Azhar 27'], ',');
-        fputcsv($output, ['Laporan Hafalan Per Kelas'], ',');
-        fputcsv($output, ['Kelas: ' . $kelas->nama_kelas . ' | Tahun Ajaran: ' . $kelas->tahun_ajaran], ',');
-        fputcsv($output, ['Tanggal: ' . date('d/m/Y') . ' | Jumlah Siswa: ' . count($siswaDetail)], ',');
-        fputcsv($output, [], ',');
-
-        // Column headers
-        fputcsv($output, ['No', 'Nama Siswa', 'Total Ayat', 'Jumlah Sesi', 'Nilai Rata-rata'], ',');
-
-        // Data rows
-        foreach ($siswaDetail as $index => $siswa) {
-            fputcsv($output, [
-                $index + 1,
-                $siswa['nama_siswa'],
-                $siswa['total_ayat'],
-                $siswa['jumlah_sesi'],
-                $siswa['nilai_rata_rata']
-            ], ',');
-        }
-
-        rewind($output);
-        $csv = stream_get_contents($output);
-        fclose($output);
-
-        return $csv;
-    }
 
     public function exportPdfSiswa($siswaId)
     {
@@ -191,10 +157,13 @@ class ExportLaporanHafalanController extends Controller
         if (!$siswa)
             return abort(404);
 
-        // 1. Proses Grouping Data
         $dataLaporan = $this->prepareLaporanSiswaData($siswaId, $siswa);
 
-        // 2. Generate PDF
+        // REVISI: Pastikan urut berdasarkan Nomor Surah
+        usort($dataLaporan['surah_dihafalkan'], function ($a, $b) {
+            return $a['nomor_surah'] <=> $b['nomor_surah'];
+        });
+
         $pdf = Pdf::loadView('exports.laporan-hafalan-siswa-pdf', [
             'sekolah' => 'HAFIZUNA',
             'nama_sekolah_lengkap' => 'SD Islam Al-Azhar 27 Cibinong Bogor',
@@ -203,12 +172,8 @@ class ExportLaporanHafalanController extends Controller
             'nama_siswa' => $siswa->nama_siswa,
             'kelas' => $siswa->kelas,
             'tanggal' => date('d/m/Y'),
-
-            // Data Tabel
             'surah_dihafalkan' => $dataLaporan['surah_dihafalkan'],
             'surah_belum_dihafalkan' => $dataLaporan['surah_belum_dihafalkan'],
-
-            // Statistik Umum
             'jumlah_sesi' => $dataLaporan['total_sesi'],
             'total_ayat' => $dataLaporan['total_ayat'],
             'nilai_rata_rata' => $dataLaporan['nilai_rata_rata_total'],
@@ -223,10 +188,13 @@ class ExportLaporanHafalanController extends Controller
         if (!$siswa)
             return abort(404);
 
-        // 1. Proses Grouping Data
         $dataLaporan = $this->prepareLaporanSiswaData($siswaId, $siswa);
 
-        // 2. Buat Spreadsheet
+        // REVISI: Pastikan urut berdasarkan Nomor Surah
+        usort($dataLaporan['surah_dihafalkan'], function ($a, $b) {
+            return $a['nomor_surah'] <=> $b['nomor_surah'];
+        });
+
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
@@ -251,8 +219,8 @@ class ExportLaporanHafalanController extends Controller
         $sheet->setCellValue('F4', $dataLaporan['total_sesi']);
         $sheet->setCellValue('E5', 'Total Ayat:');
         $sheet->setCellValue('F5', $dataLaporan['total_ayat']);
-        $sheet->setCellValue('E6', 'Rata-rata:');
-        $sheet->setCellValue('F6', $dataLaporan['nilai_rata_rata_total']);
+        $sheet->setCellValue('E6', 'Nilai Akhir:');
+        $sheet->setCellValue('F6', $dataLaporan['nilai_rata_rata_total']); // REVISI LABEL
         $sheet->getStyle('E4:F6')->getFont()->setBold(true);
 
         // TABEL 1: SURAH SUDAH DIHAFALKAN
@@ -262,10 +230,11 @@ class ExportLaporanHafalanController extends Controller
         $sheet->getStyle('A' . $row)->getFont()->setBold(true);
 
         $row++;
-        $headers = ['No', 'Nama Surah', 'Total Sesi', 'Tajwid', 'Kelancaran', 'Makhroj', 'Nilai Terakhir'];
+        // REVISI LABEL HEADER
+        $headers = ['No', 'Nama Surah', 'Total Sesi', 'Tajwid', 'Kelancaran', 'Makhroj', 'Nilai Akhir'];
         $sheet->fromArray($headers, NULL, 'A' . $row);
         $sheet->getStyle('A' . $row . ':G' . $row)->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
-        $sheet->getStyle('A' . $row . ':G' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('16A34A'); // Hijau
+        $sheet->getStyle('A' . $row . ':G' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('16A34A');
         $sheet->getStyle('A' . $row . ':G' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $row++;
@@ -301,7 +270,7 @@ class ExportLaporanHafalanController extends Controller
         $headersTarget = ['No', 'Nama Surah', 'Status', 'Progress'];
         $sheet->fromArray($headersTarget, NULL, 'A' . $row);
         $sheet->getStyle('A' . $row . ':D' . $row)->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
-        $sheet->getStyle('A' . $row . ':D' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('EA580C'); // Oranye
+        $sheet->getStyle('A' . $row . ':D' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('EA580C');
         $sheet->getStyle('A' . $row . ':D' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
         $row++;
@@ -330,152 +299,247 @@ class ExportLaporanHafalanController extends Controller
         return $this->downloadXlsx($spreadsheet, 'Laporan-Siswa-' . str_replace(' ', '-', $siswa->nama_siswa) . '.xlsx');
     }
 
-    public function exportPdfSesi($siswaId, $surahId)
+    public function exportPdfDetailSesi($sesiId)
     {
-        // 1. LOAD DATA SISWA + KELAS + KELOMPOK & GURUNYA
-        $siswa = Siswa::with(['kelas', 'kelompok.guru.akun'])->find($siswaId);
-        $surah = Surah::find($surahId);
-
-        if (!$siswa || !$surah)
+        $sesi = SesiHafalan::with(['siswa.kelas', 'surahMulai', 'guru.akun', 'koreksi.ayat'])->find($sesiId);
+        if (!$sesi)
             return abort(404);
 
-        // 2. LOGIKA GURU (Dari Kelompok Siswa)
-        // Ambil kelompok pertama siswa, lalu ambil gurunya
-        $namaGuru = '-';
-        $kelompokSiswa = $siswa->kelompok->first();
+        $siswa = $sesi->siswa;
+        $namaGuru = ($sesi->guru && $sesi->guru->akun) ? $sesi->guru->akun->nama_lengkap : '-';
 
-        if ($kelompokSiswa && $kelompokSiswa->guru && $kelompokSiswa->guru->akun) {
-            $namaGuru = $kelompokSiswa->guru->akun->nama_lengkap;
-        }
-
-        // 3. AMBIL SESI UNTUK SURAH INI
-        $allSesi = SesiHafalan::where('id_siswa', $siswaId)
-            ->where(function ($q) use ($surahId) {
-                $q->where('id_surah_mulai', $surahId)
-                    ->orWhere('id_surah_selesai', $surahId);
+        // Hitung Sesi Ke-berapa secara manual
+        $urutanSesi = SesiHafalan::where('id_siswa', $sesi->id_siswa)
+            ->where(function ($q) use ($sesi) {
+                $q->where('id_surah_mulai', $sesi->id_surah_mulai)
+                    ->orWhere('id_surah_selesai', $sesi->id_surah_mulai);
             })
-            ->with(['koreksi.ayat'])
-            ->orderBy('tanggal_setor', 'asc')
-            ->get();
+            ->where('tanggal_setor', '<=', $sesi->tanggal_setor)
+            ->count();
 
-        if ($allSesi->isEmpty())
-            return abort(404, 'Sesi tidak ditemukan');
-
-        $latestSesi = $allSesi->last();
-
-        // 4. PERBAIKI TEKS ARAB (Reshaping)
-        // Walaupun dari API, teks harus di-reshape agar nyambung di PDF
+        // Data koreksi (karena single sesi, sesi_ke nya ya urutan sesi itu)
         $arabic = new Arabic();
         $allKoreksiHistory = [];
-
-        foreach ($allSesi as $index => $sesi) {
-            $nomorSesi = $index + 1;
-            foreach ($sesi->koreksi as $k) {
-                // Perbaiki teks Arab
-                $catatanFixed = $k->catatan ? $arabic->utf8Glyphs($k->catatan) : '-';
-
-                $allKoreksiHistory[] = [
-                    'lokasi' => 'Ayat ' . ($k->ayat ? $k->ayat->nomor_ayat : ($k->kata_ke ?? '?')),
-                    'sesi_ke' => $nomorSesi,
-                    'jenis_kesalahan' => $k->kategori_kesalahan ?? '-',
-                    'catatan' => $catatanFixed // Teks yang sudah diperbaiki
-                ];
-            }
+        foreach ($sesi->koreksi as $k) {
+            $catatanFixed = $k->catatan ? $arabic->utf8Glyphs($k->catatan) : '-';
+            $allKoreksiHistory[] = [
+                'lokasi' => 'Ayat ' . ($k->ayat ? $k->ayat->nomor_ayat : ($k->kata_ke ?? '?')),
+                'sesi_ke' => $urutanSesi, // Masukkan angka urutan sesi
+                'jenis_kesalahan' => $k->kategori_kesalahan ?? '-',
+                'catatan' => $catatanFixed
+            ];
         }
 
-        $allKoreksiHistory = array_reverse($allKoreksiHistory);
-
-        // Data Pelengkap
-        $namaKelas = $siswa->kelas ? $siswa->kelas->nama_kelas : 'N/A';
-        $nilaiRataRata = $latestSesi->nilai_rata ?? 0;
-
-        // Grade
-        $gradeTajwid = $this->getGradeDescription($latestSesi->skor_tajwid);
-        $gradeKelancaran = $this->getGradeDescription($latestSesi->skor_kelancaran);
-        $gradeMakhroj = $this->getGradeDescription($latestSesi->skor_makhroj);
-        $gradeDesc = $this->getGradeDescription($nilaiRataRata);
-
-        // Data Riwayat Nilai
-        $riwayatSesiFormatted = $allSesi->sortByDesc('tanggal_setor')->map(function ($sesi) {
-            return [
+        // Data untuk tabel nilai di PDF
+        $riwayatSatuSesi = [
+            [
                 'tanggal' => $sesi->tanggal_setor->format('d/m/Y'),
                 'ayat' => $sesi->ayat_mulai . '-' . $sesi->ayat_selesai,
                 'tajwid' => number_format($sesi->skor_tajwid, 1),
                 'kelancaran' => number_format($sesi->skor_kelancaran, 1),
                 'makhroj' => number_format($sesi->skor_makhroj, 1),
                 'rata_rata' => number_format($sesi->nilai_rata, 2)
-            ];
-        })->values()->toArray();
+            ]
+        ];
 
         $pdf = Pdf::loadView('exports.sesi-setoran-pdf', [
             'sekolah' => 'HAFIZUNA',
             'nama_sekolah_lengkap' => 'SD Islam Al-Azhar 27 Cibinong Bogor',
-            'judul' => 'Riwayat Koreksi Hafalan',
+            'judul' => 'Detail Setoran Hafalan',
             'nama_siswa' => $siswa->nama_siswa,
-            'nama_kelas' => $namaKelas,
-            'nama_surah' => $surah->nama_surah,
-            'ayat_mulai' => $latestSesi->ayat_mulai,
-            'ayat_selesai' => $latestSesi->ayat_selesai,
-            'nama_guru' => $namaGuru, // ✅ Guru Pembimbing dari Kelompok
-            'tanggal_sesi' => Carbon::parse($latestSesi->tanggal_setor)->translatedFormat('l, d F Y'),
-            'nilai_tajwid' => number_format($latestSesi->skor_tajwid, 1),
-            'nilai_kelancaran' => number_format($latestSesi->skor_kelancaran, 1),
-            'nilai_makhroj' => number_format($latestSesi->skor_makhroj, 1),
-            'nilai_rata_rata' => number_format($nilaiRataRata, 2),
-            'grade_tajwid' => $gradeTajwid,
-            'grade_kelancaran' => $gradeKelancaran,
-            'grade_makhroj' => $gradeMakhroj,
-            'grade_desc' => $gradeDesc,
+            'nama_kelas' => $siswa->kelas->nama_kelas ?? '-',
+            'nama_surah' => $sesi->surahMulai->nama_surah,
+            'ayat_mulai' => $sesi->ayat_mulai,
+            'ayat_selesai' => $sesi->ayat_selesai,
+            'nama_guru' => $namaGuru,
+            'tanggal_sesi' => Carbon::parse($sesi->tanggal_setor)->translatedFormat('l, d F Y'),
+            'nilai_tajwid' => number_format($sesi->skor_tajwid, 1),
+            'nilai_kelancaran' => number_format($sesi->skor_kelancaran, 1),
+            'nilai_makhroj' => number_format($sesi->skor_makhroj, 1),
+            'nilai_rata_rata' => number_format($sesi->nilai_rata, 2),
+            'grade_tajwid' => $this->getGradeDescription($sesi->skor_tajwid),
+            'grade_kelancaran' => $this->getGradeDescription($sesi->skor_kelancaran),
+            'grade_makhroj' => $this->getGradeDescription($sesi->skor_makhroj),
+            'grade_desc' => $this->getGradeDescription($sesi->nilai_rata),
             'koreksi' => $allKoreksiHistory,
-            'riwayat_sesi' => $riwayatSesiFormatted,
+            'riwayat_sesi' => $riwayatSatuSesi,
         ])->setPaper('a4', 'portrait');
 
-        return $pdf->download('Detail-Sesi-' . str_replace(' ', '-', $siswa->nama_siswa) . '.pdf');
+        return $pdf->download('Detail-Sesi-' . $sesi->tanggal_setor->format('dmY') . '-' . str_replace(' ', '-', $siswa->nama_siswa) . '.pdf');
     }
-    public function exportExcelSesi($siswaId, $surahId)
-    {
-        $siswa = Siswa::with(['kelas', 'kelompok.guru.akun'])->find($siswaId);
-        $surah = Surah::find($surahId);
 
-        if (!$siswa || !$surah)
+    // EXPORT EXCEL SATU SESI (POPUP)
+    public function exportExcelDetailSesi($sesiId)
+    {
+        $sesi = SesiHafalan::with(['siswa.kelas', 'surahMulai', 'guru.akun', 'koreksi.ayat'])->find($sesiId);
+        if (!$sesi)
             return abort(404);
 
-        $allSesi = SesiHafalan::where('id_siswa', $siswaId)
-            ->where(function ($q) use ($surahId) {
-                $q->where('id_surah_mulai', $surahId)
-                    ->orWhere('id_surah_selesai', $surahId);
+        $siswa = $sesi->siswa;
+        $namaGuru = ($sesi->guru && $sesi->guru->akun) ? $sesi->guru->akun->nama_lengkap : '-';
+        $gradeDesc = $this->getGradeDescription($sesi->nilai_rata);
+
+        // Hitung Sesi Ke-berapa secara manual
+        $urutanSesi = SesiHafalan::where('id_siswa', $sesi->id_siswa)
+            ->where(function ($q) use ($sesi) {
+                $q->where('id_surah_mulai', $sesi->id_surah_mulai)
+                    ->orWhere('id_surah_selesai', $sesi->id_surah_mulai);
             })
-            ->with(['koreksi.ayat'])
-            ->orderBy('tanggal_setor', 'asc')
-            ->get();
+            ->where('tanggal_setor', '<=', $sesi->tanggal_setor)
+            ->count();
 
-        if ($allSesi->isEmpty())
-            return abort(404, 'Sesi tidak ditemukan');
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
 
-        // Ambil Guru
+        // Header
+        $sheet->setCellValue('A1', 'HAFIZUNA - SD Islam Al-Azhar 27 Cibinong Bogor');
+        $sheet->setCellValue('A2', 'Detail Setoran Hafalan');
+        $sheet->mergeCells('A1:F1');
+        $sheet->mergeCells('A2:F2');
+        $sheet->getStyle('A1:A2')->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle('A1:A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // Info
+        $sheet->setCellValue('A4', 'Nama Siswa:');
+        $sheet->setCellValue('B4', $siswa->nama_siswa);
+        $sheet->setCellValue('A5', 'Kelas:');
+        $sheet->setCellValue('B5', $siswa->kelas->nama_kelas ?? '-');
+        $sheet->setCellValue('A6', 'Surah:');
+        $sheet->setCellValue('B6', $sesi->surahMulai->nama_surah);
+        $sheet->setCellValue('A7', 'Guru:');
+        $sheet->setCellValue('B7', $namaGuru);
+        $sheet->setCellValue('A8', 'Tanggal:');
+        $sheet->setCellValue('B8', $sesi->tanggal_setor->format('d/m/Y'));
+
+        // Nilai
+        $sheet->setCellValue('D4', 'HASIL PENILAIAN');
+        $sheet->getStyle('D4')->getFont()->setBold(true);
+        $sheet->setCellValue('D5', 'Tajwid:');
+        $sheet->setCellValue('E5', $sesi->skor_tajwid);
+        $sheet->setCellValue('D6', 'Kelancaran:');
+        $sheet->setCellValue('E6', $sesi->skor_kelancaran);
+        $sheet->setCellValue('D7', 'Makhroj:');
+        $sheet->setCellValue('E7', $sesi->skor_makhroj);
+        $sheet->setCellValue('D8', 'Nilai Akhir:');
+        $sheet->setCellValue('E8', $sesi->nilai_rata . ' (' . $gradeDesc . ')');
+
+        // Koreksi
+        $row = 11;
+        $sheet->setCellValue('A' . $row, 'CATATAN KOREKSI');
+        $sheet->mergeCells('A' . $row . ':F' . $row);
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+
+        $row++;
+        $headers = ['No', 'Tanggal', 'Sesi Ke-', 'Lokasi Ayat', 'Jenis Kesalahan', 'Catatan (Lafadz)'];
+        $sheet->fromArray($headers, NULL, 'A' . $row);
+        $sheet->getStyle('A' . $row . ':F' . $row)->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
+        $sheet->getStyle('A' . $row . ':F' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('16A34A');
+
+        $row++;
+        $no = 1;
+        if ($sesi->koreksi->count() > 0) {
+            foreach ($sesi->koreksi as $k) {
+                $sheet->setCellValue('A' . $row, $no++);
+                $sheet->setCellValue('B' . $row, $sesi->tanggal_setor->format('d/m/Y'));
+                $sheet->setCellValue('C' . $row, $urutanSesi); // ISI KOLOM SESI KE-
+                $sheet->setCellValue('D' . $row, 'Ayat ' . ($k->ayat ? $k->ayat->nomor_ayat : ($k->kata_ke ?? '?')));
+                $sheet->setCellValue('E' . $row, $k->kategori_kesalahan ?? '-');
+                $sheet->setCellValue('F' . $row, $k->catatan ?? '-');
+                $row++;
+            }
+        } else {
+            $sheet->setCellValue('A' . $row, 'Tidak ada catatan koreksi.');
+            $sheet->mergeCells('A' . $row . ':F' . $row);
+            $row++;
+        }
+
+        foreach (range('A', 'F') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        return $this->downloadXlsx($spreadsheet, 'Detail-Sesi-' . $sesi->tanggal_setor->format('dmY') . '.xlsx');
+    }
+
+    public function exportPdfSesi($siswaId, $surahId)
+    { /* SAMA SEPERTI SEBELUMNYA, TIDAK DIUBAH AGAR TAB DETAIL SURAH JALAN */
+        $siswa = Siswa::with(['kelas', 'kelompok.guru.akun'])->find($siswaId);
+        $surah = Surah::find($surahId);
+        if (!$siswa || !$surah)
+            return abort(404);
         $namaGuru = '-';
         $kelompokSiswa = $siswa->kelompok->first();
         if ($kelompokSiswa && $kelompokSiswa->guru && $kelompokSiswa->guru->akun) {
             $namaGuru = $kelompokSiswa->guru->akun->nama_lengkap;
         }
-
+        $allSesi = SesiHafalan::where('id_siswa', $siswaId)->where(function ($q) use ($surahId) {
+            $q->where('id_surah_mulai', $surahId)->orWhere('id_surah_selesai', $surahId);
+        })->with(['koreksi.ayat'])->orderBy('tanggal_setor', 'asc')->get();
+        if ($allSesi->isEmpty())
+            return abort(404, 'Sesi tidak ditemukan');
         $latestSesi = $allSesi->last();
-        $nilaiRataRata = $latestSesi->nilai_rata ?? 0;
-        $gradeDesc = $this->getGradeDescription($nilaiRataRata);
+        $arabic = new Arabic();
+        $allKoreksiHistory = [];
+        foreach ($allSesi as $index => $sesi) {
+            $nomorSesi = $index + 1;
+            foreach ($sesi->koreksi as $k) {
+                $catatanFixed = $k->catatan ? $arabic->utf8Glyphs($k->catatan) : '-';
+                $allKoreksiHistory[] = ['lokasi' => 'Ayat ' . ($k->ayat ? $k->ayat->nomor_ayat : ($k->kata_ke ?? '?')), 'sesi_ke' => $nomorSesi, 'jenis_kesalahan' => $k->kategori_kesalahan ?? '-', 'catatan' => $catatanFixed];
+            }
+        }
+        $allKoreksiHistory = array_reverse($allKoreksiHistory);
+        $riwayatSesiFormatted = $allSesi->sortByDesc('tanggal_setor')->map(function ($sesi) {
+            return ['tanggal' => $sesi->tanggal_setor->format('d/m/Y'), 'ayat' => $sesi->ayat_mulai . '-' . $sesi->ayat_selesai, 'tajwid' => number_format($sesi->skor_tajwid, 1), 'kelancaran' => number_format($sesi->skor_kelancaran, 1), 'makhroj' => number_format($sesi->skor_makhroj, 1), 'rata_rata' => number_format($sesi->nilai_rata, 2)];
+        })->values()->toArray();
+        $pdf = Pdf::loadView('exports.sesi-setoran-pdf', [
+            'sekolah' => 'HAFIZUNA',
+            'nama_sekolah_lengkap' => 'SD Islam Al-Azhar 27 Cibinong Bogor',
+            'judul' => 'Riwayat Koreksi Hafalan',
+            'nama_siswa' => $siswa->nama_siswa,
+            'nama_kelas' => $siswa->kelas->nama_kelas ?? '-',
+            'nama_surah' => $surah->nama_surah,
+            'ayat_mulai' => $latestSesi->ayat_mulai,
+            'ayat_selesai' => $latestSesi->ayat_selesai,
+            'nama_guru' => $namaGuru,
+            'tanggal_sesi' => Carbon::parse($latestSesi->tanggal_setor)->translatedFormat('l, d F Y'),
+            'nilai_tajwid' => number_format($latestSesi->skor_tajwid, 1),
+            'nilai_kelancaran' => number_format($latestSesi->skor_kelancaran, 1),
+            'nilai_makhroj' => number_format($latestSesi->skor_makhroj, 1),
+            'nilai_rata_rata' => number_format($latestSesi->nilai_rata, 2),
+            'grade_tajwid' => $this->getGradeDescription($latestSesi->skor_tajwid),
+            'grade_kelancaran' => $this->getGradeDescription($latestSesi->skor_kelancaran),
+            'grade_makhroj' => $this->getGradeDescription($latestSesi->skor_makhroj),
+            'grade_desc' => $this->getGradeDescription($latestSesi->nilai_rata),
+            'koreksi' => $allKoreksiHistory,
+            'riwayat_sesi' => $riwayatSesiFormatted,
+        ])->setPaper('a4', 'portrait');
+        return $pdf->download('Detail-Sesi-' . str_replace(' ', '-', $siswa->nama_siswa) . '.pdf');
+    }
 
-        // === MEMBUAT SPREADSHEET EXCEL ===
+    public function exportExcelSesi($siswaId, $surahId)
+    { /* SAMA SEPERTI SEBELUMNYA */
+        $siswa = Siswa::with(['kelas', 'kelompok.guru.akun'])->find($siswaId);
+        $surah = Surah::find($surahId);
+        if (!$siswa || !$surah)
+            return abort(404);
+        $allSesi = SesiHafalan::where('id_siswa', $siswaId)->where(function ($q) use ($surahId) {
+            $q->where('id_surah_mulai', $surahId)->orWhere('id_surah_selesai', $surahId);
+        })->with(['koreksi.ayat'])->orderBy('tanggal_setor', 'asc')->get();
+        if ($allSesi->isEmpty())
+            return abort(404, 'Sesi tidak ditemukan');
+        $namaGuru = '-';
+        $kelompokSiswa = $siswa->kelompok->first();
+        if ($kelompokSiswa && $kelompokSiswa->guru && $kelompokSiswa->guru->akun) {
+            $namaGuru = $kelompokSiswa->guru->akun->nama_lengkap;
+        }
+        $latestSesi = $allSesi->last();
+        $gradeDesc = $this->getGradeDescription($latestSesi->nilai_rata);
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-
-        // 1. Header Laporan
         $sheet->setCellValue('A1', 'HAFIZUNA - SD Islam Al-Azhar 27 Cibinong Bogor');
         $sheet->setCellValue('A2', 'Detail Riwayat Sesi Setoran Hafalan');
         $sheet->mergeCells('A1:F1');
         $sheet->mergeCells('A2:F2');
         $sheet->getStyle('A1:A2')->getFont()->setBold(true)->setSize(12);
         $sheet->getStyle('A1:A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-        // 2. Informasi Siswa
         $sheet->setCellValue('A4', 'Nama Siswa:');
         $sheet->setCellValue('B4', $siswa->nama_siswa);
         $sheet->setCellValue('A5', 'Kelas:');
@@ -486,8 +550,6 @@ class ExportLaporanHafalanController extends Controller
         $sheet->setCellValue('B7', $namaGuru);
         $sheet->setCellValue('A8', 'Tanggal:');
         $sheet->setCellValue('B8', $latestSesi->tanggal_setor->format('d/m/Y'));
-
-        // 3. Nilai Terakhir
         $sheet->setCellValue('D4', 'NILAI TERAKHIR');
         $sheet->getStyle('D4')->getFont()->setBold(true);
         $sheet->setCellValue('D5', 'Tajwid:');
@@ -497,67 +559,49 @@ class ExportLaporanHafalanController extends Controller
         $sheet->setCellValue('D7', 'Makhroj:');
         $sheet->setCellValue('E7', $latestSesi->skor_makhroj);
         $sheet->setCellValue('D8', 'Rata-rata:');
-        $sheet->setCellValue('E8', $nilaiRataRata . ' (' . $gradeDesc . ')');
-
-        // 4. Tabel Riwayat Koreksi
+        $sheet->setCellValue('E8', $latestSesi->nilai_rata . ' (' . $gradeDesc . ')');
         $row = 11;
         $sheet->setCellValue('A' . $row, 'RIWAYAT CATATAN KOREKSI');
         $sheet->mergeCells('A' . $row . ':F' . $row);
         $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-
         $row++;
         $headers = ['No', 'Tanggal', 'Sesi Ke-', 'Lokasi Ayat', 'Jenis Kesalahan', 'Catatan (Lafadz)'];
         $sheet->fromArray($headers, NULL, 'A' . $row);
-
-        // Style Header Tabel
         $sheet->getStyle('A' . $row . ':F' . $row)->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
         $sheet->getStyle('A' . $row . ':F' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('16A34A');
-
-        // Isi Data Koreksi
         $row++;
         $koreksiFound = false;
-        // Urutkan data sesi untuk koreksi (Terbaru -> Terlama)
         $sesiReverse = $allSesi->reverse();
-
         $no = 1;
         foreach ($sesiReverse as $index => $sesi) {
-            // index di reverse collection tetap mempertahankan key aslinya (misal id), jadi kita hitung manual untuk sesi ke-
-            // Logic Sesi Ke: Kita perlu cari index asli dari $allSesi
             $sesiKe = $allSesi->search(function ($item) use ($sesi) {
                 return $item->id_sesi === $sesi->id_sesi;
             }) + 1;
-
             foreach ($sesi->koreksi as $k) {
                 $koreksiFound = true;
                 $sheet->setCellValue('A' . $row, $no++);
                 $sheet->setCellValue('B' . $row, $sesi->tanggal_setor->format('d/m/Y'));
-                $sheet->setCellValue('C' . $row, $sesiKe); // Sesi Ke
+                $sheet->setCellValue('C' . $row, $sesiKe);
                 $sheet->setCellValue('D' . $row, 'Ayat ' . ($k->ayat ? $k->ayat->nomor_ayat : ($k->kata_ke ?? '?')));
                 $sheet->setCellValue('E' . $row, $k->kategori_kesalahan ?? '-');
                 $sheet->setCellValue('F' . $row, $k->catatan ?? '-');
                 $row++;
             }
         }
-
         if (!$koreksiFound) {
             $sheet->setCellValue('A' . $row, 'Tidak ada catatan koreksi.');
             $sheet->mergeCells('A' . $row . ':F' . $row);
             $row++;
         }
-
-        $row += 2; // Spasi
-
-        // 5. Tabel Riwayat Nilai
+        $row += 2;
         $sheet->setCellValue('A' . $row, 'REKAPITULASI NILAI PER PERTEMUAN');
-        $sheet->mergeCells('A' . $row . ':G' . $row); // G untuk rata-rata
+        $sheet->mergeCells('A' . $row . ':G' . $row);
         $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-
         $row++;
         $headersNilai = ['No', 'Tanggal', 'Ayat', 'Tajwid', 'Kelancaran', 'Makhroj', 'Rata-rata'];
         $sheet->fromArray($headersNilai, NULL, 'A' . $row);
         $sheet->getStyle('A' . $row . ':G' . $row)->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE));
         $sheet->getStyle('A' . $row . ':G' . $row)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('16A34A');
-
         $row++;
         $no = 1;
         foreach ($sesiReverse as $sesi) {
@@ -570,20 +614,14 @@ class ExportLaporanHafalanController extends Controller
             $sheet->setCellValue('G' . $row, $sesi->nilai_rata);
             $row++;
         }
-
-        // Auto Size Columns
         foreach (range('A', 'G') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
-
-        // Download Xlsx
-        $filename = 'Detail-Sesi-' . str_replace(' ', '-', $siswa->nama_siswa) . '.xlsx';
-        return $this->downloadXlsx($spreadsheet, $filename);
+        return $this->downloadXlsx($spreadsheet, 'Detail-Sesi-' . str_replace(' ', '-', $siswa->nama_siswa) . '.xlsx');
     }
 
     private function prepareLaporanSiswaData($siswaId, $siswa)
     {
-        // 1. Ambil Semua Sesi (Urut terlama -> terbaru untuk dapet nilai terakhir)
         $semuaSesi = SesiHafalan::where('id_siswa', $siswaId)
             ->with(['surahMulai'])
             ->orderBy('tanggal_setor', 'asc')
@@ -594,35 +632,28 @@ class ExportLaporanHafalanController extends Controller
         $totalAyat = 0;
         $nilaiTotal = 0;
 
-        // 2. Grouping per Surah
         foreach ($semuaSesi as $sesi) {
-            $idSurah = $sesi->id_surah_mulai; // Asumsi input per surah
+            $idSurah = $sesi->id_surah_mulai;
             $surah = $sesi->surahMulai;
-
-            // Hitung total ayat global
             $totalAyat += ($sesi->ayat_selesai - $sesi->ayat_mulai + 1);
             $nilaiTotal += $sesi->nilai_rata;
 
-            // Inisialisasi Data Surah jika belum ada
+            // FIX: Tambahkan 'nomor_surah' saat inisialisasi
             if (!isset($statsSurah[$idSurah])) {
                 $statsSurah[$idSurah] = [
                     'nama_surah' => $surah ? $surah->nama_surah : 'Unknown',
+                    'nomor_surah' => $surah ? $surah->nomor_surah : 999, // INI YANG BIKIN ERROR SEBELUMNYA
                     'jumlah_ayat_surah' => $surah ? $surah->jumlah_ayat : 0,
-                    'count' => 0, // Jumlah sesi untuk surah ini
-                    'max_ayat' => 0, // Progress terjauh
-                    'latest_scores' => [] // Nilai dari sesi terakhir
+                    'count' => 0,
+                    'max_ayat' => 0,
+                    'latest_scores' => []
                 ];
             }
 
-            // Update Data Surah
-            $statsSurah[$idSurah]['count']++; // Tambah sesi
-
-            // Cek progress
+            $statsSurah[$idSurah]['count']++;
             if ($sesi->ayat_selesai > $statsSurah[$idSurah]['max_ayat']) {
                 $statsSurah[$idSurah]['max_ayat'] = $sesi->ayat_selesai;
             }
-
-            // Selalu update nilai dengan sesi saat ini (karena loop ASC, ini akan jadi nilai terakhir)
             $statsSurah[$idSurah]['latest_scores'] = [
                 'tajwid' => $sesi->skor_tajwid,
                 'kelancaran' => $sesi->skor_kelancaran,
@@ -631,33 +662,28 @@ class ExportLaporanHafalanController extends Controller
             ];
         }
 
-        // 3. Pisahkan Jadi 2 Kategori
         $surahDihafalkan = [];
-        $progressMap = []; // Untuk lookup progress surah yg belum selesai
+        $progressMap = [];
 
         foreach ($statsSurah as $idSurah => $stat) {
-            // TUNTAS jika ayat terakhir yg disetor >= jumlah ayat surah
             if ($stat['max_ayat'] >= $stat['jumlah_ayat_surah']) {
                 $surahDihafalkan[] = [
+                    'nomor_surah' => $stat['nomor_surah'], // Sekarang aman
                     'nama_surah' => $stat['nama_surah'],
-                    'jumlah_sesi' => $stat['count'], // Jumlah Sesi (misal 5 kali)
+                    'jumlah_sesi' => $stat['count'],
                     'nilai_tajwid' => $stat['latest_scores']['tajwid'],
                     'nilai_kelancaran' => $stat['latest_scores']['kelancaran'],
                     'nilai_makhroj' => $stat['latest_scores']['makhroj'],
                     'nilai_rata' => $stat['latest_scores']['rata_rata'],
                 ];
             } else {
-                // Masuk kategori Belum Selesai
                 $progressMap[$idSurah] = $stat['max_ayat'];
             }
         }
 
-        // 4. Proses Target Hafalan (Gabung Belum Dimulai + Belum Selesai)
         $surahBelumDihafalkan = [];
         $kelompokIds = $siswa->kelompok->pluck('id_kelompok');
         $targetHafalan = TargetHafalanKelompok::whereIn('id_kelompok', $kelompokIds)->get();
-
-        // Kumpulkan semua ID surah target unik
         $allTargetSurahIds = [];
         foreach ($targetHafalan as $target) {
             $range = range($target->id_surah_awal, $target->id_surah_akhir);
@@ -666,23 +692,18 @@ class ExportLaporanHafalanController extends Controller
         $allTargetSurahIds = array_unique($allTargetSurahIds);
 
         foreach ($allTargetSurahIds as $idSurah) {
-            // Skip jika sudah TUNTAS
             if (isset($statsSurah[$idSurah]) && $statsSurah[$idSurah]['max_ayat'] >= $statsSurah[$idSurah]['jumlah_ayat_surah']) {
                 continue;
             }
-
             $surah = Surah::find($idSurah);
             if ($surah) {
                 if (isset($progressMap[$idSurah])) {
-                    // Ada di progress map = Sedang Berjalan
                     $status = 'Belum Selesai';
                     $progress = $progressMap[$idSurah] . '/' . $surah->jumlah_ayat . ' ayat';
                 } else {
-                    // Tidak ada di progress map = Belum Dimulai
                     $status = 'Belum Dimulai';
                     $progress = '0/' . $surah->jumlah_ayat . ' ayat';
                 }
-
                 $surahBelumDihafalkan[] = [
                     'nama_surah' => $surah->nama_surah,
                     'status' => $status,
@@ -734,7 +755,7 @@ class ExportLaporanHafalanController extends Controller
 
         // Ambil HANYA siswa yang tergabung dalam kelompok ini
         $siswaList = $kelompok->siswa;
-        
+
         // Prepare data siswa dengan Progress Target
         $siswaDetail = $siswaList->map(function ($siswa) use ($kelompok) {
             // 1. Ambil target dari kelompok ini
@@ -862,7 +883,7 @@ class ExportLaporanHafalanController extends Controller
         $sheet->mergeCells('A1:E1');
 
         // Header Tabel
-        $headers = ['No', 'Nama Siswa', 'Progress Target', 'Jumlah Sesi', 'Nilai Rata-rata'];
+        $headers = ['No', 'Nama Siswa', 'Progress Target', 'Jumlah Sesi', 'Nilai Akhir'];
         $sheet->fromArray($headers, NULL, 'A5');
 
         // Styling Header
