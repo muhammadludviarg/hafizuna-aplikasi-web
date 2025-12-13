@@ -62,10 +62,10 @@ class ExportLaporanHafalanController extends Controller
         $sheet->setCellValue('A1', 'Laporan Hafalan Per Kelas');
         $sheet->setCellValue('A2', 'Kelas: ' . $kelas->nama_kelas);
         $sheet->setCellValue('A3', 'Tanggal: ' . date('d/m/Y'));
-        $sheet->mergeCells('A1:E1');
+        $sheet->mergeCells('A1:F1');
 
         // Header Tabel (Updated: Total Ayat -> Progress Target)
-        $headers = ['No', 'Nama Siswa', 'Progress Target', 'Jumlah Sesi', 'Nilai Rata-rata'];
+        $headers = ['No', 'Nama Siswa', 'Kelompok', 'Progress Target', 'Jumlah Sesi', 'Nilai Rata-rata'];
         $sheet->fromArray($headers, NULL, 'A5');
 
         // Styling Header
@@ -74,21 +74,22 @@ class ExportLaporanHafalanController extends Controller
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '16A34A']],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ];
-        $sheet->getStyle('A5:E5')->applyFromArray($headerStyle);
+        $sheet->getStyle('A5:F5')->applyFromArray($headerStyle);
 
         // Isi Data
         $row = 6;
         foreach ($siswaDetail as $index => $siswa) {
             $sheet->setCellValue('A' . $row, $index + 1);
             $sheet->setCellValue('B' . $row, $siswa['nama_siswa']);
-            $sheet->setCellValue('C' . $row, $siswa['progress_target']); // Updated
-            $sheet->setCellValue('D' . $row, $siswa['jumlah_sesi']);
-            $sheet->setCellValue('E' . $row, $siswa['nilai_rata_rata']);
+            $sheet->setCellValue('C' . $row, $siswa['nama_kelompok']);
+            $sheet->setCellValue('D' . $row, $siswa['progress_target']); // Updated
+            $sheet->setCellValue('E' . $row, $siswa['jumlah_sesi']);
+            $sheet->setCellValue('F' . $row, $siswa['nilai_rata_rata']);
             $row++;
         }
 
         // Auto Size Columns
-        foreach (range('A', 'E') as $col) {
+        foreach (range('A', 'F') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -103,6 +104,7 @@ class ExportLaporanHafalanController extends Controller
         return $kelas->siswa->map(function ($siswa) {
             // 1. Cari Kelompok & Target
             $kelompok = $siswa->kelompok->first(); // Asumsi 1 siswa 1 kelompok
+            $namaKelompok = $kelompok ? $kelompok->nama_kelompok : '-';
             $target = $kelompok ? TargetHafalanKelompok::where('id_kelompok', $kelompok->id_kelompok)->first() : null;
 
             $surahSelesaiCount = 0;
@@ -141,6 +143,7 @@ class ExportLaporanHafalanController extends Controller
 
             return [
                 'nama_siswa' => $siswa->nama_siswa,
+                'nama_kelompok' => $namaKelompok,
                 'progress_target' => $progressTarget, // Field baru
                 'jumlah_sesi' => $jumlahSesi,
                 'nilai_rata_rata' => $nilaiRataRata,
@@ -330,7 +333,7 @@ class ExportLaporanHafalanController extends Controller
     public function exportPdfSesi($siswaId, $surahId)
     {
         // 1. LOAD DATA SISWA + KELAS + KELOMPOK & GURUNYA
-        $siswa = Siswa::with(['kelas', 'kelompok.guru'])->find($siswaId);
+        $siswa = Siswa::with(['kelas', 'kelompok.guru.akun'])->find($siswaId);
         $surah = Surah::find($surahId);
 
         if (!$siswa || !$surah)
@@ -341,8 +344,8 @@ class ExportLaporanHafalanController extends Controller
         $namaGuru = '-';
         $kelompokSiswa = $siswa->kelompok->first();
 
-        if ($kelompokSiswa && $kelompokSiswa->guru) {
-            $namaGuru = $kelompokSiswa->guru->nama_guru;
+        if ($kelompokSiswa && $kelompokSiswa->guru && $kelompokSiswa->guru->akun) {
+            $namaGuru = $kelompokSiswa->guru->akun->nama_lengkap;
         }
 
         // 3. AMBIL SESI UNTUK SURAH INI
@@ -431,7 +434,7 @@ class ExportLaporanHafalanController extends Controller
     }
     public function exportExcelSesi($siswaId, $surahId)
     {
-        $siswa = Siswa::with(['kelas', 'kelompok.guru'])->find($siswaId);
+        $siswa = Siswa::with(['kelas', 'kelompok.guru.akun'])->find($siswaId);
         $surah = Surah::find($surahId);
 
         if (!$siswa || !$surah)
@@ -452,8 +455,8 @@ class ExportLaporanHafalanController extends Controller
         // Ambil Guru
         $namaGuru = '-';
         $kelompokSiswa = $siswa->kelompok->first();
-        if ($kelompokSiswa && $kelompokSiswa->guru) {
-            $namaGuru = $kelompokSiswa->guru->nama_guru;
+        if ($kelompokSiswa && $kelompokSiswa->guru && $kelompokSiswa->guru->akun) {
+            $namaGuru = $kelompokSiswa->guru->akun->nama_lengkap;
         }
 
         $latestSesi = $allSesi->last();

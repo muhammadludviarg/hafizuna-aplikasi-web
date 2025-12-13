@@ -92,11 +92,13 @@
                                         No</th>
                                     <th class="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
                                         Nama Siswa</th>
+                                    <th class="px-4 py-2 md:px-6 py-3 text-left text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
+                                        Kelompok</th>
                                     <th class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
-                                        Jml Sesi</th>
+                                        Jumlah Sesi</th>
                                     {{-- UPDATE KOLOM DISINI: Total Ayat -> Progress Target --}}
                                     <th class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
-                                        Progress Target</th>
+                                        Progres Target</th>
                                     <th class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">
                                         Rata-rata</th>
                                 </tr>
@@ -108,6 +110,10 @@
                                         <td class="px-4 md:px-6 py-4 text-sm text-gray-700">{{ $index + 1 }}</td>
                                         <td class="px-4 md:px-6 py-4 text-sm font-medium text-gray-900">
                                             {{ $siswa['nama_siswa'] }}
+                                        </td>
+                                        {{-- Karena $detailLaporan berbentuk Array, cara aksesnya pakai kurung siku ['key'] --}}
+                                        <td class="px-4 md:px-6 py-4 text-sm font-medium text-gray-700">
+                                                {{ $siswa['nama_kelompok'] }}
                                         </td>
                                         <td class="px-4 md:px-6 py-4 text-center text-sm text-gray-700">
                                             {{ $siswa['jumlah_sesi'] }}</td>

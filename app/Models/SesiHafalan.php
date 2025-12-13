@@ -37,7 +37,7 @@ class SesiHafalan extends Model
     }
     public function guru()
     {
-        return $this->belongsTo(Guru::class, 'id_guru');
+        return $this->belongsTo(Guru::class, 'id_guru', 'id_guru');
     }
     public function surahMulai()
     {

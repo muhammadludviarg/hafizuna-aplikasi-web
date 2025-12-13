@@ -47,4 +47,9 @@ class Siswa extends Model
     {
         return $this->belongsTo(OrangTua::class, 'id_ortu', 'id_ortu');
     }
+
+    public function kelompokTerbaru()
+    {
+        return $this->hasOne(SiswaKelompok::class, 'id_siswa')->latest();
+    }
 }

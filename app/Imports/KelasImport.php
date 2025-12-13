@@ -13,9 +13,13 @@ class KelasImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmpty
     public function model(array $row)
     {
         try {
+            // Trim data untuk menghindari masalah whitespace
+            $namaKelas = trim($row['nama_kelas']);
+            $tahunAjaran = trim($row['tahun_ajaran']);
+
             // Cek duplikasi agar tidak double
-            $exists = Kelas::where('nama_kelas', $row['nama_kelas'])
-                ->where('tahun_ajaran', $row['tahun_ajaran'])
+            $exists = Kelas::where('nama_kelas', $namaKelas)
+                ->where('tahun_ajaran', $tahunAjaran)
                 ->exists();
 
             if ($exists) {
@@ -23,8 +27,8 @@ class KelasImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmpty
             }
 
             return new Kelas([
-                'nama_kelas' => $row['nama_kelas'],
-                'tahun_ajaran' => $row['tahun_ajaran'],
+                'nama_kelas' => $namaKelas,
+                'tahun_ajaran' => $tahunAjaran,
             ]);
         } catch (\Exception $e) {
             return null;

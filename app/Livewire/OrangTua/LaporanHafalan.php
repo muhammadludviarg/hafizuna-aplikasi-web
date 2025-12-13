@@ -124,9 +124,9 @@ class LaporanHafalan extends Component
             ->with('surahMulai', 'surahSelesai');
 
         if ($this->tanggalMulai)
-            $query->where('tanggal_setor', '>=', $this->tanggalMulai);
+            $query->whereDate('tanggal_setor', '>=', $this->tanggalMulai);
         if ($this->tanggalAkhir)
-            $query->where('tanggal_setor', '<=', $this->tanggalAkhir);
+            $query->whereDate('tanggal_setor', '<=', $this->tanggalAkhir);
 
         $riwayatSesi = $query->orderByDesc('tanggal_setor')->get();
 
@@ -259,7 +259,7 @@ class LaporanHafalan extends Component
 
     public function selectSesi($sesiId)
     {
-        $sesi = SesiHafalan::with(['guru', 'koreksi.ayat'])->find($sesiId);
+        $sesi = SesiHafalan::with(['guru.akun', 'koreksi.ayat'])->find($sesiId);
         if (!$sesi)
             return;
 
@@ -283,7 +283,7 @@ class LaporanHafalan extends Component
         $this->selectedSesiDetail = [
             'id' => $sesi->id_sesi,
             'tanggal' => \Carbon\Carbon::parse($sesi->tanggal_setor)->translatedFormat('d F Y'),
-            'guru' => $sesi->guru ? $sesi->guru->nama_guru : 'Belum ditentukan',
+            'guru' => ($sesi->guru && $sesi->guru->akun) ? $sesi->guru->akun->nama_lengkap : 'Belum ditentukan',
             'ayat_mulai' => $sesi->ayat_mulai,
             'ayat_selesai' => $sesi->ayat_selesai,
             'nilai_tajwid' => $sesi->skor_tajwid,
