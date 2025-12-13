@@ -5,32 +5,33 @@
         <p class="text-gray-600 mt-1">Kelola tahun ajaran dan semester untuk target hafalan</p>
     </div>
 
-    <!-- Toast Notification -->
-    @if ($showSuccessToast)
-        <div class="fixed top-6 right-6 z-50 animate-slide-in"
-            x-data
-            x-init="setTimeout(() => $wire.set('showSuccessToast', false), 3000)"
-            @scroll-to-top="$el.remove()">
-            <div class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg bg-white border-l-4"
-                :class="'{{ $toastType }}' === 'success' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'">
-                
-                @if ($toastType === 'success')
-                    <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="text-sm font-medium text-green-800">{{ $successMessage }}</span>
-                @else
-                    <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="text-sm font-medium text-red-800">{{ $successMessage }}</span>
-                @endif
-                
-                <button @click="$wire.set('showSuccessToast', false)" class="ml-auto text-gray-400 hover:text-gray-600">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                </button>
+    <!-- Using Livewire-specific toast component for consistency across all pages -->
+    @if($showSuccessToast)
+        <div class="fixed top-6 right-6 z-[9999] animate-slide-in">
+            <div class="bg-white rounded-lg shadow-2xl border-l-4 {{ $toastType === 'success' ? 'border-green-500' : 'border-red-500' }} p-4 max-w-sm">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        @if($toastType === 'success')
+                            <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        @else
+                            <svg class="h-6 w-6 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 001.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        @endif
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <p class="text-sm font-medium {{ $toastType === 'success' ? 'text-gray-800' : 'text-red-800' }}">
+                            {{ $successMessage }}
+                        </p>
+                    </div>
+                    <button wire:click="$set('showSuccessToast', false)" class="ml-3 text-gray-400 hover:text-gray-600">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     @endif
@@ -63,11 +64,30 @@
                     <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="font-bold text-gray-800">Tahun Ajaran {{ $tahun }}</h3>
-                            <button wire:click="hapusPeriode({{ $periodes->first()->id_periode }})" 
-                                wire:confirm="Yakin ingin menghapus tahun ajaran ini?"
-                                class="text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-1 rounded text-sm transition">
-                                Hapus
-                            </button>
+                            <div class="flex gap-2">
+                                @if($periodes->count() < 2)
+                                    <button wire:click="tambahSemesterYangKurang('{{ $tahun }}')"
+                                        class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1 rounded text-sm transition font-medium">
+                                        Tambah Semester
+                                    </button>
+                                @endif
+                                @php
+                                    $canDeleteYear = $periodes->every(function($p) { return $p->targetHafalan()->count() === 0; });
+                                @endphp
+                                @if($canDeleteYear)
+                                    <button wire:click="hapusTahunAjaran('{{ $tahun }}')" 
+                                        wire:confirm="Yakin ingin menghapus tahun ajaran ini? Semua semester akan dihapus."
+                                        class="text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-1 rounded text-sm transition font-medium">
+                                        Hapus
+                                    </button>
+                                @else
+                                    <button disabled
+                                        title="Tidak bisa dihapus karena sudah ada target hafalan"
+                                        class="text-gray-400 cursor-not-allowed px-3 py-1 rounded text-sm font-medium">
+                                        Hapus
+                                    </button>
+                                @endif
+                            </div>
                         </div>
 
                         <div class="space-y-2">
@@ -82,12 +102,27 @@
                                         @endif
                                     </div>
 
-                                    @if(!$periode->is_active)
-                                        <button wire:click="setAktif({{ $periode->id_periode }})"
-                                            class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1 rounded text-sm transition">
-                                            Aktifkan
-                                        </button>
-                                    @endif
+                                    <div class="flex gap-2">
+                                        @if(!$periode->is_active)
+                                            <button wire:click="setAktif({{ $periode->id_periode }})"
+                                                class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-3 py-1 rounded text-sm transition">
+                                                Aktifkan
+                                            </button>
+                                        @endif
+                                        @if($periode->targetHafalan()->count() === 0)
+                                            <button wire:click="hapusPeriode({{ $periode->id_periode }})" 
+                                                wire:confirm="Yakin ingin menghapus semester ini?"
+                                                class="text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-1 rounded text-sm transition">
+                                                Hapus
+                                            </button>
+                                        @else
+                                            <button disabled
+                                                title="Tidak bisa dihapus karena sudah ada target hafalan"
+                                                class="text-gray-400 cursor-not-allowed px-3 py-1 rounded text-sm">
+                                                Hapus
+                                            </button>
+                                        @endif
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
@@ -102,7 +137,7 @@
         <!-- Modal Overlay -->
         <div class="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity" wire:click="resetForm"></div>
 
-        <!-- Modal Container -->
+        <!-- Modal Container - Positioned to top-right -->
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div class="bg-white rounded-lg shadow-2xl max-w-md w-full" @click.stop>
                 <!-- Modal Header -->
@@ -147,21 +182,4 @@
             </div>
         </div>
     @endif
-
-    <style>
-        @keyframes slide-in {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .animate-slide-in {
-            animation: slide-in 0.3s ease-out forwards;
-        }
-    </style>
 </div>
