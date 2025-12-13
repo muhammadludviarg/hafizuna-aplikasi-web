@@ -79,6 +79,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/export/sesi-detail/{sesiId}/excel', [ExportLaporanHafalanController::class, 'exportExcelDetailSesi'])
         ->name('export.sesi-detail.excel');
 
+    // 5. Export Laporan Hafalan per Kelompok (PDF & Excel) Untuk Guru
+    Route::get('/export/laporan-hafalan-kelompok/{kelompokId}/pdf', [App\Http\Controllers\ExportLaporanHafalanController::class, 'exportPdfKelompok'])
+        ->name('export.laporan-hafalan-kelompok.pdf');
+    Route::get('/export/laporan-hafalan-kelompok/{kelompokId}/excel', [App\Http\Controllers\ExportLaporanHafalanController::class, 'exportExcelKelompok'])
+        ->name('export.laporan-hafalan-kelompok.excel');
+
 });
 
 /*
