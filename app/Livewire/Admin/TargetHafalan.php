@@ -76,11 +76,12 @@ class TargetHafalan extends Component
             ->map(function ($kelompok) {
                 $hasTarget = false;
                 if ($this->id_periode && !$this->isEditing) {
+                    // Hanya cek duplikasi saat CREATE, bukan EDIT
                     $hasTarget = TargetHafalanKelompok::where('id_kelompok', $kelompok->id_kelompok)
                         ->where('id_periode', $this->id_periode)
                         ->exists();
                 }
-                
+
                 $kelompok->has_target = $hasTarget;
                 return $kelompok;
             });
@@ -95,7 +96,6 @@ class TargetHafalan extends Component
             'surahAkhir',
             'periode' // Load periode untuk ambil namanya (label)
         ])
-            ->orderBy('created_at', 'desc')
             ->get()
             ->sortBy(function ($target) {
                 return $target->kelompok->kelas->nama_kelas ?? '';
@@ -128,11 +128,11 @@ class TargetHafalan extends Component
     {
         $this->validate();
 
+        // Fix: Saat edit, exclude current target from duplicate check
         $exists = TargetHafalanKelompok::where('id_kelompok', $this->id_kelompok)
             ->where('id_periode', $this->id_periode)
-            ->when(!$this->isEditing, function ($query) {
-                return $query;
-            }, function ($query) {
+            ->when($this->isEditing, function ($query) {
+                // Saat EDIT, exclude target yang sedang diedit
                 return $query->where('id_target', '!=', $this->editingId);
             })
             ->exists();
@@ -200,7 +200,7 @@ class TargetHafalan extends Component
         $this->successMessage = $message;
         $this->toastType = $type;
         $this->showSuccessToast = true;
-        
+
         $this->dispatch('toast-timer', delay: 3000);
     }
 

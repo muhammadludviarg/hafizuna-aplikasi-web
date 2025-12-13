@@ -9,7 +9,7 @@ class ManajePeriode extends Component
 {
     public $tahun_ajaran;
     public $daftarPeriode = [];
-    
+
     public $showModal = false;
     public $showSuccessToast = false;
     public $successMessage = '';
@@ -64,10 +64,10 @@ class ManajePeriode extends Component
     public function setAktif($id)
     {
         $periode = Periode::findOrFail($id);
-        
+
         // Deaktifkan semua periode lain dengan tahun ajaran berbeda
         Periode::whereNot('id_periode', $id)->update(['is_active' => false]);
-        
+
         $periode->update(['is_active' => true]);
         $this->showToast('Periode ' . $periode->label . ' sudah diaktifkan', 'success');
         $this->loadPeriode();

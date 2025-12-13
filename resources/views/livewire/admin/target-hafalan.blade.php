@@ -5,28 +5,32 @@
     </div>
 
     @if ($showSuccessToast)
-        <div class="fixed top-6 right-6 z-50 animate-slide-in"
-            x-data
-            x-init="setTimeout(() => $wire.set('showSuccessToast', false), 3000)"
-            @scroll-to-top="$el.remove()">
+        <div class="fixed top-6 right-6 z-50 animate-slide-in" x-data
+            x-init="setTimeout(() => $wire.set('showSuccessToast', false), 3000)" @scroll-to-top="$el.remove()">
             <div class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg bg-white border-l-4"
                 :class="'{{ $toastType }}' === 'success' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'">
-                
+
                 @if ($toastType === 'success')
                     <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd" />
                     </svg>
                     <span class="text-sm font-medium text-green-800">{{ $successMessage }}</span>
                 @else
                     <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 001.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293a1 1 0 000-1.414z"
+                            clip-rule="evenodd" />
                     </svg>
                     <span class="text-sm font-medium text-red-800">{{ $successMessage }}</span>
                 @endif
-                
+
                 <button @click="$wire.set('showSuccessToast', false)" class="ml-auto text-gray-400 hover:text-gray-600">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clip-rule="evenodd" />
                     </svg>
                 </button>
             </div>
@@ -40,7 +44,8 @@
                 <p class="text-sm text-gray-600 mt-1">Daftar target hafalan untuk setiap kelompok</p>
             </div>
             <div class="flex items-center gap-3">
-                <span class="inline-flex items-center justify-center w-8 h-8 text-sm font-bold text-white bg-green-600 rounded-full">
+                <span
+                    class="inline-flex items-center justify-center w-8 h-8 text-sm font-bold text-white bg-green-600 rounded-full">
                     {{ count($daftarTarget) }}
                 </span>
                 <button wire:click="openCreateForm"
@@ -66,7 +71,8 @@
         @else
             <div class="space-y-3" id="targetList">
                 @foreach($daftarTarget as $target)
-                    <div class="group border border-gray-200 rounded-lg p-4 hover:border-green-300 hover:shadow-md transition duration-200 bg-gradient-to-r from-white to-green-50 hover:to-green-100">
+                    <div
+                        class="group border border-gray-200 rounded-lg p-4 hover:border-green-300 hover:shadow-md transition duration-200 bg-gradient-to-r from-white to-green-50 hover:to-green-100">
                         <div class="flex justify-between items-start mb-3">
                             <div class="flex-1">
                                 <div class="mb-2">
@@ -90,7 +96,7 @@
                                     </span>
                                 </div>
                             </div>
-                            
+
                             <div class="flex gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button wire:click="edit({{ $target->id_target }})"
                                     class="p-2 text-gray-500 hover:text-green-600 hover:bg-green-100 rounded-lg transition duration-200"
@@ -101,8 +107,8 @@
                                         </path>
                                     </svg>
                                 </button>
-                                
-                                <button wire:click="hapus({{ $target->id_target }})" 
+
+                                <button wire:click="hapus({{ $target->id_target }})"
                                     wire:confirm="Yakin ingin menghapus target ini?"
                                     class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-lg transition duration-200"
                                     title="Hapus target">
@@ -146,7 +152,8 @@
                     </h3>
                     <button wire:click="resetForm" class="text-gray-400 hover:text-gray-600 transition">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                            </path>
                         </svg>
                     </button>
                 </div>
@@ -181,7 +188,8 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('id_kelas') <span class="text-xs text-red-500 block mt-1">{{ $message }}</span> @enderror
+                                @error('id_kelas') <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             <div>
@@ -190,8 +198,7 @@
                                     class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 transition-colors">
                                     <option value="">Pilih Kelompok</option>
                                     @foreach ($daftarKelompok as $kelompok)
-                                        <option value="{{ $kelompok->id_kelompok }}"
-                                            {{ $kelompok->has_target && !$isEditing ? 'disabled' : '' }}>
+                                        <option value="{{ $kelompok->id_kelompok }}" {{ $kelompok->has_target && !$isEditing ? 'disabled' : '' }}>
                                             {{ $kelompok->nama_kelompok ?? 'Kelompok ' . $kelompok->id_kelompok }} -
                                             {{ $kelompok->guru->akun->nama_lengkap ?? 'N/A' }}
                                             @if($kelompok->has_target && !$isEditing)
@@ -214,7 +221,8 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('id_surah_awal') <span class="text-xs text-red-500 block mt-1">{{ $message }}</span> @enderror
+                                @error('id_surah_awal') <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             <div>
@@ -228,7 +236,8 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('id_surah_akhir') <span class="text-xs text-red-500 block mt-1">{{ $message }}</span> @enderror
+                                @error('id_surah_akhir') <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
+                                @enderror
                             </div>
                         </div>
 
@@ -236,7 +245,8 @@
                             <button type="button" wire:click="resetForm"
                                 class="inline-flex items-center gap-2 bg-gray-500 hover:bg-gray-600 active:bg-gray-700 text-white font-medium py-2 px-6 rounded-lg transition duration-200 shadow-md hover:shadow-lg">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
                                 Batal
                             </button>
@@ -244,7 +254,8 @@
                             <button type="submit"
                                 class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium py-2 px-6 rounded-lg transition duration-200 shadow-md hover:shadow-lg">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7"></path>
                                 </svg>
                                 {{ $isEditing ? 'Update Target' : 'Simpan Target' }}
                             </button>
@@ -261,6 +272,7 @@
                 transform: translateX(400px);
                 opacity: 0;
             }
+
             to {
                 transform: translateX(0);
                 opacity: 1;
