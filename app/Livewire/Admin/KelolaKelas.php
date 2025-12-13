@@ -33,7 +33,7 @@ class KelolaKelas extends Component
     protected function rules()
     {
         return [
-            'nama_kelas' => 'required|min:2',
+            'nama_kelas' => 'required|min:1',
             'tahun_ajaran' => 'required|string',
         ];
     }

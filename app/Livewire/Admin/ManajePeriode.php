@@ -76,7 +76,7 @@ class ManajePeriode extends Component
     public function hapusPeriode($id)
     {
         $periode = Periode::findOrFail($id);
-
+        
         if ($periode->targetHafalan()->count() > 0) {
             $this->showToast('Tidak bisa menghapus periode "' . $periode->label . '" karena sudah memiliki target hafalan', 'error');
             return;
@@ -113,7 +113,7 @@ class ManajePeriode extends Component
             } else {
                 $this->showToast('Semua semester sudah lengkap untuk tahun ajaran ini', 'info');
             }
-
+            
             $this->loadPeriode();
         } catch (\Exception $e) {
             $this->showToast('Gagal menambahkan semester: ' . $e->getMessage(), 'error');

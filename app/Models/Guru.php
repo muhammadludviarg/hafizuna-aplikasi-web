@@ -8,5 +8,5 @@ class Guru extends Model {
     protected $primaryKey = 'id_guru';
     public $timestamps = false;
     protected $fillable = ['id_akun', 'no_hp'];
-    public function akun() { return $this->belongsTo(User::class, 'id_akun'); }
+    public function akun() { return $this->belongsTo(User::class, 'id_akun', 'id_akun'); }
 }

@@ -1,11 +1,9 @@
 <div class="container mx-auto px-6 py-8">
-    <!-- Header -->
     <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Target Hafalan</h2>
         <p class="text-gray-600 mt-1">Atur target hafalan untuk setiap kelompok</p>
     </div>
 
-    <!-- Toast notification moved to top-right corner -->
     @if ($showSuccessToast)
         <div class="fixed top-6 right-6 z-50 animate-slide-in" x-data
             x-init="setTimeout(() => $wire.set('showSuccessToast', false), 3000)" @scroll-to-top="$el.remove()">
@@ -39,7 +37,6 @@
         </div>
     @endif
 
-    <!-- Target List Section -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
         <div class="flex items-center justify-between mb-6">
             <div>
@@ -93,13 +90,9 @@
                                 </div>
 
                                 <div class="flex flex-wrap gap-2 mt-3">
-                                    <span
-                                        class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded font-medium">
-                                        {{ $target->periode->label ?? 'Tanpa Label' }}
-                                    </span>
-                                    <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-medium">
-                                        {{ $target->tanggal_mulai->format('d/m/Y') }} -
-                                        {{ $target->tanggal_selesai->format('d/m/Y') }}
+                                    {{-- Nama Periode Langsung --}}
+                                    <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded font-medium">
+                                        {{ $target->periode->label ?? 'Periode Tidak Ditemukan' }}
                                     </span>
                                 </div>
                             </div>
@@ -148,15 +141,11 @@
         @endif
     </div>
 
-    <!-- Form converted to modal popup -->
     @if ($showModal)
-        <!-- Modal Overlay -->
         <div class="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity" wire:click="resetForm"></div>
 
-        <!-- Modal Container -->
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" @click.stop>
-                <!-- Modal Header -->
                 <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-gray-800">
                         {{ $isEditing ? 'Edit Target Hafalan' : 'Tambah Target Hafalan Baru' }}
@@ -169,16 +158,30 @@
                     </button>
                 </div>
 
-                <!-- Modal Body -->
                 <div class="px-6 py-4">
                     <form wire:submit.prevent="simpanTarget" class="space-y-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Pilih Kelas -->
+                            
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Periode</label>
+                                <select wire:model.live="id_periode"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 transition-colors">
+                                    <option value="">Pilih Periode</option>
+                                    @foreach($daftarPeriode as $periode)
+                                        <option value="{{ $periode->id_periode }}">
+                                            {{ $periode->label }}
+                                            @if($periode->is_active) (AKTIF) @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('id_periode') <span class="text-xs text-red-500 block mt-1">{{ $message }}</span> @enderror
+                            </div>
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Kelas</label>
                                 <select wire:model.live="id_kelas"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 transition-colors">
-                                    <option value="">Pilih kelas terlebih dahulu</option>
+                                    <option value="">Pilih kelas</option>
                                     @foreach($daftarKelas as $kelas)
                                         <option value="{{ $kelas->id_kelas }}">
                                             {{ $kelas->nama_kelas }} ({{ $kelas->tahun_ajaran }})
@@ -189,66 +192,24 @@
                                 @enderror
                             </div>
 
-                            <!-- Pilih Periode -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Periode</label>
-                                <select wire:model.live="id_periode"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 transition-colors">
-                                    <option value="">-- Pilih Periode --</option>
-                                    @foreach($daftarPeriode as $periode)
-                                        <option value="{{ $periode->id_periode }}">
-                                            {{ $periode->label }}
-                                            @if($periode->is_active) <strong>(AKTIF)</strong> @endif
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('id_periode') <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <!-- Pilih Kelompok -->
-                            <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Kelompok</label>
                                 <select wire:model="id_kelompok"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 transition-colors">
-                                    <option value="">-- Pilih Kelompok --</option>
+                                    <option value="">Pilih Kelompok</option>
                                     @foreach ($daftarKelompok as $kelompok)
                                         <option value="{{ $kelompok->id_kelompok }}" {{ $kelompok->has_target && !$isEditing ? 'disabled' : '' }}>
                                             {{ $kelompok->nama_kelompok ?? 'Kelompok ' . $kelompok->id_kelompok }} -
                                             {{ $kelompok->guru->akun->nama_lengkap ?? 'N/A' }}
                                             @if($kelompok->has_target && !$isEditing)
-                                                - Target sudah dibuat
+                                                (Sudah Ada)
                                             @endif
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('id_kelompok') <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
-                                @enderror
-                                <p class="text-xs text-gray-500 mt-2">Kelompok yang sudah memiliki target ditandai "(Target
-                                    sudah dibuat)"</p>
+                                @error('id_kelompok') <span class="text-xs text-red-500 block mt-1">{{ $message }}</span> @enderror
                             </div>
 
-                            <!-- Tanggal Mulai -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai</label>
-                                <input type="date" value="{{ $tanggal_mulai }}"
-                                    wire:change="$set('tanggal_mulai', $event.target.value)"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer">
-                                @error('tanggal_mulai') <span class="text-xs text-red-500 block mt-1">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <!-- Tanggal Selesai -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Selesai</label>
-                                <input type="date" value="{{ $tanggal_selesai }}"
-                                    wire:change="$set('tanggal_selesai', $event.target.value)"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer">
-                                @error('tanggal_selesai') <span
-                                class="text-xs text-red-500 block mt-1">{{ $message }}</span> @enderror
-                            </div>
-
-                            <!-- Surah Awal -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Surah Awal</label>
                                 <select wire:model="id_surah_awal"
@@ -264,7 +225,6 @@
                                 @enderror
                             </div>
 
-                            <!-- Surah Akhir -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Surah Akhir</label>
                                 <select wire:model="id_surah_akhir"
@@ -281,7 +241,6 @@
                             </div>
                         </div>
 
-                        <!-- Modal Footer -->
                         <div class="border-t border-gray-200 pt-4 flex gap-3 justify-end">
                             <button type="button" wire:click="resetForm"
                                 class="inline-flex items-center gap-2 bg-gray-500 hover:bg-gray-600 active:bg-gray-700 text-white font-medium py-2 px-6 rounded-lg transition duration-200 shadow-md hover:shadow-lg">

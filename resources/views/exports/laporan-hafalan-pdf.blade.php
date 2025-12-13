@@ -103,6 +103,16 @@
 </head>
 
 <body>
+    {{-- LOGIKA DETEKSI KOLOM KELOMPOK --}}
+    @php
+        $showKolomKelompok = false;
+        if (!empty($siswa_data) && count($siswa_data) > 0) {
+            if (array_key_exists('nama_kelompok', $siswa_data[0])) {
+                $showKolomKelompok = true;
+            }
+        }
+    @endphp
+
     <div class="header">
         <h1>{{ $sekolah }}</h1>
         <p>{{ $nama_sekolah_lengkap }} - {{ $lokasi }}</p>
@@ -116,8 +126,9 @@
                 <td style="border: none; padding: 2px; text-align: left;">{{ $judul }}</td>
             </tr>
             <tr style="background-color: transparent;">
-                <td style="border: none; padding: 2px; text-align: left; font-weight: bold;">Kelas:</td>
-                <td style="border: none; padding: 2px; text-align: left;">{{ $nama_kelas }}</td>
+                <td style="border: none; padding: 2px; text-align: left; font-weight: bold;">Kelas/Kelompok:</td>
+                {{-- Gunakan $nama_kelas jika ada, jika tidak (Guru) mungkin pakai nama kelompok atau string lain --}}
+                <td style="border: none; padding: 2px; text-align: left;">{{ $nama_kelas ?? '-' }}</td>
             </tr>
             <tr style="background-color: transparent;">
                 <td style="border: none; padding: 2px; text-align: left; font-weight: bold;">Tahun Ajaran:</td>
@@ -134,10 +145,18 @@
         <thead>
             <tr>
                 <th style="width: 5%;">No</th>
-                <th style="width: 30%;">Nama Siswa</th>
+                
+                {{-- Lebar kolom Nama Siswa menyesuaikan: Jika Kelompok hilang, Nama Siswa jadi 40% --}}
+                <th style="width: {{ $showKolomKelompok ? '25%' : '40%' }};">Nama Siswa</th>
+                
+                {{-- Hanya Tampilkan Header Kelompok Jika Admin --}}
+                @if($showKolomKelompok)
+                    <th style="width: 15%;">Kelompok</th> 
+                @endif
+                
                 <th style="width: 25%;">Progress Target</th>
-                <th style="width: 20%;">Jumlah Sesi</th>
-                <th style="width: 20%;">Rata-rata Nilai</th>
+                <th style="width: 15%;">Jumlah Sesi</th>
+                <th style="width: 15%;">Rata-rata Nilai</th>
             </tr>
         </thead>
         <tbody>
@@ -145,13 +164,20 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $siswa['nama_siswa'] }}</td>
+                    
+                    {{-- Hanya Tampilkan Isi Kelompok Jika Admin --}}
+                    @if($showKolomKelompok)
+                        <td>{{ $siswa['nama_kelompok'] ?? '-' }}</td> 
+                    @endif
+                    
                     <td>{{ $siswa['progress_target'] }}</td>
                     <td>{{ $siswa['jumlah_sesi'] }}</td>
                     <td>{{ $siswa['nilai_rata_rata'] }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" style="text-align: center;">Tidak ada data siswa</td>
+                    {{-- Colspan menyesuaikan jumlah kolom aktif (6 atau 5) --}}
+                    <td colspan="{{ $showKolomKelompok ? 6 : 5 }}" style="text-align: center;">Tidak ada data siswa</td>
                 </tr>
             @endforelse
         </tbody>

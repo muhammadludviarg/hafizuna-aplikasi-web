@@ -386,7 +386,7 @@ class KelolaOrangTua extends Component
                             ->orWhere('email', 'like', '%' . $this->search . '%');
                     });
             })
-            ->orderBy('id_ortu', 'desc')
+            ->orderBy('id_ortu', 'asc')
             ->paginate(10);
 
         return view('livewire.admin.kelola-orang-tua', [

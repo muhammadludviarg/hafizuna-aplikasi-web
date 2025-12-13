@@ -106,9 +106,9 @@
                                 <tr>
                                     <th class="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">No</th>
                                     <th class="px-4 md:px-6 py-3 text-left text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">Nama Siswa</th>
-                                    <th class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">Jml Sesi</th>
+                                    <th class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">Jumlah Sesi</th>
                                     {{-- Di Guru Controller datanya adalah 'progress_target', bukan 'total_ayat' --}}
-                                    <th class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">Progress Target</th>
+                                    <th class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">Progres Target</th>
                                     <th class="px-4 md:px-6 py-3 text-center text-xs md:text-sm font-semibold uppercase tracking-wider whitespace-nowrap">Rata-rata</th>
                                 </tr>
                             </thead>

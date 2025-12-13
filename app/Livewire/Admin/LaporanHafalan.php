@@ -63,6 +63,7 @@ class LaporanHafalan extends Component
             return;
         }
 
+        // 1. Ambil Data Siswa beserta Kelompoknya
         $kelas = Kelas::with(['siswa.kelompok'])->find($this->selectedKelasId);
         if (!$kelas) {
             return;
@@ -73,16 +74,20 @@ class LaporanHafalan extends Component
             'tahun_ajaran' => $kelas->tahun_ajaran ?? 'Tidak Ada',
         ];
 
-        // --- UPDATE LOGIKA: Menampilkan Progress Target (bukan Total Ayat) ---
+        // 2. Mapping Data Siswa
         $siswaDetail = $kelas->siswa->map(function ($siswa) {
 
-            // 1. Hitung Statistik Dasar
+            // --- A. Hitung Statistik Dasar ---
             $sesiHafalan = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
             $jumlahSesi = $sesiHafalan->count();
             $nilaiRataRata = $jumlahSesi > 0 ? round($sesiHafalan->avg('nilai_rata'), 2) : 0;
 
-            // 2. Hitung Progress Target (Logic dari Guru UI)
-            $kelompok = $siswa->kelompok->first(); // Ambil kelompok pertama siswa
+            // --- B. Ambil Data Kelompok & Target ---
+            $kelompok = $siswa->kelompok->first(); // Ambil kelompok siswa
+            
+            // Ambil Nama Kelompok
+            $namaKelompok = $kelompok ? $kelompok->nama_kelompok : '-'; 
+
             $target = $kelompok ? TargetHafalanKelompok::where('id_kelompok', $kelompok->id_kelompok)->first() : null;
 
             $surahSelesaiCount = 0;
@@ -94,10 +99,9 @@ class LaporanHafalan extends Component
 
                 foreach ($rangeSurah as $idSurah) {
                     $surah = Surah::find($idSurah);
-                    if (!$surah)
-                        continue;
+                    if (!$surah) continue;
 
-                    // Cek hafalan tuntas (ayat_selesai >= jumlah_ayat surah)
+                    // Cek hafalan tuntas
                     $cekSesi = SesiHafalan::where('id_siswa', $siswa->id_siswa)
                         ->where(function ($q) use ($idSurah) {
                             $q->where('id_surah_mulai', $idSurah)->orWhere('id_surah_selesai', $idSurah);
@@ -113,12 +117,14 @@ class LaporanHafalan extends Component
 
             $progressTarget = $target ? "$surahSelesaiCount / $totalTargetSurah Surah" : "Belum ada target";
 
+            // --- C. Kembalikan Data ke View ---
             return [
                 'id_siswa' => $siswa->id_siswa,
                 'nama_siswa' => $siswa->nama_siswa,
+                'nama_kelompok' => $namaKelompok, 
                 'jumlah_sesi' => $jumlahSesi,
                 'nilai_rata_rata' => $nilaiRataRata,
-                'progress_target' => $progressTarget, // Field Baru
+                'progress_target' => $progressTarget,
             ];
         })->sortByDesc('nilai_rata_rata')
             ->values()
@@ -153,10 +159,10 @@ class LaporanHafalan extends Component
             ->with('surahMulai', 'surahSelesai');
 
         if ($this->tanggalMulai) {
-            $query->where('tanggal_setor', '>=', $this->tanggalMulai);
+            $query->whereDate('tanggal_setor', '>=', $this->tanggalMulai);
         }
         if ($this->tanggalAkhir) {
-            $query->where('tanggal_setor', '<=', $this->tanggalAkhir);
+            $query->whereDate('tanggal_setor', '<=', $this->tanggalAkhir);
         }
 
         $riwayatSesi = $query->orderByDesc('tanggal_setor')->get();
@@ -316,7 +322,7 @@ class LaporanHafalan extends Component
 
     public function selectSesi($sesiId)
     {
-        $sesi = SesiHafalan::with(['guru', 'koreksi.ayat'])->find($sesiId);
+        $sesi = SesiHafalan::with(['guru.akun', 'koreksi.ayat'])->find($sesiId);
         if (!$sesi)
             return;
 
@@ -340,7 +346,7 @@ class LaporanHafalan extends Component
         $this->selectedSesiDetail = [
             'id' => $sesi->id_sesi,
             'tanggal' => \Carbon\Carbon::parse($sesi->tanggal_setor)->translatedFormat('d F Y'),
-            'guru' => $sesi->guru ? $sesi->guru->nama_guru : 'Belum ditentukan',
+            'guru' => ($sesi->guru && $sesi->guru->akun) ? $sesi->guru->akun->nama_lengkap : 'Belum ditentukan',
             'ayat_mulai' => $sesi->ayat_mulai,
             'ayat_selesai' => $sesi->ayat_selesai,
             'nilai_tajwid' => $sesi->skor_tajwid,

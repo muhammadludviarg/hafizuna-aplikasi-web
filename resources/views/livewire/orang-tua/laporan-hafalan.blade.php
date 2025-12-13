@@ -356,10 +356,6 @@
                             {{ $surahDetail['jumlah_ayat'] ?? 'N/A' }} Ayat
                         </p>
                     </div>
-                    <div
-                        class="inline-block bg-green-600 text-white rounded-full w-16 h-16 flex items-center justify-center">
-                        <span class="text-2xl font-bold">{{ $surahDetail['nomor_surah'] ?? '0' }}</span>
-                    </div>
                 </div>
 
                 {{-- Grid Nilai Surah --}}
