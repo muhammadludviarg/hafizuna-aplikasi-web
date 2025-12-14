@@ -15,21 +15,17 @@ class LaporanHafalan extends Component
 {
     public $kelompokList = [];
     public $selectedKelompokId = null;
-
-    public $selectedKelasId = null;
     public $selectedSiswaId = null;
     public $selectedSurahId = null;
     public $selectedSesiDetail = null;
-
     public $detailLaporan = null;
     public $kelompokDetail = null;
     public $siswaDetail = null;
     public $surahDetail = null;
-
     public $tanggalMulai = null;
     public $tanggalAkhir = null;
 
-    // --- PROPERTY PAGINATION (WAJIB ADA UNTUK MENGHILANGKAN ERROR) ---
+    // PAGINATION
     public $currentPageSesi = 1;
     public $perPageSesi = 10;
     public $totalPagesSesi = 1;
@@ -49,29 +45,20 @@ class LaporanHafalan extends Component
 
     public function loadKelompokList()
     {
-        $user = Auth::user();
-        $guru = $user->guru;
-
-        if (!$guru) {
-            $this->kelompokList = [];
+        $guru = Auth::user()->guru;
+        if (!$guru)
             return;
-        }
 
-        $this->kelompokList = Kelompok::with(['kelas'])
-            ->where('id_guru', $guru->id_guru)
+        $this->kelompokList = Kelompok::where('id_guru', $guru->id_guru)
+            ->with('kelas')
             ->get()
-            ->map(function ($kelompok) {
-                $jumlahSiswa = $kelompok->siswa->count();
-                $namaKelas = $kelompok->kelas ? $kelompok->kelas->nama_kelas : 'Tanpa Kelas';
-
+            ->map(function ($k) {
                 return [
-                    'id' => $kelompok->id_kelompok,
-                    'nama_kelompok_utama' => $kelompok->nama_kelompok ?? 'Kelompok',
-                    'nama_kelas_kecil' => $namaKelas,
-                    'jumlah_siswa' => $jumlahSiswa,
+                    'id' => $k->id_kelompok,
+                    'nama_kelompok' => $k->nama_kelompok . ' (' . ($k->kelas->nama_kelas ?? '-') . ')',
+                    'jumlah_siswa' => $k->siswa()->count(),
                 ];
-            })
-            ->toArray();
+            })->toArray();
     }
 
     public function selectKelompok($kelompokId)
@@ -86,33 +73,32 @@ class LaporanHafalan extends Component
     {
         if (!$this->selectedKelompokId) {
             $this->detailLaporan = null;
-            $this->kelompokDetail = null;
             return;
         }
 
-        $kelompok = Kelompok::with(['kelas', 'siswa'])->find($this->selectedKelompokId);
+        $kelompok = Kelompok::with(['siswa', 'kelas'])->find($this->selectedKelompokId);
         if (!$kelompok)
             return;
 
         $this->kelompokDetail = [
-            'nama_kelompok' => "Kelompok " . ($kelompok->nama_kelompok ?? '-') . " - " . ($kelompok->kelas->nama_kelas ?? '-'),
-            'tahun_ajaran' => $kelompok->kelas->tahun_ajaran ?? 'Tidak Ada',
+            'nama_kelompok' => $kelompok->nama_kelompok,
+            'nama_kelas' => $kelompok->kelas->nama_kelas ?? '-',
         ];
 
-        // 1. Ambil Target Kelompok
-        $target = TargetHafalanKelompok::where('id_kelompok', $kelompok->id_kelompok)->first();
-        $totalTargetSurah = 0;
-        $rangeSurah = [];
+        $target = TargetHafalanKelompok::where('id_kelompok', $this->selectedKelompokId)->first();
 
-        if ($target) {
-            $totalTargetSurah = abs($target->id_surah_akhir - $target->id_surah_awal) + 1;
-            $rangeSurah = range(min($target->id_surah_awal, $target->id_surah_akhir), max($target->id_surah_awal, $target->id_surah_akhir));
-        }
+        $this->detailLaporan = $kelompok->siswa->map(function ($siswa) use ($target) {
+            $sesiHafalan = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
+            $jumlahSesi = $sesiHafalan->count();
+            $nilaiRataRata = $jumlahSesi > 0 ? round($sesiHafalan->avg('nilai_rata'), 2) : 0;
 
-        $siswaDetail = $kelompok->siswa->map(function ($siswa) use ($kelompok, $target, $totalTargetSurah, $rangeSurah) {
             $surahSelesaiCount = 0;
+            $totalTargetSurah = 0;
 
             if ($target) {
+                $totalTargetSurah = abs($target->id_surah_akhir - $target->id_surah_awal) + 1;
+                $rangeSurah = range(min($target->id_surah_awal, $target->id_surah_akhir), max($target->id_surah_awal, $target->id_surah_akhir));
+
                 foreach ($rangeSurah as $idSurah) {
                     $surah = Surah::find($idSurah);
                     if (!$surah)
@@ -120,11 +106,8 @@ class LaporanHafalan extends Component
 
                     $cekSesi = SesiHafalan::where('id_siswa', $siswa->id_siswa)
                         ->where(function ($q) use ($idSurah) {
-                            $q->where('id_surah_mulai', $idSurah)
-                                ->orWhere('id_surah_selesai', $idSurah);
-                        })
-                        ->orderByDesc('ayat_selesai')
-                        ->first();
+                            $q->where('id_surah_mulai', $idSurah)->orWhere('id_surah_selesai', $idSurah);
+                        })->orderByDesc('ayat_selesai')->first();
 
                     if ($cekSesi && $cekSesi->ayat_selesai >= $surah->jumlah_ayat) {
                         $surahSelesaiCount++;
@@ -132,34 +115,23 @@ class LaporanHafalan extends Component
                 }
             }
 
-            $sesiHafalan = SesiHafalan::where('id_siswa', $siswa->id_siswa)->get();
-            $jumlahSesi = $sesiHafalan->count();
-            $nilaiRataRata = $jumlahSesi > 0 ? round($sesiHafalan->avg('nilai_rata'), 2) : 0;
-
             return [
                 'id_siswa' => $siswa->id_siswa,
                 'nama_siswa' => $siswa->nama_siswa,
                 'jumlah_sesi' => $jumlahSesi,
-                'nilai_rata_rata' => $nilaiRataRata,
+                'nilai_rata_rata' => $nilaiRataRata, // Sudah di-round di atas
                 'progress_target' => $target ? "$surahSelesaiCount / $totalTargetSurah Surah" : "Belum ada target",
             ];
         })->sortByDesc('nilai_rata_rata')->values()->toArray();
-
-        $this->detailLaporan = $siswaDetail;
     }
 
     public function selectSiswa($siswaId)
     {
         $this->selectedSiswaId = $siswaId;
         $this->selectedSurahId = null;
-        $this->tanggalMulai = null;
-        $this->tanggalAkhir = null;
-
-        // RESET PAGINATION SAAT GANTI SISWA (PENTING)
         $this->currentPageSesi = 1;
         $this->currentPageSurahSelesai = 1;
         $this->currentPageTarget = 1;
-
         $this->loadDetailSiswa();
     }
 
@@ -169,21 +141,16 @@ class LaporanHafalan extends Component
             $this->siswaDetail = null;
             return;
         }
-
         $siswa = Siswa::find($this->selectedSiswaId);
         if (!$siswa)
             return;
 
-        // --- 1. RIWAYAT SESI (Dengan Filter Tanggal & LOGIKA PAGINATION) ---
-        $query = SesiHafalan::where('id_siswa', $this->selectedSiswaId)
-            ->with('surahMulai', 'surahSelesai');
-
+        // --- 1. RIWAYAT SESI ---
+        $query = SesiHafalan::where('id_siswa', $this->selectedSiswaId)->with('surahMulai', 'surahSelesai');
         if ($this->tanggalMulai)
             $query->whereDate('tanggal_setor', '>=', $this->tanggalMulai);
         if ($this->tanggalAkhir)
             $query->whereDate('tanggal_setor', '<=', $this->tanggalAkhir);
-
-        // Ambil semua data dulu untuk statistik
         $allRiwayatSesi = $query->orderByDesc('tanggal_setor')->get();
 
         $jumlahSesi = $allRiwayatSesi->count();
@@ -192,66 +159,55 @@ class LaporanHafalan extends Component
         $nilaiMakhroj = $jumlahSesi > 0 ? round($allRiwayatSesi->avg('skor_makhroj'), 2) : 0;
         $nilaiRataRata = $jumlahSesi > 0 ? round($allRiwayatSesi->avg('nilai_rata'), 2) : 0;
 
-        // IMPLEMENTASI PAGINATION MANUAL (SLICE ARRAY)
         $this->totalPagesSesi = ceil($jumlahSesi / $this->perPageSesi);
-        // Cegah error jika halaman saat ini melebihi total halaman (misal setelah filter)
-        if ($this->currentPageSesi > $this->totalPagesSesi && $this->totalPagesSesi > 0) {
-            $this->currentPageSesi = 1;
-        }
         $offsetSesi = ($this->currentPageSesi - 1) * $this->perPageSesi;
-        $riwayatSesiPaged = $allRiwayatSesi->slice($offsetSesi, $this->perPageSesi);
+        $riwayatSesi = $allRiwayatSesi->slice($offsetSesi, $this->perPageSesi);
 
-        $riwayatFormatted = $riwayatSesiPaged->map(function ($sesi) {
-            $surahMulai = $sesi->surahMulai;
-            $surahSelesai = $sesi->surahSelesai;
-            $surahText = $surahMulai->nama_surah . ($surahMulai->id_surah !== $surahSelesai->id_surah ? ' - ' . $surahSelesai->nama_surah : '');
-
+        // PERBAIKAN 1: Rounding di list riwayat sesi
+        $riwayatFormatted = $riwayatSesi->map(function ($sesi) {
+            $surahText = $sesi->surahMulai->nama_surah;
+            if ($sesi->surahMulai->id_surah !== $sesi->surahSelesai->id_surah)
+                $surahText .= ' - ' . $sesi->surahSelesai->nama_surah;
             return [
                 'id_sesi' => $sesi->id_sesi,
                 'tanggal_setor' => $sesi->tanggal_setor->format('d F Y'),
                 'surah_text' => $surahText,
                 'ayat_mulai' => $sesi->ayat_mulai,
                 'ayat_selesai' => $sesi->ayat_selesai,
-                'skor_tajwid' => $sesi->skor_tajwid,
-                'skor_kelancaran' => $sesi->skor_kelancaran,
-                'skor_makhroj' => $sesi->skor_makhroj,
-                'nilai_rata' => $sesi->nilai_rata,
-                'id_surah_mulai' => $surahMulai->id_surah,
+                'skor_tajwid' => round($sesi->skor_tajwid, 2),        // Rounding
+                'skor_kelancaran' => round($sesi->skor_kelancaran, 2),// Rounding
+                'skor_makhroj' => round($sesi->skor_makhroj, 2),      // Rounding
+                'nilai_rata' => round($sesi->nilai_rata, 2),          // Rounding
+                'id_surah_mulai' => $sesi->id_surah_mulai,
             ];
-        })->values()->toArray(); // Reset keys dengan values()
+        })->values()->toArray();
 
-        // --- 2. SURAH SUDAH DIHAFAL (TUNTAS) ---
-        $allSesi = SesiHafalan::where('id_siswa', $this->selectedSiswaId)
-            ->with('surahMulai')
-            ->orderBy('tanggal_setor', 'asc')
-            ->get();
-
+        // --- 2. SURAH TUNTAS ---
+        $allSesi = SesiHafalan::where('id_siswa', $this->selectedSiswaId)->with('surahMulai')->orderBy('tanggal_setor', 'asc')->get();
         $statsSurah = [];
-
         foreach ($allSesi as $sesi) {
             $idSurah = $sesi->id_surah_mulai;
-            $surah = $sesi->surahMulai;
-
             if (!isset($statsSurah[$idSurah])) {
                 $statsSurah[$idSurah] = [
-                    'nama_surah' => $surah ? $surah->nama_surah : 'Unknown',
-                    'nomor_surah' => $surah ? $surah->nomor_surah : 999,
-                    'jumlah_ayat_surah' => $surah ? $surah->jumlah_ayat : 0,
+                    'id_surah' => $idSurah,
+                    'nama_surah' => $sesi->surahMulai->nama_surah ?? 'Unknown',
+                    'nomor_surah' => $sesi->surahMulai->nomor_surah ?? 999,
+                    'jumlah_ayat_surah' => $sesi->surahMulai->jumlah_ayat ?? 0,
                     'count' => 0,
                     'max_ayat' => 0,
                     'latest_scores' => []
                 ];
             }
-
             $statsSurah[$idSurah]['count']++;
-            if ($sesi->ayat_selesai > $statsSurah[$idSurah]['max_ayat']) {
+            if ($sesi->ayat_selesai > $statsSurah[$idSurah]['max_ayat'])
                 $statsSurah[$idSurah]['max_ayat'] = $sesi->ayat_selesai;
-            }
+
+            // PERBAIKAN 2: Rounding di statistik surah (nilai terakhir)
             $statsSurah[$idSurah]['latest_scores'] = [
-                'tajwid' => $sesi->skor_tajwid,
-                'kelancaran' => $sesi->skor_kelancaran,
-                'makhroj' => $sesi->skor_makhroj,
-                'rata_rata' => $sesi->nilai_rata
+                'tajwid' => round($sesi->skor_tajwid, 2),
+                'kelancaran' => round($sesi->skor_kelancaran, 2),
+                'makhroj' => round($sesi->skor_makhroj, 2),
+                'rata_rata' => round($sesi->nilai_rata, 2)
             ];
         }
 
@@ -259,6 +215,7 @@ class LaporanHafalan extends Component
         foreach ($statsSurah as $stat) {
             if ($stat['max_ayat'] >= $stat['jumlah_ayat_surah']) {
                 $allSurahSelesai[] = [
+                    'id_surah' => $stat['id_surah'],
                     'nama_surah' => $stat['nama_surah'],
                     'nomor_surah' => $stat['nomor_surah'],
                     'jumlah_sesi' => $stat['count'],
@@ -269,58 +226,37 @@ class LaporanHafalan extends Component
                 ];
             }
         }
-        usort($allSurahSelesai, function ($a, $b) {
-            return $a['nomor_surah'] <=> $b['nomor_surah'];
-        });
+        usort($allSurahSelesai, fn($a, $b) => $a['nomor_surah'] <=> $b['nomor_surah']);
 
-        // PAGINATION SURAH SELESAI
-        $totalSurahSelesai = count($allSurahSelesai);
-        $this->totalPagesSurahSelesai = ceil($totalSurahSelesai / $this->perPageSurahSelesai);
-        $offsetSurah = ($this->currentPageSurahSelesai - 1) * $this->perPageSurahSelesai;
-        $surahSudahDihafalPaged = array_slice($allSurahSelesai, $offsetSurah, $this->perPageSurahSelesai);
+        $this->totalPagesSurahSelesai = ceil(count($allSurahSelesai) / $this->perPageSurahSelesai);
+        $offsetSurahSelesai = ($this->currentPageSurahSelesai - 1) * $this->perPageSurahSelesai;
+        $surahSudahDihafal = array_slice($allSurahSelesai, $offsetSurahSelesai, $this->perPageSurahSelesai);
 
-        // --- 3. TARGET HAFALAN ---
+        // --- 3. TARGET ---
         $siswaKelompok = $siswa->kelompok;
-        $allTargetBelum = [];
-
+        $allTargetBelumDihafalkan = [];
         if ($siswaKelompok->isNotEmpty()) {
             $kelompokIds = $siswaKelompok->pluck('id_kelompok')->toArray();
             $targetHafalan = TargetHafalanKelompok::whereIn('id_kelompok', $kelompokIds)->get();
-
             foreach ($targetHafalan as $target) {
                 $rangeSurah = range(min($target->id_surah_awal, $target->id_surah_akhir), max($target->id_surah_awal, $target->id_surah_akhir));
-
                 foreach ($rangeSurah as $i) {
-                    $isTuntas = isset($statsSurah[$i]) && $statsSurah[$i]['max_ayat'] >= $statsSurah[$i]['jumlah_ayat_surah'];
-
-                    if (!$isTuntas) {
-                        $surah = Surah::find($i);
-                        if ($surah) {
-                            $cekSesi = SesiHafalan::where('id_siswa', $siswa->id_siswa)
-                                ->where(function ($q) use ($i) {
-                                    $q->where('id_surah_mulai', $i)->orWhere('id_surah_selesai', $i);
-                                })->orderByDesc('ayat_selesai')->first();
-
-                            $status = $cekSesi ? 'Sedang Menghafal' : 'Belum Dimulai';
-                            $progress = $cekSesi ? $cekSesi->ayat_selesai . '/' . $surah->jumlah_ayat . ' ayat' : '0/' . $surah->jumlah_ayat . ' ayat';
-
-                            $allTargetBelum[] = [
-                                'no' => $surah->nomor_surah,
-                                'nama_surah' => $surah->nama_surah,
-                                'status' => $status,
-                                'progress' => $progress,
-                            ];
-                        }
+                    if (isset($statsSurah[$i]) && $statsSurah[$i]['max_ayat'] >= $statsSurah[$i]['jumlah_ayat_surah'])
+                        continue;
+                    $surah = Surah::find($i);
+                    if ($surah) {
+                        $cekSesi = SesiHafalan::where('id_siswa', $siswa->id_siswa)->where(function ($q) use ($i) {
+                            $q->where('id_surah_mulai', $i)->orWhere('id_surah_selesai', $i); })->orderByDesc('ayat_selesai')->first();
+                        $status = $cekSesi ? 'Sedang Menghafal' : 'Belum Dimulai';
+                        $progress = $cekSesi ? $cekSesi->ayat_selesai . '/' . $surah->jumlah_ayat . ' ayat' : '0/' . $surah->jumlah_ayat . ' ayat';
+                        $allTargetBelumDihafalkan[] = ['no' => $surah->nomor_surah, 'nama_surah' => $surah->nama_surah, 'status' => $status, 'progress' => $progress];
                     }
                 }
             }
         }
-
-        // PAGINATION TARGET
-        $totalTarget = count($allTargetBelum);
-        $this->totalPagesTarget = ceil($totalTarget / $this->perPageTarget);
+        $this->totalPagesTarget = ceil(count($allTargetBelumDihafalkan) / $this->perPageTarget);
         $offsetTarget = ($this->currentPageTarget - 1) * $this->perPageTarget;
-        $targetBelumDihafalkanPaged = array_slice($allTargetBelum, $offsetTarget, $this->perPageTarget);
+        $targetBelumDihafalkan = array_slice($allTargetBelumDihafalkan, $offsetTarget, $this->perPageTarget);
 
         $this->siswaDetail = [
             'nama_siswa' => $siswa->nama_siswa,
@@ -330,12 +266,12 @@ class LaporanHafalan extends Component
             'nilai_makhroj' => $nilaiMakhroj,
             'nilai_rata_rata' => $nilaiRataRata,
             'riwayat_sesi' => $riwayatFormatted,
-            'target_belum_dihafalkan' => $targetBelumDihafalkanPaged,
-            'surah_sudah_dihafal' => $surahSudahDihafalPaged,
+            'target_belum_dihafalkan' => $targetBelumDihafalkan,
+            'surah_sudah_dihafal' => $surahSudahDihafal,
         ];
     }
 
-    // --- NAVIGATION METHODS FOR PAGINATION ---
+    // PAGINATION NAVIGATORS
     public function nextPageSesi()
     {
         if ($this->currentPageSesi < $this->totalPagesSesi) {
@@ -343,7 +279,6 @@ class LaporanHafalan extends Component
             $this->loadDetailSiswa();
         }
     }
-
     public function prevPageSesi()
     {
         if ($this->currentPageSesi > 1) {
@@ -351,7 +286,6 @@ class LaporanHafalan extends Component
             $this->loadDetailSiswa();
         }
     }
-
     public function nextPageSurahSelesai()
     {
         if ($this->currentPageSurahSelesai < $this->totalPagesSurahSelesai) {
@@ -359,7 +293,6 @@ class LaporanHafalan extends Component
             $this->loadDetailSiswa();
         }
     }
-
     public function prevPageSurahSelesai()
     {
         if ($this->currentPageSurahSelesai > 1) {
@@ -367,7 +300,6 @@ class LaporanHafalan extends Component
             $this->loadDetailSiswa();
         }
     }
-
     public function nextPageTarget()
     {
         if ($this->currentPageTarget < $this->totalPagesTarget) {
@@ -375,62 +307,12 @@ class LaporanHafalan extends Component
             $this->loadDetailSiswa();
         }
     }
-
     public function prevPageTarget()
     {
         if ($this->currentPageTarget > 1) {
             $this->currentPageTarget--;
             $this->loadDetailSiswa();
         }
-    }
-    // --- END PAGINATION METHODS ---
-
-    public function selectSesi($sesiId)
-    {
-        $sesi = SesiHafalan::with(['guru.akun', 'koreksi.ayat'])->find($sesiId);
-        if (!$sesi)
-            return;
-
-        $urutanSesi = SesiHafalan::where('id_siswa', $sesi->id_siswa)
-            ->where(function ($q) use ($sesi) {
-                $q->where('id_surah_mulai', $sesi->id_surah_mulai)
-                    ->orWhere('id_surah_selesai', $sesi->id_surah_mulai);
-            })
-            ->where('tanggal_setor', '<=', $sesi->tanggal_setor)
-            ->count();
-
-        $koreksiFormatted = $sesi->koreksi->map(function ($k) use ($urutanSesi) {
-            return [
-                'lokasi' => 'Ayat ' . ($k->ayat ? $k->ayat->nomor_ayat : ($k->kata_ke ?? '?')),
-                'sesi_ke' => $urutanSesi,
-                'jenis_kesalahan' => $k->kategori_kesalahan ?? '-',
-                'catatan' => $k->catatan ?? '-'
-            ];
-        })->toArray();
-
-        $this->selectedSesiDetail = [
-            'id' => $sesi->id_sesi,
-            'tanggal' => \Carbon\Carbon::parse($sesi->tanggal_setor)->translatedFormat('d F Y'),
-            'guru' => ($sesi->guru && $sesi->guru->akun) ? $sesi->guru->akun->nama_lengkap : 'Belum ditentukan',
-            'ayat_mulai' => $sesi->ayat_mulai,
-            'ayat_selesai' => $sesi->ayat_selesai,
-            'nilai_tajwid' => $sesi->skor_tajwid,
-            'nilai_kelancaran' => $sesi->skor_kelancaran,
-            'nilai_makhroj' => $sesi->skor_makhroj,
-            'nilai_rata' => $sesi->nilai_rata,
-            'koreksi' => $koreksiFormatted
-        ];
-    }
-
-    public function closeSesiDetail()
-    {
-        $this->selectedSesiDetail = null;
-    }
-
-    public function filterPeriode()
-    {
-        $this->currentPageSesi = 1; // Reset halaman ke 1 saat filter berubah
-        $this->loadDetailSiswa();
     }
 
     public function selectSurah($surahId)
@@ -441,138 +323,147 @@ class LaporanHafalan extends Component
 
     public function loadDetailSurah()
     {
-        if (!$this->selectedSiswaId || !$this->selectedSurahId) {
-            $this->surahDetail = null;
+        if (!$this->selectedSiswaId || !$this->selectedSurahId)
             return;
-        }
-
         $siswa = Siswa::find($this->selectedSiswaId);
         $surah = Surah::find($this->selectedSurahId);
-
-        if (!$siswa || !$surah)
-            return;
-
         $sesiSurah = SesiHafalan::where('id_siswa', $this->selectedSiswaId)
             ->where(function ($q) use ($surah) {
-                $q->where('id_surah_mulai', $surah->id_surah)
-                    ->orWhere('id_surah_selesai', $surah->id_surah);
-            })
-            ->with('surahMulai', 'surahSelesai')
-            ->orderByDesc('tanggal_setor')
-            ->get();
+                $q->where('id_surah_mulai', $surah->id_surah)->orWhere('id_surah_selesai', $surah->id_surah); })
+            ->with('surahMulai')->orderByDesc('tanggal_setor')->get();
 
-        $sesiFormatted = $sesiSurah->map(function ($sesi) {
-            return [
-                'id_sesi' => $sesi->id_sesi,
-                'tanggal_setor' => $sesi->tanggal_setor->format('d F Y'),
-                'ayat_mulai' => $sesi->ayat_mulai,
-                'ayat_selesai' => $sesi->ayat_selesai,
-                'skor_tajwid' => $sesi->skor_tajwid,
-                'skor_kelancaran' => $sesi->skor_kelancaran,
-                'skor_makhroj' => $sesi->skor_makhroj,
-                'nilai_rata' => $sesi->nilai_rata,
-            ];
-        })->toArray();
-
-        $jumlahSesiSurah = count($sesiFormatted);
-        $nilaiTajwid = $jumlahSesiSurah > 0 ? round($sesiSurah->avg('skor_tajwid'), 2) : 0;
-        $nilaiKelancaran = $jumlahSesiSurah > 0 ? round($sesiSurah->avg('skor_kelancaran'), 2) : 0;
-        $nilaiMakhroj = $jumlahSesiSurah > 0 ? round($sesiSurah->avg('skor_makhroj'), 2) : 0;
-        $nilaiRataRata = $jumlahSesiSurah > 0 ? round($sesiSurah->avg('nilai_rata'), 2) : 0;
+        // PERBAIKAN 3: Rounding di detail surah (tabel list sesi)
+        $sesiFormatted = $sesiSurah->map(fn($sesi) => [
+            'id_sesi' => $sesi->id_sesi,
+            'tanggal_setor' => $sesi->tanggal_setor->format('d F Y'),
+            'ayat_mulai' => $sesi->ayat_mulai,
+            'ayat_selesai' => $sesi->ayat_selesai,
+            'nilai_tajwid' => round($sesi->skor_tajwid, 2),
+            'nilai_kelancaran' => round($sesi->skor_kelancaran, 2),
+            'nilai_makhroj' => round($sesi->skor_makhroj, 2),
+            'nilai_rata' => round($sesi->nilai_rata, 2),
+            'id_surah_mulai' => $sesi->id_surah_mulai, // Tambahan ID Surah
+        ])->toArray();
 
         $this->surahDetail = [
             'nama_siswa' => $siswa->nama_siswa,
             'nama_surah' => $surah->nama_surah,
             'nomor_surah' => $surah->nomor_surah,
             'jumlah_ayat' => $surah->jumlah_ayat,
-            'jumlah_sesi_surah' => $jumlahSesiSurah,
-            'nilai_tajwid' => $nilaiTajwid,
-            'nilai_kelancaran' => $nilaiKelancaran,
-            'nilai_makhroj' => $nilaiMakhroj,
-            'nilai_rata_rata' => $nilaiRataRata,
-            'sesi_formatnya' => $sesiFormatted,
+            'nilai_tajwid' => round($sesiSurah->avg('skor_tajwid'), 2),
+            'nilai_kelancaran' => round($sesiSurah->avg('skor_kelancaran'), 2),
+            'nilai_makhroj' => round($sesiSurah->avg('skor_makhroj'), 2),
+            'nilai_rata_rata' => round($sesiSurah->avg('nilai_rata'), 2),
+            'sesi_formatnya' => $sesiFormatted
         ];
     }
 
-
-    // --- NAVIGATION ---
-    public function backToList()
+    public function selectSesi($sesiId)
     {
-        $this->selectedKelompokId = null;
-        $this->selectedSiswaId = null;
-        $this->selectedSurahId = null;
-        $this->detailLaporan = null;
-        $this->siswaDetail = null;
-        $this->surahDetail = null;
+        $sesi = SesiHafalan::with(['guru.akun', 'koreksi.ayat'])->find($sesiId);
+        if (!$sesi)
+            return;
+        $urutan = SesiHafalan::where('id_siswa', $sesi->id_siswa)->where(function ($q) use ($sesi) {
+            $q->where('id_surah_mulai', $sesi->id_surah_mulai)->orWhere('id_surah_selesai', $sesi->id_surah_mulai);
+        })->where('tanggal_setor', '<=', $sesi->tanggal_setor)->count();
+
+        // PERBAIKAN 4: Rounding di Popup Detail Sesi
+        $this->selectedSesiDetail = [
+            'id' => $sesi->id_sesi,
+            'tanggal' => $sesi->tanggal_setor->format('d F Y'),
+            'guru' => $sesi->guru->akun->nama_lengkap ?? '-',
+            'ayat_mulai' => $sesi->ayat_mulai,
+            'ayat_selesai' => $sesi->ayat_selesai,
+            'nilai_tajwid' => round($sesi->skor_tajwid, 2),
+            'nilai_kelancaran' => round($sesi->skor_kelancaran, 2),
+            'nilai_makhroj' => round($sesi->skor_makhroj, 2),
+            'nilai_rata' => round($sesi->nilai_rata, 2),
+            'koreksi' => $sesi->koreksi->map(fn($k) => [
+                'lokasi' => 'Ayat ' . ($k->ayat->nomor_ayat ?? $k->kata_ke),
+                'sesi_ke' => $urutan,
+                'jenis_kesalahan' => $k->kategori_kesalahan,
+                'catatan' => $k->catatan
+            ])
+        ];
+    }
+    public function closeSesiDetail()
+    {
+        $this->selectedSesiDetail = null;
     }
 
-    public function backToKelas()
-    {
-        $this->selectedSiswaId = null;
-        $this->selectedSurahId = null;
-        $this->siswaDetail = null;
-        $this->surahDetail = null;
-    }
-
-    public function backToSiswa()
-    {
-        $this->selectedSurahId = null;
-        $this->surahDetail = null;
-        if ($this->selectedSiswaId)
-            $this->loadDetailSiswa();
-    }
-
-    // --- DOWNLOAD ---
+    // DOWNLOADS
     public function downloadPdf()
     {
-        if (!$this->selectedKelompokId) {
-            session()->flash('error', 'Pilih kelompok terlebih dahulu');
+        if (!$this->selectedKelompokId)
             return;
-        }
-        return redirect()->away(route('export.laporan-hafalan.pdf-kelompok', ['kelompokId' => $this->selectedKelompokId]));
+        return redirect()->route('export.laporan-hafalan-kelompok.pdf', $this->selectedKelompokId);
     }
-
     public function downloadExcel()
     {
-        if (!$this->selectedKelompokId) {
-            session()->flash('error', 'Pilih kelompok terlebih dahulu');
+        if (!$this->selectedKelompokId)
             return;
-        }
-        return redirect()->away(route('export.laporan-hafalan.excel-kelompok', ['kelompokId' => $this->selectedKelompokId]));
+        return redirect()->route('export.laporan-hafalan-kelompok.excel', $this->selectedKelompokId);
     }
-
     public function downloadPdfSiswa()
     {
         if (!$this->selectedSiswaId)
             return;
-        return redirect()->away(route('export.laporan-hafalan.pdf-siswa', ['siswaId' => $this->selectedSiswaId]));
+        return redirect()->away(route('export.laporan-hafalan.pdf-siswa', $this->selectedSiswaId));
     }
-
     public function downloadExcelSiswa()
     {
         if (!$this->selectedSiswaId)
             return;
-        return redirect()->away(route('export.laporan-hafalan.excel-siswa', ['siswaId' => $this->selectedSiswaId]));
+        return redirect()->away(route('export.laporan-hafalan.excel-siswa', $this->selectedSiswaId));
     }
 
+    // Perbaikan: Parameter untuk download sesi
     public function downloadPdfSesi()
     {
         if (!$this->selectedSiswaId || !$this->selectedSurahId)
             return;
-        return redirect()->away(route('export.sesi-setoran.pdf', [
-            'siswaId' => $this->selectedSiswaId,
-            'surahId' => $this->selectedSurahId
-        ]));
+        return redirect()->away(route('export.sesi-setoran.pdf', ['siswaId' => $this->selectedSiswaId, 'surahId' => $this->selectedSurahId]));
     }
-
     public function downloadExcelSesi()
     {
         if (!$this->selectedSiswaId || !$this->selectedSurahId)
             return;
-        return redirect()->away(route('export.sesi-setoran.excel', [
-            'siswaId' => $this->selectedSiswaId,
-            'surahId' => $this->selectedSurahId
-        ]));
+        return redirect()->away(route('export.sesi-setoran.excel', ['siswaId' => $this->selectedSiswaId, 'surahId' => $this->selectedSurahId]));
+    }
+
+    public function downloadPdfDetailSesi()
+    {
+        if (!$this->selectedSesiDetail)
+            return;
+        return redirect()->away(route('export.sesi-detail.pdf', ['sesiId' => $this->selectedSesiDetail['id']]));
+    }
+    public function downloadExcelDetailSesi()
+    {
+        if (!$this->selectedSesiDetail)
+            return;
+        return redirect()->away(route('export.sesi-detail.excel', ['sesiId' => $this->selectedSesiDetail['id']]));
+    }
+
+    // NAVIGASI
+    public function backToList()
+    {
+        $this->selectedKelompokId = null;
+        $this->selectedSiswaId = null;
+        $this->detailLaporan = null;
+    }
+    public function backToKelompok()
+    {
+        $this->selectedSiswaId = null;
+        $this->selectedSurahId = null;
+    }
+    public function backToSiswa()
+    {
+        $this->selectedSurahId = null;
+        $this->surahDetail = null;
+    }
+    public function filterPeriode()
+    {
+        $this->loadDetailSiswa();
     }
 
     public function render()

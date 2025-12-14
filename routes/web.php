@@ -55,32 +55,36 @@ require __DIR__ . '/auth.php';
 */
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // Nama route kita hilangkan prefix 'admin.' nya
+    // 1. Export Laporan Kelas (PDF & Excel)
+    Route::get('/export/laporan-hafalan/{kelasId}/pdf', [ExportLaporanHafalanController::class, 'exportPdf'])
+        ->name('export.laporan-hafalan.pdf');
+    Route::get('/export/laporan-hafalan/{kelasId}/excel', [ExportLaporanHafalanController::class, 'exportExcel'])
+        ->name('export.laporan-hafalan.excel');
 
-    Route::get('/export/laporan-hafalan/pdf/{kelasId}', [ExportLaporanHafalanController::class, 'exportPdf'])
-        ->name('export.laporan-hafalan.pdf'); // Digunakan oleh Admin saja
-
-    Route::get('/export/laporan-hafalan/excel/{kelasId}', [ExportLaporanHafalanController::class, 'exportExcel'])
-        ->name('export.laporan-hafalan.excel'); // Digunakan oleh Admin saja
-
-    Route::get('/export/laporan-hafalan/pdf-kelompok/{kelompokId}', [ExportLaporanHafalanController::class, 'exportPdfKelompok'])
-        ->name('export.laporan-hafalan.pdf-kelompok');
-
-    Route::get('/export/laporan-hafalan/excel-kelompok/{kelompokId}', [ExportLaporanHafalanController::class, 'exportExcelKelompok'])
-        ->name('export.laporan-hafalan.excel-kelompok');
-
-    // Rute Siswa & Sesi (Digunakan Admin, Guru, Ortu)
-    Route::get('/export/laporan-hafalan/pdf-siswa/{siswaId}', [ExportLaporanHafalanController::class, 'exportPdfSiswa'])
+    // 2. Export Laporan Siswa (PDF & Excel)
+    Route::get('/export/laporan-hafalan-siswa/{siswaId}/pdf', [ExportLaporanHafalanController::class, 'exportPdfSiswa'])
         ->name('export.laporan-hafalan.pdf-siswa');
-
-    Route::get('/export/laporan-hafalan/excel-siswa/{siswaId}', [ExportLaporanHafalanController::class, 'exportExcelSiswa'])
+    Route::get('/export/laporan-hafalan-siswa/{siswaId}/excel', [ExportLaporanHafalanController::class, 'exportExcelSiswa'])
         ->name('export.laporan-hafalan.excel-siswa');
 
-    Route::get('/export/sesi-setoran/pdf/{siswaId}/{surahId}', [ExportLaporanHafalanController::class, 'exportPdfSesi'])
+    // 3. Export Detail Surah (Semua Sesi dalam 1 Surah) -> INI YANG HILANG DAN BIKIN ERROR
+    Route::get('/export/sesi-setoran/{siswaId}/{surahId}/pdf', [ExportLaporanHafalanController::class, 'exportPdfSesi'])
         ->name('export.sesi-setoran.pdf');
-
-    Route::get('/export/sesi-setoran/excel/{siswaId}/{surahId}', [ExportLaporanHafalanController::class, 'exportExcelSesi'])
+    Route::get('/export/sesi-setoran/{siswaId}/{surahId}/excel', [ExportLaporanHafalanController::class, 'exportExcelSesi'])
         ->name('export.sesi-setoran.excel');
+
+    // 4. Export Detail Satu Sesi (Popup)
+    Route::get('/export/sesi-detail/{sesiId}/pdf', [ExportLaporanHafalanController::class, 'exportPdfDetailSesi'])
+        ->name('export.sesi-detail.pdf');
+    Route::get('/export/sesi-detail/{sesiId}/excel', [ExportLaporanHafalanController::class, 'exportExcelDetailSesi'])
+        ->name('export.sesi-detail.excel');
+
+    // 5. Export Laporan Hafalan per Kelompok (PDF & Excel) Untuk Guru
+    Route::get('/export/laporan-hafalan-kelompok/{kelompokId}/pdf', [App\Http\Controllers\ExportLaporanHafalanController::class, 'exportPdfKelompok'])
+        ->name('export.laporan-hafalan-kelompok.pdf');
+    Route::get('/export/laporan-hafalan-kelompok/{kelompokId}/excel', [App\Http\Controllers\ExportLaporanHafalanController::class, 'exportExcelKelompok'])
+        ->name('export.laporan-hafalan-kelompok.excel');
+
 });
 
 /*

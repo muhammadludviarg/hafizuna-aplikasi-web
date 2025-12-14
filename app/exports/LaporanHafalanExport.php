@@ -107,7 +107,7 @@ class LaporanHafalanExport
             'Nama Siswa',
             'Surah Selesai',
             'Total Sesi',
-            'Rata-rata Nilai'
+            'Nilai Rata-Rata'
         ];
     }
 }
