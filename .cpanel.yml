@@ -4,9 +4,11 @@ deployment:
     - export APPPATH=/home/wwhafiz/hafizuna_core
     - export PUBLICPATH=/home/wwhafiz/public_html
 
+    # pastikan target ada
     - /bin/mkdir -p $APPPATH
-    - /bin/rm -rf $APPPATH/*
-    - /bin/rm -rf $PUBLICPATH/*
 
-    - /bin/cp -R app bootstrap config database resources routes storage artisan composer.json composer.lock $APPPATH
+    # copy kode inti (tanpa storage besar-besaran)
+    - /bin/cp -R app bootstrap config database resources routes artisan composer.json composer.lock $APPPATH
+
+    # public: jangan wipe total, cukup timpa
     - /bin/cp -R public/. $PUBLICPATH
