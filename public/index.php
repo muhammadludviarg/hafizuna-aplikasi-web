@@ -25,14 +25,16 @@ use Illuminate\Http\Request;
 define('LARAVEL_START', microtime(true));
 
 if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-    // Lokal / struktur normal
     require __DIR__ . '/../vendor/autoload.php';
     $app = require_once __DIR__ . '/../bootstrap/app.php';
+} elseif (file_exists(__DIR__ . '/../hafizuna_core/vendor/autoload.php')) {
+    require __DIR__ . '/../hafizuna_core/vendor/autoload.php';
+    $app = require_once __DIR__ . '/../hafizuna_core/bootstrap/app.php';
 } else {
-    // cPanel shared hosting (source di luar public_html)
     require __DIR__ . '/../laravel_app/vendor/autoload.php';
     $app = require_once __DIR__ . '/../laravel_app/bootstrap/app.php';
 }
+
 
 $kernel = $app->make(Kernel::class);
 
