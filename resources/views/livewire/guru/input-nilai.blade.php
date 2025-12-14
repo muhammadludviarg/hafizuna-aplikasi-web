@@ -176,6 +176,23 @@
                 </div>
             @endif
 
+            @if($lastHafalan)
+                <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 flex items-start gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mt-0.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <span class="font-bold">Setoran Terakhir:</span><br>
+                        Surah {{ $lastHafalan->surahMulai ? $lastHafalan->surahMulai->nama_surah : 'Unknown' }} 
+                        (Ayat {{ $lastHafalan->ayat_mulai }} - {{ $lastHafalan->ayat_selesai }})
+                        
+                        <span class="text-xs text-gray-500 block mt-1">
+                            {{ \Carbon\Carbon::parse($lastHafalan->tanggal_setor)->translatedFormat('d F Y H:i') }}
+                        </span>
+                    </div>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Surah</label>
@@ -268,101 +285,81 @@
             <div class="p-4 border rounded-lg bg-gray-50 mb-6"
                 style="direction: rtl; font-family: 'Times New Roman', Times, serif; font-size: 24px; line-height: 2.5;">
                 @foreach($ayatsToReview as $ayat)
-                        @php 
-                            $teksArab = is_array($ayat) ? $ayat['teks_arab'] : $ayat->teks_arab;
-                            $idAyat = is_array($ayat) ? $ayat['id_ayat'] : $ayat->id_ayat;
-                            $nomorAyat = is_array($ayat) ? $ayat['nomor_ayat'] : $ayat->nomor_ayat;
-                            $words = explode(' ', $teksArab); 
+                    @php 
+                        $teksArab = is_array($ayat) ? $ayat['teks_arab'] : $ayat->teks_arab;
+                        $idAyat = is_array($ayat) ? $ayat['id_ayat'] : $ayat->id_ayat;
+                        $nomorAyat = is_array($ayat) ? $ayat['nomor_ayat'] : $ayat->nomor_ayat;
+                        $words = explode(' ', $teksArab); 
+                    @endphp
+
+                    @foreach($words as $index => $word)
+                        @php
+                            $key = 'id_ayat_' . $idAyat . '_kata_' . $index;
+                            $koreksiKata = $koreksi[$key] ?? null;
+                            
+                            // --- LOGIKA WARNA BARU (INLINE STYLE) ---
+                            $activeColors = [];
+                            if ($koreksiKata && isset($koreksiKata['kategori'])) {
+                                if (in_array('tajwid', $koreksiKata['kategori'])) $activeColors[] = '#fecaca'; // Merah
+                                if (in_array('makhroj', $koreksiKata['kategori'])) $activeColors[] = '#bfdbfe'; // Biru
+                                if (in_array('kelancaran', $koreksiKata['kategori'])) $activeColors[] = '#fef08a'; // Kuning
+                            }
+
+                            $style = '';
+                            $count = count($activeColors);
+                            
+                            if ($count == 1) {
+                                // 1 Warna: Solid
+                                $style = "background-color: {$activeColors[0]};";
+                            } elseif ($count > 1) {
+                                // > 1 Warna: Gradient (Solusi agar warna tidak campur aduk)
+                                $gradient = implode(', ', $activeColors);
+                                $style = "background: linear-gradient(to right, {$gradient});";
+                            }
                         @endphp
 
-                        @foreach($words as $index => $word)
-                            @php
-                                $key = 'id_ayat_' . $idAyat . '_kata_' . $index;
-                                $koreksiKata = $koreksi[$key] ?? null;
+                        {{-- PERHATIKAN: Hapus {{ $bgColor }} di class, ganti dengan style="{{ $style }}" --}}
+                        <span x-data="{ open: false }" 
+                            class="relative inline-block p-1 rounded cursor-pointer mx-1 select-none hover:bg-gray-200"
+                            style="{{ $style }}">
+                            
+                            <span @click="open = !open">{{ $word }}</span>
 
-                                // Background color berdasarkan kesalahan yang dipilih
-                                $bgColors = [];
-                                if ($koreksiKata && isset($koreksiKata['kategori'])) {
-                                    if (in_array('tajwid', $koreksiKata['kategori'])) {
-                                        $bgColors[] = 'bg-red-200';
-                                    }
-                                    if (in_array('makhroj', $koreksiKata['kategori'])) {
-                                        $bgColors[] = 'bg-blue-200';
-                                    }
-                                    if (in_array('kelancaran', $koreksiKata['kategori'])) {
-                                        $bgColors[] = 'bg-yellow-200';
-                                    }
-                                }
+                            {{-- Popup Checkbox --}}
+                            <div x-show="open" @click.away="open = false" x-transition
+                                class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10 p-3 bg-white shadow-xl rounded-lg min-w-[150px] border border-gray-200"
+                                style="direction: ltr; display: none;">
                                 
-                                // Jika ada multiple kesalahan, tampilkan gradient atau kombinasi
-                                if (count($bgColors) > 1) {
-                                    $bgColor = 'bg-gradient-to-r from-red-200 via-blue-200 to-yellow-200';
-                                } elseif (count($bgColors) == 1) {
-                                    $bgColor = $bgColors[0];
-                                } else {
-                                    $bgColor = '';
-                                }
-                            @endphp
+                                <div class="text-xs font-bold text-gray-700 mb-2 text-center border-b pb-2">Pilih Kesalahan</div>
 
-                            <span x-data="{ open: false }"
-                                class="relative inline-block p-1 rounded cursor-pointer {{ $bgColor }} hover:bg-gray-200 mx-1 select-none">
-                                <span @click="open = !open">{{ $word }}</span>
+                                <label class="flex items-center gap-2 p-2 hover:bg-red-50 rounded cursor-pointer">
+                                    <input type="checkbox" wire:click="toggleKoreksi({{ $idAyat }}, {{ $index }}, 'tajwid', '{{ $word }}')"
+                                        @if($this->isKoreksiChecked($idAyat, $index, 'tajwid')) checked @endif
+                                        class="w-4 h-4 text-red-600 rounded focus:ring-red-500">
+                                    <span class="text-sm font-medium text-red-700">Tajwid</span>
+                                </label>
 
-                                {{-- REVISI: Popup dengan CHECKBOX --}}
-                                <div x-show="open" 
-                                     @click.away="open = false" 
-                                     x-transition
-                                     class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10 p-3 bg-white shadow-lg rounded-lg min-w-[140px]"
-                                     style="direction: ltr; display: none;">
-                                    
-                                    <div class="text-xs font-bold text-gray-700 mb-2 text-center border-b pb-2">
-                                        Pilih Kesalahan
-                                    </div>
+                                <label class="flex items-center gap-2 p-2 hover:bg-blue-50 rounded cursor-pointer">
+                                    <input type="checkbox" wire:click="toggleKoreksi({{ $idAyat }}, {{ $index }}, 'makhroj', '{{ $word }}')"
+                                        @if($this->isKoreksiChecked($idAyat, $index, 'makhroj')) checked @endif
+                                        class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
+                                    <span class="text-sm font-medium text-blue-700">Makhroj</span>
+                                </label>
 
-                                    {{-- Checkbox Tajwid --}}
-                                    <label class="flex items-center gap-2 p-2 hover:bg-red-50 rounded cursor-pointer">
-                                        <input 
-                                            type="checkbox" 
-                                            wire:click="toggleKoreksi({{ $idAyat }}, {{ $index }}, 'tajwid', '{{ $word }}')"
-                                            @if($this->isKoreksiChecked($idAyat, $index, 'tajwid')) checked @endif
-                                            class="w-4 h-4 text-red-600 rounded focus:ring-red-500"
-                                        >
-                                        <span class="text-sm font-medium text-red-700">Tajwid</span>
-                                    </label>
+                                <label class="flex items-center gap-2 p-2 hover:bg-yellow-50 rounded cursor-pointer">
+                                    <input type="checkbox" wire:click="toggleKoreksi({{ $idAyat }}, {{ $index }}, 'kelancaran', '{{ $word }}')"
+                                        @if($this->isKoreksiChecked($idAyat, $index, 'kelancaran')) checked @endif
+                                        class="w-4 h-4 text-yellow-600 rounded focus:ring-yellow-500">
+                                    <span class="text-sm font-medium text-yellow-700">Kelancaran</span>
+                                </label>
 
-                                    {{-- Checkbox Makhroj --}}
-                                    <label class="flex items-center gap-2 p-2 hover:bg-blue-50 rounded cursor-pointer">
-                                        <input 
-                                            type="checkbox" 
-                                            wire:click="toggleKoreksi({{ $idAyat }}, {{ $index }}, 'makhroj', '{{ $word }}')"
-                                            @if($this->isKoreksiChecked($idAyat, $index, 'makhroj')) checked @endif
-                                            class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                                        >
-                                        <span class="text-sm font-medium text-blue-700">Makhroj</span>
-                                    </label>
-
-                                    {{-- Checkbox Kelancaran --}}
-                                    <label class="flex items-center gap-2 p-2 hover:bg-yellow-50 rounded cursor-pointer">
-                                        <input 
-                                            type="checkbox" 
-                                            wire:click="toggleKoreksi({{ $idAyat }}, {{ $index }}, 'kelancaran', '{{ $word }}')"
-                                            @if($this->isKoreksiChecked($idAyat, $index, 'kelancaran')) checked @endif
-                                            class="w-4 h-4 text-yellow-600 rounded focus:ring-yellow-500"
-                                        >
-                                        <span class="text-sm font-medium text-yellow-700">Kelancaran</span>
-                                    </label>
-
-                                    {{-- Tombol Tutup --}}
-                                    <button 
-                                        @click="open = false"
-                                        class="w-full mt-2 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs font-medium text-gray-700 border-t pt-2"
-                                    >
-                                        Tutup
-                                    </button>
-                                </div>
-                            </span>
-                        @endforeach
-                        <span class="text-green-700 text-lg font-bold inline-block mr-2 border border-green-700 rounded-full w-8 h-8 text-center leading-7 text-base"> {{ $nomorAyat }} </span>
+                                <button @click="open = false" class="w-full mt-2 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-xs font-medium text-gray-600 border-t pt-2">
+                                    Tutup
+                                </button>
+                            </div>
+                        </span>
+                    @endforeach
+                    <span class="text-green-700 text-lg font-bold inline-block mr-2 border border-green-700 rounded-full w-8 h-8 text-center leading-7 text-base"> {{ $nomorAyat }} </span>
                 @endforeach
             </div>
 
