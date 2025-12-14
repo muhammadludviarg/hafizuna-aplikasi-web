@@ -38,6 +38,7 @@ class InputNilai extends Component
 
     // (BARU) Info Target Hafalan untuk ditampilkan di UI
     public $targetHafalanInfo = null;
+    public $lastHafalan = null;
 
     // Data Form Surah (Step 3)
     public $id_surah, $ayat_mulai, $ayat_selesai;
@@ -134,7 +135,7 @@ class InputNilai extends Component
 
     public function loadStatusHafalanSiswa()
     {
-        // 1. Ambil Target Hafalan untuk Info UI
+        // 1. Ambil Target Hafalan
         $target = TargetHafalanKelompok::where('id_kelompok', $this->selectedKelompokId)->first();
 
         if ($target && $target->surahAwal && $target->surahAkhir) {
@@ -143,7 +144,14 @@ class InputNilai extends Component
             $this->targetHafalanInfo = "Belum ada target hafalan yang diatur.";
         }
 
-        // 2. Load SEMUA Surah + Status Hafalan (Tanpa Filter) - CONVERT TO ARRAY
+        // 2. (PERBAIKAN) Ambil Hafalan Terakhir dengan Relasi yang BENAR
+        // Ganti 'with('surah')' menjadi 'with('surahMulai')' karena itu nama fungsi di Model
+        $this->lastHafalan = SesiHafalan::with('surahMulai')
+            ->where('id_siswa', $this->selectedSiswaId)
+            ->orderBy('tanggal_setor', 'desc') // Pastikan pakai tanggal_setor
+            ->first();
+
+        // 3. Load Surah + Status
         $this->daftarSurah = Surah::orderBy('nomor_surah')->get()->map(function ($surah) {
             $sesi = SesiHafalan::where('id_siswa', $this->selectedSiswaId)
                 ->where(function ($q) use ($surah) {
@@ -166,7 +174,6 @@ class InputNilai extends Component
                 }
             }
 
-            // Return as array to persist the data
             return [
                 'id_surah' => $surah->id_surah,
                 'nomor_surah' => $surah->nomor_surah,
