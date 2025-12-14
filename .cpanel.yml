@@ -1,0 +1,16 @@
+---
+deployment:
+  tasks:
+    - export APPPATH=/home/wwwhafiz/laravel_app
+    - export PUBLICPATH=/home/wwwhafiz/public_html
+
+    # siapkan folder aplikasi
+    - /bin/rm -rf $APPPATH
+    - /bin/mkdir -p $APPPATH
+
+    # copy source Laravel (tanpa folder public)
+    - /bin/cp -R app bootstrap config database resources routes artisan composer.json composer.lock $APPPATH
+
+    # copy folder public ke public_html
+    - /bin/rm -rf $PUBLICPATH/*
+    - /bin/cp -R public/* $PUBLICPATH

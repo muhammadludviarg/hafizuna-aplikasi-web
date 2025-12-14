@@ -1,20 +1,43 @@
 <?php
 
-use Illuminate\Foundation\Application;
+//use Illuminate\Foundation\Application;
+//use Illuminate\Http\Request;
+
+//define('LARAVEL_START', microtime(true));
+
+// Determine if the application is in maintenance mode...
+//if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+//  require $maintenance;
+//}
+
+// Register the Composer autoloader...
+//require __DIR__.'/../vendor/autoload.php';
+
+// Bootstrap Laravel and handle the request...
+//** @var Application $app */
+//$app = require_once __DIR__.'/../bootstrap/app.php';
+
+//$app->handleRequest(Request::capture());
+
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
-// Determine if the application is in maintenance mode...
-if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
-    require $maintenance;
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    // Lokal / struktur normal
+    require __DIR__ . '/../vendor/autoload.php';
+    $app = require_once __DIR__ . '/../bootstrap/app.php';
+} else {
+    // cPanel shared hosting (source di luar public_html)
+    require __DIR__ . '/../laravel_app/vendor/autoload.php';
+    $app = require_once __DIR__ . '/../laravel_app/bootstrap/app.php';
 }
 
-// Register the Composer autoloader...
-require __DIR__.'/../vendor/autoload.php';
+$kernel = $app->make(Kernel::class);
 
-// Bootstrap Laravel and handle the request...
-/** @var Application $app */
-$app = require_once __DIR__.'/../bootstrap/app.php';
+$response = $kernel->handle(
+    $request = Request::capture()
+)->send();
 
-$app->handleRequest(Request::capture());
+$kernel->terminate($request, $response);
