@@ -558,7 +558,7 @@ class ExportLaporanHafalanController extends Controller
         $sheet->setCellValue('E6', $latestSesi->skor_kelancaran);
         $sheet->setCellValue('D7', 'Makhroj:');
         $sheet->setCellValue('E7', $latestSesi->skor_makhroj);
-        $sheet->setCellValue('D8', 'Rata-rata:');
+        $sheet->setCellValue('D8', 'Nilai Akhir:');
         $sheet->setCellValue('E8', $latestSesi->nilai_rata . ' (' . $gradeDesc . ')');
         $row = 11;
         $sheet->setCellValue('A' . $row, 'RIWAYAT CATATAN KOREKSI');

@@ -223,7 +223,7 @@
                 <td>{{ $grade_makhroj ?? '' }}</td>
             </tr>
             <tr class="bg-light">
-                <td class="rating-label">RATA-RATA</td>
+                <td class="rating-label">Nilai Akhir</td>
                 <td class="text-center rating-label">{{ $nilai_rata_rata }}</td>
                 <td class="rating-label">{{ $grade_desc ?? '' }}</td>
             </tr>

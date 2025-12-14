@@ -348,9 +348,11 @@ class LaporanHafalan extends Component
         if (!$siswa || !$surah)
             return;
 
+        // Ambil semua sesi untuk surah ini
         $sesiSurah = SesiHafalan::where('id_siswa', $this->selectedSiswaId)
             ->where(function ($q) use ($surah) {
-                $q->where('id_surah_mulai', $surah->id_surah)->orWhere('id_surah_selesai', $surah->id_surah);
+                $q->where('id_surah_mulai', $surah->id_surah)
+                    ->orWhere('id_surah_selesai', $surah->id_surah);
             })
             ->with('surahMulai', 'surahSelesai')
             ->orderByDesc('tanggal_setor')
@@ -367,16 +369,23 @@ class LaporanHafalan extends Component
             'nilai_rata' => round($sesi->nilai_rata, 2),
         ])->toArray();
 
-        $jumlah = $sesiSurah->count();
+        // [LOGIC BARU] Ambil sesi terakhir berdasarkan waktu input (created_at)
+        // Gunakan sortBy created_at lalu ambil last() untuk memastikan dapat yang paling baru
+        $sesiTerakhir = $sesiSurah->sortBy('created_at')->first();
+
         $this->surahDetail = [
             'nama_siswa' => $siswa->nama_siswa,
             'nama_surah' => $surah->nama_surah,
             'nomor_surah' => $surah->nomor_surah,
             'jumlah_ayat' => $surah->jumlah_ayat,
-            'nilai_tajwid' => $jumlah > 0 ? round($sesiSurah->avg('skor_tajwid'), 2) : 0,
-            'nilai_kelancaran' => $jumlah > 0 ? round($sesiSurah->avg('skor_kelancaran'), 2) : 0,
-            'nilai_makhroj' => $jumlah > 0 ? round($sesiSurah->avg('skor_makhroj'), 2) : 0,
-            'nilai_rata_rata' => $jumlah > 0 ? round($sesiSurah->avg('nilai_rata'), 2) : 0,
+
+            // Gunakan nilai sesi terakhir & bulatkan 2 desimal
+            // Jika belum ada sesi (null), beri nilai 0
+            'nilai_tajwid' => $sesiTerakhir ? round($sesiTerakhir->skor_tajwid, 2) : 0,
+            'nilai_kelancaran' => $sesiTerakhir ? round($sesiTerakhir->skor_kelancaran, 2) : 0,
+            'nilai_makhroj' => $sesiTerakhir ? round($sesiTerakhir->skor_makhroj, 2) : 0,
+            'nilai_rata_rata' => $sesiTerakhir ? round($sesiTerakhir->nilai_rata, 2) : 0,
+
             'sesi_formatnya' => $sesiFormatted,
         ];
     }

@@ -127,7 +127,7 @@
                         </div>
                         <div
                             class="col-span-2 lg:col-span-1 border border-green-500 bg-green-600 rounded-xl p-4 shadow-md text-white">
-                            <p class="text-green-100 text-xs md:text-sm mb-1 uppercase font-bold">Rata-rata Total</p>
+                            <p class="text-green-100 text-xs md:text-sm mb-1 uppercase font-bold">Rata-Rata</p>
                             <p class="text-3xl font-extrabold">{{ $siswaDetail['nilai_rata_rata'] ?? 0 }}</p>
                         </div>
                     </div>
@@ -297,7 +297,7 @@
                                                 <p class="font-bold text-gray-700 text-base">{{ $sesi['skor_makhroj'] }}</p>
                                             </div>
                                             <div class="text-center bg-green-50 rounded-lg p-1 border border-green-100">
-                                                <p class="text-[10px] text-green-700 uppercase font-bold mb-0.5">Rata</p>
+                                                <p class="text-[10px] text-green-700 uppercase font-bold mb-0.5">Rata-Rata</p>
                                                 <p class="font-extrabold text-green-700 text-base">{{ $sesi['nilai_rata'] }}</p>
                                             </div>
                                         </div>
@@ -388,7 +388,7 @@
                             <p class="text-2xl font-bold text-gray-800">{{ $surahDetail['nilai_makhroj'] ?? 0 }}</p>
                         </div>
                         <div class="bg-green-600 p-4 rounded-xl shadow-md text-white">
-                            <p class="text-[10px] uppercase text-green-200 font-bold mb-1">Rata-rata</p>
+                            <p class="text-[10px] uppercase text-green-200 font-bold mb-1">Nilai Akhir</p>
                             <p class="text-2xl font-extrabold">{{ $surahDetail['nilai_rata_rata'] ?? 0 }}</p>
                         </div>
                     </div>
@@ -504,7 +504,7 @@
                                             class="block text-xl font-bold text-gray-800">{{ $selectedSesiDetail['nilai_makhroj'] }}</span>
                                     </div>
                                     <div class="text-center p-3 bg-green-600 rounded-xl shadow-md">
-                                        <span class="block text-[10px] text-green-200 uppercase font-bold">Rata</span>
+                                        <span class="block text-[10px] text-green-200 uppercase font-bold">Rata-Rata</span>
                                         <span
                                             class="block text-xl font-bold text-white">{{ $selectedSesiDetail['nilai_rata'] }}</span>
                                     </div>
