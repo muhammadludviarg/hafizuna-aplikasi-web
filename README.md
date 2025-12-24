@@ -1,59 +1,284 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Hafizuna: Sistem Informasi Manajemen Hafalan Al-Qur'an
+### SD Islam Al Azhar 27 Cibinong
+[**Link Website / Demo**](https://hafizuna.web.id)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+---
 
-## About Laravel
+## 📜 Deskripsi Proyek
+**Hafizuna** adalah aplikasi web modern berbasis **Laravel** dan **Livewire** yang dirancang untuk mendigitalkan proses manajemen hafalan Al-Qur'an (Tahfidz). Aplikasi ini menggantikan metode pencatatan manual (buku penghubung) menjadi sistem terintegrasi yang transparan, efisien, dan *real-time*.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Sistem ini menghubungkan **Guru**, **Orang Tua**, dan **Admin Sekolah** dalam satu platform untuk memantau perkembangan hafalan siswa, mencatat setoran harian, serta menghasilkan laporan penilaian secara otomatis. Berdasarkan pengujian *usability* (USE Questionnaire), sistem ini mendapatkan skor **97.93%** dengan predikat **"Sangat Layak"**.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Proyek ini merupakan hasil Tugas Akhir Mata Kuliah **Rekayasa Perangkat Lunak** dari Politeknik Statistika STIS.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## ✨ Fitur Utama
+Aplikasi ini memiliki tiga aktor utama dengan hak akses yang disesuaikan:
 
-## Learning Laravel
+#### 👤 Admin
+* **Manajemen Data Master:** Mengelola data Siswa, Guru, Orang Tua, Kelas, dan Periode Akademik
+* **Manajemen Kelompok:** Mengatur pembagian kelompok halaqah siswa dengan guru pembimbingnya
+* **Monitoring & Log:** Memantau seluruh aktivitas sistem melalui Log Aktivitas dan melihat rekapitulasi global
+* **Pengaturan Kurikulum:** Menentukan target hafalan per kelompok dan bobot penilaian sistem (Tajwid, Makhroj, Kelancaran)
+* **Laporan Menyeluruh:** Mengunduh laporan hafalan tingkat kelompok dan keseluruhan dalam format PDF/Excel
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+#### 👨‍🏫 Guru
+* **Input Setoran Hafalan:** Mencatat hafalan siswa (Surah, Ayat Awal-Akhir) dengan penilaian Tajwid, Makhroj, dan Kelancaran secara *real-time*
+* **Koreksi Interaktif:** Memberikan koreksi pada kata/ayat yang salah dengan menandai langsung di teks Al-Qur'an
+* **Notifikasi Otomatis:** Mengirim notifikasi hasil setoran ke email orang tua
+* **Laporan Kelompok:** Mengunduh rekap perkembangan siswa dalam kelompok bimbingan
+* **Manajemen Kelompok:** Mengelola data siswa dalam kelompok yang dibimbing
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+#### 👨‍👩‍👧 Orang Tua
+* **Dashboard Monitoring:** Melihat ringkasan statistik perkembangan hafalan anak secara visual
+* **Riwayat Setoran:** Melihat detail setoran harian (tanggal, surah, ayat, nilai per aspek, dan catatan koreksi guru)
+* **Notifikasi:** Menerima pemberitahuan via email setiap ada setoran hafalan baru
+* **Laporan Detail:** Mengunduh laporan perkembangan hafalan anak dalam format PDF/Excel
 
-## Laravel Sponsors
+## 🛠 Teknologi yang Digunakan
+* **Backend Framework:** Laravel 11 (PHP 8.2+)
+* **Frontend Framework:** Livewire 3 (Fullstack Reactivity)
+* **Styling:** Tailwind CSS + Alpine.js
+* **Database:** MySQL
+* **Fitur Tambahan:**
+    * `DomPDF` (Cetak Laporan PDF)
+    * `Maatwebsite Excel` (Export Data Excel)
+    * Email Notification System (Laravel Mail)
+    * Log Aktivitas Otomatis
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🚀 Cara Menjalankan Proyek
 
-### Premium Partners
+**1. Prasyarat:**
+* PHP >= 8.2
+* Composer
+* Node.js & NPM
+* MySQL Server
+* XAMPP/WAMP/LAMP (opsional)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+**2. Instalasi:**
+```bash
+# Clone repository
+git clone https://github.com/username/hafizuna-app.git
 
-## Contributing
+# Masuk ke direktori
+cd hafizuna-app
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# Install dependencies PHP
+composer install
 
-## Code of Conduct
+# Install dependencies JavaScript
+npm install
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Setup Environment
+cp .env.example .env
+php artisan key:generate
+```
 
-## Security Vulnerabilities
+**3. Konfigurasi Database:**
+* Buka phpMyAdmin atau MySQL client
+* Buat database baru (misal: `hafizuna_db`)
+* Import file SQL yang tersedia di folder `database/` (jika ada)
+* Sesuaikan kredensial di file `.env`:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=hafizuna_db
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+* Jalankan migrasi dan seeder:
+```bash
+php artisan migrate --seed
+```
 
-## License
+**4. Konfigurasi Email (Opsional):**
+Untuk fitur notifikasi email, sesuaikan konfigurasi di `.env`:
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=your-email@gmail.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+**5. Menjalankan Aplikasi:**
+```bash
+# Terminal 1 - Server PHP
+php artisan serve
+
+# Terminal 2 - Compile Assets (di terminal terpisah)
+npm run dev
+```
+
+Akses aplikasi di browser: `http://localhost:8000`
+
+## 🔐 Akun Testing
+Untuk mencoba sistem, gunakan akun berikut:
+
+**Admin:**
+* Email: `admin1@hafizuna.com`
+* Password: `Password123!`
+
+**Guru:**
+* Email: `suharyono@guru.dummy.com`
+* Password: `password123`
+
+**Orang Tua:**
+* Email: `indra.lesmana@dummy.com`
+* Password: `password123`
+
+## 🌳 Struktur Proyek
+
+Proyek ini menggunakan arsitektur MVC yang dimodifikasi dengan pola **Livewire Component**:
+
+```
+hafizuna-app/
+├── app/
+│   ├── Helpers/              # Fungsi bantuan global
+│   ├── Http/
+│   │   ├── Controllers/      # Controller untuk Auth, Export, dll
+│   │   └── Middleware/       # Middleware autentikasi & otorisasi
+│   ├── Livewire/             # LOGIKA UTAMA (Komponen Livewire)
+│   │   ├── Admin/            # Komponen untuk Admin
+│   │   ├── Guru/             # Komponen untuk Guru
+│   │   ├── OrangTua/         # Komponen untuk Orang Tua
+│   │   └── Auth/             # Komponen autentikasi
+│   ├── Models/               # Eloquent Models (representasi tabel)
+│   └── Exports/              # Logika export Excel
+├── database/
+│   ├── migrations/           # Definisi skema database
+│   └── seeders/              # Data dummy & master data
+├── resources/
+│   ├── views/
+│   │   ├── layouts/          # Template layout utama
+│   │   ├── livewire/         # View Livewire components
+│   │   └── exports/          # Template PDF
+│   ├── css/                  # File CSS (Tailwind)
+│   └── js/                   # File JavaScript
+├── routes/
+│   ├── web.php               # Route web utama
+│   └── auth.php              # Route autentikasi
+├── public/                   # Aset publik (gambar, CSS/JS compiled)
+├── storage/                  # File storage & logs
+└── vendor/                   # Dependencies Composer
+```
+
+### Penjelasan Komponen Penting
+
+1. **`app/Livewire/Guru/InputNilai.php`**: Komponen inti untuk input setoran hafalan dengan fitur koreksi interaktif
+2. **`app/Livewire/Admin/LogAktivitas.php`**: Menampilkan audit trail aktivitas pengguna
+3. **`app/Models/SesiHafalan.php`**: Model utama untuk transaksi setoran hafalan
+4. **`database/seeders/QuranSeeder.php`**: Seeder data 114 surah Al-Qur'an dan ayat-ayatnya
+
+## 🗃️ Skema Database
+
+Database dirancang ternormalisasi dengan 17 tabel utama:
+
+### 1. Manajemen Pengguna & Autentikasi
+
+| Tabel | Deskripsi | Relasi Penting |
+|-------|-----------|----------------|
+| `akun` | Data akun login (email, password_hash, status) | Parent untuk semua user |
+| `admin` | Profil administrator | `id_akun` → `akun` |
+| `guru` | Profil guru | `id_akun` → `akun` |
+| `orang_tua` | Profil orang tua siswa | `id_akun` → `akun` |
+| `siswa` | Profil siswa | `id_kelas`, `id_ortu` |
+
+### 2. Organisasi Akademik
+
+| Tabel | Deskripsi |
+|-------|-----------|
+| `kelas` | Data kelas (nama, tahun ajaran) |
+| `kelompok` | Kelompok hafalan/halaqah |
+| `siswa_kelompok` | Pivot: alokasi siswa ke kelompok |
+| `target_hafalan_kelompok` | Target hafalan per kelompok dan periode |
+
+### 3. Data Al-Qur'an
+
+| Tabel | Deskripsi |
+|-------|-----------|
+| `surah` | Master 114 surah (nomor, nama, jumlah ayat) |
+| `ayat` | Master data ayat per surah (teks Arab, terjemahan) |
+
+### 4. Transaksi Hafalan (Core System)
+
+| Tabel | Deskripsi | Kolom Penting |
+|-------|-----------|---------------|
+| **`sesi_hafalan`** | Record setoran hafalan siswa | `id_siswa`, `id_guru`, `ayat_mulai`, `ayat_selesai`, `skor_tajwid`, `skor_makhroj`, `skor_kelancaran`, `nilai_rata` |
+| **`koreksi`** | Detail koreksi kesalahan bacaan | `id_sesi`, `id_ayat`, `kata_ke`, `kategori_kesalahan`, `catatan` |
+| **`sistem_penilaian`** | Parameter penilaian & grading | `aspek`, `grade`, `proporsi_minimal`, `proporsi_maksimal` |
+
+### 5. Sistem Pendukung
+
+| Tabel | Deskripsi |
+|-------|-----------|
+| `notifikasi` | Log notifikasi ke orang tua |
+| `log_aktivitas` | Audit trail sistem |
+| `password_resets` | Token reset password |
+
+**Diagram ERD lengkap** tersedia di laporan milestone (halaman 50-62).
+
+## 📊 Hasil Evaluasi Sistem
+
+Berdasarkan pengujian dengan **7 responden** (2 admin, 4 guru, 1 orang tua):
+
+### Black Box Testing
+✅ **100% Success Rate** - Semua fitur berfungsi sesuai spesifikasi
+
+### USE Questionnaire (Usability Testing)
+
+| Aspek | Skor | Kategori |
+|-------|------|----------|
+| **Usefulness** | 98.57% | Sangat Layak |
+| **Ease of Use** | 96.57% | Sangat Layak |
+| **Ease of Learning** | 96.42% | Sangat Layak |
+| **Satisfaction** | 100% | Sangat Layak |
+| **TOTAL** | **97.93%** | **Sangat Layak** |
+
+## 📝 Dokumentasi Lengkap
+
+Dokumentasi teknis lengkap meliputi:
+- Use Case Diagram & Description
+- Activity Diagram
+- Sequence Diagram
+- Class Diagram
+- Rancangan Antarmuka (Figma)
+- Analisis Risiko & Mitigasi
+
+Tersedia di: **[Laporan Milestone 4](link-ke-laporan)**
+
+## 👥 Tim Penyusun
+
+**Kelompok 6 - 2KS3 (Politeknik Statistika STIS)**
+
+| Nama | NIM | Role |
+|------|-----|------|
+| **Abdul Hanif Al Fatah** | 222312938 | Developer |
+| **Aurelia Ayala Naura** | 222313006 | Developer |
+| **Fadzilla Kusuma Ningrum** | 222313071 | Developer |
+| **Immanita Denawinta Ginting** | 222313138 | Developer |
+| **Mario Mikail H. Simanjuntak** | 222313196 | Developer |
+| **Moses Noel Estomihi Simanullang** | 222313218 | Developer |
+| **Muhammad Ludvi Argorahayu** | 222313248 | Project Lead & Developer |
+
+---
+
+## 📞 Kontak & Dukungan
+
+**Klien:** SD Islam Al Azhar 27 Cibinong  
+**Institusi:** Politeknik Statistika STIS  
+**Mata Kuliah:** Rekayasa Perangkat Lunak  
+**Tahun:** 2025  
+
+---
+
+## 📄 Lisensi
+
+Proyek ini dikembangkan untuk keperluan akademik dan internal SD Islam Al Azhar 27 Cibinong.  
+Hak cipta dilindungi sesuai dengan ketentuan yang disepakati antara tim pengembang dan klien.
+
+---
