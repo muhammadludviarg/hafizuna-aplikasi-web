@@ -57,7 +57,7 @@ Aplikasi ini memiliki tiga aktor utama dengan hak akses yang disesuaikan:
 **2. Instalasi:**
 ```bash
 # Clone repository
-git clone https://github.com/username/hafizuna-app.git
+git clone https://github.com/muhammadludviarg/hafizuna-aplikasi-web.git
 
 # Masuk ke direktori
 cd hafizuna-app
@@ -249,7 +249,7 @@ Dokumentasi teknis lengkap meliputi:
 - Rancangan Antarmuka (Figma)
 - Analisis Risiko & Mitigasi
 
-Tersedia di: **[Laporan Milestone 4](link-ke-laporan)**
+Tersedia di: **[Laporan Milestone 4](./K6_3SD1_RPL_2025_Laporan%20Milestone%204.pdf)**
 
 ## 👥 Tim Penyusun
 
