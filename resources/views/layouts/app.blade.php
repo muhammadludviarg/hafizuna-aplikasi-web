@@ -117,7 +117,7 @@
                     @if(Auth::check())
                                     <li>
                                         <a href="{{ route('admin.log-aktivitas') }}" class="group flex items-center px-4 py-3 text-sm font-medium transition-all duration-200 rounded-r-lg rounded-bl-lg whitespace-nowrap
-                                           {{ request()->routeIs('admin.log-aktivitas')
+                                                           {{ request()->routeIs('admin.log-aktivitas')
                         ? 'bg-green-900 text-white border-l-4 border-yellow-400 shadow-inner'
                         : 'text-green-100 hover:bg-green-700 hover:text-white hover:pl-6' }}">
                                             Log Aktivitas
@@ -160,7 +160,8 @@
                             class="flex items-center space-x-2 md:space-x-3 focus:outline-none group">
                             <div class="hidden md:block text-right">
                                 <div class="text-sm font-semibold text-gray-700 group-hover:text-green-700">
-                                    {{ Auth::user()->nama_lengkap ?? 'Admin' }}</div>
+                                    {{ Auth::user()->nama_lengkap ?? 'Admin' }}
+                                </div>
                                 <div class="text-xs text-gray-400">Administrator</div>
                             </div>
                             <div
@@ -191,6 +192,18 @@
                                         </path>
                                     </svg>
                                     Ganti Password
+                                </div>
+                            </a>
+
+                            <a href="{{ route('ganti-email') }}"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                        </path>
+                                    </svg>
+                                    Ganti Email
                                 </div>
                             </a>
 
@@ -227,6 +240,8 @@
                                 </h2>
                             </div>
                         @endif
+
+                        <x-peringatan-email />
 
                         <div class="w-full overflow-x-auto">
                             {{ $slot }}

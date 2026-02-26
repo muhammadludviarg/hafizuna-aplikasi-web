@@ -26,6 +26,7 @@ class User extends Authenticatable implements CanResetPassword
     protected $fillable = [
         'nama_lengkap',
         'email',
+        'email_sementara', // Tambahkan ini jika Anda ingin mengisi email_sementara melalui mass assignment
         'sandi_hash', // Nama kolom password yang Anda gunakan
         'status',
     ];

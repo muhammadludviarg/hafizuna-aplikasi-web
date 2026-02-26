@@ -122,6 +122,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Halaman Ganti Email
+    Route::get('/ganti-email', \App\Livewire\Global\GantiEmail::class)->name('ganti-email');
+
+    // Aksi Klik Link dari Email
+    Route::get('/verify-email-change/{id}/{hash}', function (\Illuminate\Http\Request $request, $id, $hash) {
+        if (! $request->hasValidSignature()) {
+            abort(403, 'Tautan verifikasi tidak valid atau sudah kedaluwarsa.');
+        }
+        
+        $user = \App\Models\User::findOrFail($id);
+        
+        if (sha1($user->email_sementara) !== $hash) {
+            abort(403, 'Email tidak sesuai atau tautan sudah usang.');
+        }
+        
+        // Proses ganti email
+        $user->update([
+            'email' => $user->email_sementara,
+            'email_sementara' => null,
+        ]);
+        
+        return redirect()->route('dashboard')->with('success', 'Alamat email berhasil diperbarui!');
+    })->name('verify.email.change');
 });
 
 /*

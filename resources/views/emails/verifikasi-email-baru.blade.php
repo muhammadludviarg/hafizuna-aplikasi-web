@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password - Hafizuna</title>
+    <title>Verifikasi Email - Hafizuna</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -90,17 +90,6 @@
             color: #92400e;
         }
 
-        .divider {
-            border-top: 1px solid #e5e7eb;
-            margin: 30px 0;
-        }
-
-        .tips {
-            color: #6b7280;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
         .email-footer {
             background-color: #f9fafb;
             padding: 30px;
@@ -118,26 +107,18 @@
             <div class="tagline">Manajemen Hafalan Terpadu</div>
         </div>
         <div class="email-body">
-            <div class="greeting">Assalamu'alaikum,</div>
+            <div class="greeting">Assalamu'alaikum {{ $user->nama_lengkap ?? '' }},</div>
             <div class="message">
-                <p>Kami menerima permintaan untuk mengatur ulang kata sandi (<em>password</em>) akun Anda di sistem
-                    Hafizuna.</p>
-                <p>Jika ini adalah Anda, silakan klik tombol di bawah ini untuk membuat kata sandi yang baru:</p>
+                <p>Kami menerima permintaan untuk mengganti alamat email akun Anda di sistem Hafizuna menjadi
+                    <strong>{{ $emailBaru }}</strong>.</p>
+                <p>Untuk mengonfirmasi perubahan ini, silakan klik tombol di bawah ini:</p>
             </div>
             <div class="button-container">
-                <a href="{{ $url }}" class="action-button">🔐 Reset Password</a>
+                <a href="{{ $url }}" class="action-button">✔️ Verifikasi Email Baru</a>
             </div>
             <div class="warning">
-                <strong>⚠️ Penting:</strong> Tautan <em>reset password</em> ini akan kadaluarsa dalam <strong>10
-                    menit</strong>. Jika
-                Anda tidak meminta pengaturan ulang kata sandi, abaikan pesan ini. Akun Anda tetap aman.
-            </div>
-            <div class="divider"></div>
-            <div class="tips">
-                <strong>Tips Keamanan:</strong><br>
-                • Jangan bagikan tautan ini kepada siapa pun.<br>
-                • Gunakan kata sandi yang kuat dan unik.<br>
-                • Kombinasikan huruf besar, huruf kecil, dan angka.
+                <strong>⚠️ Penting:</strong> Link verifikasi ini akan kadaluarsa dalam <strong>10 menit</strong>. Jika
+                Anda tidak merasa meminta perubahan email, abaikan pesan ini. Akun Anda tetap aman.
             </div>
         </div>
         <div class="email-footer">
