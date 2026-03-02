@@ -59,11 +59,19 @@ class OrangTuaImport implements ToModel, WithHeadingRow, WithValidation, SkipsEm
             DB::commit();
             return $ortu;
 
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            // Simpan jeroan ke log secara diam-diam
+            Log::error("DB Error Import Ortu: " . json_encode($row) . " | Error: " . $e->getMessage());
+
+            // Lempar pesan halus ke layar
+            throw new \Exception("Gagal pada baris '{$row['nama_lengkap']}'. Teks terlalu panjang atau email sudah terdaftar.");
+
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Gagal Import Row: " . json_encode($row) . " | Error: " . $e->getMessage());
-            // Kita biarkan error ini agar user tau ada data yang salah format (bukan kosong)
-            throw new \Exception("Gagal pada baris {$row['nama_lengkap']}: " . $e->getMessage());
+            Log::error("Error Import Ortu: " . json_encode($row) . " | Error: " . $e->getMessage());
+
+            throw new \Exception("Format salah pada baris '{$row['nama_lengkap']}'. Silakan cek file Excel.");
         }
     }
 

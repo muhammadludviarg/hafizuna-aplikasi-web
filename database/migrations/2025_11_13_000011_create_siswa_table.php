@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('siswa', function (Blueprint $table) {
             $table->increments('id_siswa');
-            $table->string('nama_siswa', 50);
+            $table->string('nama_siswa', 150);
             $table->string('kode_siswa', 20)->nullable()->unique();
             $table->unsignedInteger('id_kelas')->nullable();
             $table->unsignedInteger('id_ortu');

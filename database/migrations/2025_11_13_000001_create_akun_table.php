@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('akun', function (Blueprint $table) {
             $table->increments('id_akun'); // Sesuai int(11) auto_increment
-            $table->string('email', 30)->unique();
+            $table->string('email', 100)->unique();
             $table->text('sandi_hash');
-            $table->string('nama_lengkap', 50);
+            $table->string('nama_lengkap', 150);
             $table->boolean('status')->default(true);
             $table->datetime('dibuat_pada')->useCurrent(); // Sesuai default current_timestamp()
         });

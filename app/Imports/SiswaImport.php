@@ -59,9 +59,13 @@ class SiswaImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmpty
                 'id_ortu' => $id_ortu, // Bisa null jika ortu tidak ketemu (tidak error, tapi kosong)
             ]);
 
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error("DB Error Import Siswa: " . json_encode($row) . " | Error: " . $e->getMessage());
+            throw new \Exception("Gagal baris '{$namaSiswa}'. Nama/kode kepanjangan atau kode siswa duplikat.");
+
         } catch (\Exception $e) {
-            // Tangkap error dan lempar ke Controller agar muncul di Pop-up Merah
-            throw new \Exception("Gagal baris '$namaSiswa': " . $e->getMessage());
+            Log::error("Error Import Siswa: " . json_encode($row) . " | Error: " . $e->getMessage());
+            throw new \Exception($e->getMessage()); // Ini aman karena exception bawaan Anda (seperti "Kelas tidak ditemukan") sudah berbahasa Indonesia
         }
     }
 

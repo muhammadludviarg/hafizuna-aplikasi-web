@@ -1,4 +1,4 @@
-@if (auth()->check() && \Illuminate\Support\Str::endsWith(auth()->user()->email, '@hafizuna.com'))
+@if (auth()->check() && \Illuminate\Support\Str::endsWith(auth()->user()->email, '@sd.belajar.id'))
     <div x-data="{ show: true }" x-show="show" x-transition.opacity
         class="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg shadow-sm flex items-start justify-between">
         <div class="flex items-start gap-3">
@@ -14,7 +14,7 @@
                 <p class="text-sm text-orange-700 mt-1 leading-relaxed">
                     Saat ini Anda login menggunakan email bawaan (<span
                         class="font-mono bg-orange-100 px-1 rounded">{{ auth()->user()->email }}</span>).
-                    Demi kemudahan memulihkan *password* di masa depan, silakan ganti ke alamat email pribadi Anda.
+                    Demi kemudahan memulihkan <span class="font-bold">password</span> di masa depan, silakan ganti ke alamat email pribadi Anda.
                 </p>
                 <div class="mt-3">
                     <a href="{{ route('ganti-email') }}"

@@ -5,33 +5,42 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        // TAHAP 1: Hapus Foreign Key lama agar kolom id_periode bisa diedit
-        // Kita menggunakan try-catch atau pengecekan agar tidak error jika FK belum ada
+        // TAHAP 1: Cabut semua Foreign Key yang mengganggu
         Schema::table('target_hafalan_kelompok', function (Blueprint $table) {
-            // Hapus constraint foreign key yang menyebabkan error 1832
-            // Nama constraint diambil dari pesan error Anda sebelumnya
-            $table->dropForeign('target_hafalan_kelompok_id_periode_foreign');
+            // Cabut FK id_kelompok agar kita bisa menghapus Unique Index
+            $table->dropForeign(['id_kelompok']);
+
+            // Cabut FK id_periode lama agar tidak terjadi "Duplicate Key 121" saat dipasang ulang
+            $table->dropForeign(['id_periode']);
         });
 
-        // TAHAP 2: Modifikasi Kolom dan Hapus kolom lama
+        // TAHAP 2: Sekarang aman untuk menghapus Unique Index
         Schema::table('target_hafalan_kelompok', function (Blueprint $table) {
-            // Hapus kolom 'periode' (string) jika masih ada
+            $table->dropUnique('unique_kelompok_periode');
+        });
+
+        // TAHAP 3: Modifikasi Kolom
+        Schema::table('target_hafalan_kelompok', function (Blueprint $table) {
+            // Hapus kolom periode lama
             if (Schema::hasColumn('target_hafalan_kelompok', 'periode')) {
                 $table->dropColumn('periode');
             }
 
-            // Ubah tipe data id_periode.
-            // PENTING: Gunakan unsignedInteger karena tabel 'periode' memakai int(10), bukan bigint.
+            // Ubah id_periode agar tidak boleh null
             $table->unsignedInteger('id_periode')->nullable(false)->change();
         });
 
-        // TAHAP 3: Pasang kembali Foreign Key yang baru
+        // TAHAP 4: Pasang kembali semua Foreign Key
         Schema::table('target_hafalan_kelompok', function (Blueprint $table) {
+            // Kembalikan FK id_kelompok
+            $table->foreign('id_kelompok')
+                ->references('id_kelompok')
+                ->on('kelompok')
+                ->onDelete('cascade');
+
+            // Kembalikan FK id_periode
             $table->foreign('id_periode')
                 ->references('id_periode')
                 ->on('periode')
@@ -40,29 +49,32 @@ return new class extends Migration {
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        // Hapus FK baru
+        // Hapus FK saat rollback
         Schema::table('target_hafalan_kelompok', function (Blueprint $table) {
+            $table->dropForeign(['id_kelompok']);
             $table->dropForeign(['id_periode']);
         });
 
-        // Kembalikan struktur kolom (opsional, tergantung kebutuhan rollback)
+        // Kembalikan struktur kolom
         Schema::table('target_hafalan_kelompok', function (Blueprint $table) {
-            // Kembalikan jadi nullable
             $table->unsignedInteger('id_periode')->nullable()->change();
 
-            // Tambah kolom periode lagi (jika perlu rollback penuh)
             if (!Schema::hasColumn('target_hafalan_kelompok', 'periode')) {
                 $table->string('periode')->nullable()->after('id_kelompok');
             }
         });
 
-        // Pasang kembali FK lama (opsional)
+        // Pasang kembali FK dan Aturan Unique yang lama
         Schema::table('target_hafalan_kelompok', function (Blueprint $table) {
+            $table->unique(['id_kelompok', 'periode'], 'unique_kelompok_periode');
+
+            $table->foreign('id_kelompok')
+                ->references('id_kelompok')
+                ->on('kelompok')
+                ->onDelete('cascade');
+
             $table->foreign('id_periode')
                 ->references('id_periode')
                 ->on('periode')
