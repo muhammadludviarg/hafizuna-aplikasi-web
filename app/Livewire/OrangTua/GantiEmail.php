@@ -1,21 +1,19 @@
 <?php
 
-namespace App\Livewire\Global;
+namespace App\Livewire\OrangTua;
 
 use Livewire\Component;
-use Livewire\Attributes\Layout;
 use App\Mail\VerifikasiEmailBaruMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 
-#[Layout('layouts.app')]
 class GantiEmail extends Component
 {
     public $email_baru;
     public $statusPesan = '';
 
     protected $rules = [
-        'email_baru' => 'required|email|max:30|unique:akun,email',
+        'email_baru' => 'required|email|max:50|unique:akun,email',
     ];
 
     public function requestPerubahan()
@@ -32,6 +30,7 @@ class GantiEmail extends Component
 
     public function render()
     {
-        return view('livewire.global.ganti-email');
+        return view('livewire.orang-tua.ganti-email')
+            ->layout('layouts.orang-tua');
     }
 }

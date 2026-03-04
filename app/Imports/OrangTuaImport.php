@@ -78,18 +78,18 @@ class OrangTuaImport implements ToModel, WithHeadingRow, WithValidation, SkipsEm
     public function rules(): array
     {
         return [
-            'nama_lengkap' => 'required|string|max:100',
-            'email' => 'required|email',
-            'no_hp' => 'nullable',
+            '*.nama_lengkap' => 'required|max:100',
+            '*.email' => 'required|email',
+            '*.no_hp' => 'nullable',
         ];
     }
 
     public function customValidationMessages()
     {
         return [
-            'nama_lengkap.required' => 'Nama lengkap harus diisi',
-            'email.required' => 'Email harus diisi',
-            'email.email' => 'Format email tidak valid',
+            '*.nama_lengkap.required' => 'Nama lengkap harus diisi pada Excel',
+            '*.email.required' => 'Email harus diisi pada Excel',
+            '*.email.email' => 'Format email tidak valid pada Excel',
         ];
     }
 

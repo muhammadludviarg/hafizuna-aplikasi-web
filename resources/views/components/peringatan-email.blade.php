@@ -14,10 +14,22 @@
                 <p class="text-sm text-orange-700 mt-1 leading-relaxed">
                     Saat ini Anda login menggunakan email bawaan (<span
                         class="font-mono bg-orange-100 px-1 rounded">{{ auth()->user()->email }}</span>).
-                    Demi kemudahan memulihkan <span class="font-bold">password</span> di masa depan, silakan ganti ke alamat email pribadi Anda.
+                    Demi kemudahan memulihkan <span class="font-bold">password</span> di masa depan, silakan ganti ke alamat
+                    email pribadi Anda.
                 </p>
                 <div class="mt-3">
-                    <a href="{{ route('ganti-email') }}"
+                    @php
+                        // Deteksi route berdasarkan URL yang sedang diakses
+                        $routeGantiEmail = route('admin.ganti-email'); // Default ke admin
+
+                        if (request()->is('guru*')) {
+                            $routeGantiEmail = route('guru.ganti-email');
+                        } elseif (request()->is('orang-tua*') || request()->is('ortu*')) {
+                            $routeGantiEmail = route('ortu.ganti-email');
+                        }
+                    @endphp
+
+                    <a href="{{ $routeGantiEmail }}"
                         class="inline-flex items-center justify-center px-4 py-1.5 text-xs font-bold text-white bg-orange-600 rounded-md hover:bg-orange-700 transition-colors shadow-sm">
                         Ganti Email Sekarang
                     </a>

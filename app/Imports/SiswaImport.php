@@ -72,18 +72,18 @@ class SiswaImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmpty
     public function rules(): array
     {
         return [
-            'nama_siswa' => 'required|string|max:100',
-            'kode_siswa' => 'required|string|max:20',
-            'nama_kelas' => 'required|string',
+            '*.nama_siswa' => 'required|max:100',
+            '*.kode_siswa' => 'required|max:20',
+            '*.nama_kelas' => 'required',
         ];
     }
 
     public function customValidationMessages()
     {
         return [
-            'nama_siswa.required' => 'Nama siswa wajib diisi',
-            'kode_siswa.required' => 'Kode siswa wajib diisi',
-            'nama_kelas.required' => 'Nama kelas wajib diisi',
+            '*.nama_siswa.required' => 'Nama siswa wajib diisi pada Excel',
+            '*.kode_siswa.required' => 'Kode siswa wajib diisi pada Excel',
+            '*.nama_kelas.required' => 'Nama kelas wajib diisi pada Excel',
         ];
     }
 

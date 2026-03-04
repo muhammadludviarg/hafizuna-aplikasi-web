@@ -184,6 +184,13 @@ class KelolaKelas extends Component
             $this->dispatch('import-success');
 
             $this->resetPage();
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            $errorMsg = "❌ Gagal Import, periksa file Anda: <br>";
+            foreach ($failures as $failure) {
+                $errorMsg .= "- Baris ke-{$failure->row()}: {$failure->errors()[0]} <br>";
+            }
+            session()->flash('error', $errorMsg);
         } catch (\Exception $e) {
             session()->flash('error', '❌ Gagal import: ' . $e->getMessage());
         }

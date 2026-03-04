@@ -38,16 +38,16 @@ class KelasImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmpty
     public function rules(): array
     {
         return [
-            'nama_kelas' => 'required|string|max:50',
-            'tahun_ajaran' => 'required|string|max:20',
+            '*.nama_kelas' => 'required|max:50',
+            '*.tahun_ajaran' => 'required|max:20',
         ];
     }
 
     public function customValidationMessages()
     {
         return [
-            'nama_kelas.required' => 'Nama kelas harus diisi',
-            'tahun_ajaran.required' => 'Tahun ajaran harus diisi',
+            '*.nama_kelas.required' => 'Nama kelas harus diisi pada Excel',
+            '*.tahun_ajaran.required' => 'Tahun ajaran harus diisi pada Excel',
         ];
     }
 

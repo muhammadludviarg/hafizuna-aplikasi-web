@@ -102,16 +102,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
 
+        // 1. Cek Admin dulu (Prioritas Tertinggi)
+        if ($user->hasRole('admin')) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        // 2. Jika bukan admin, cek Guru
         if ($user->hasRole('guru')) {
             return redirect()->route('guru.dashboard');
         }
 
+        // 3. Terakhir cek Ortu
         if ($user->hasRole('ortu')) {
             return redirect()->route('ortu.dashboard');
-        }
-
-        if ($user->hasRole('admin')) {
-            return redirect()->route('admin.dashboard');
         }
 
         // Fallback jika tidak punya peran
@@ -122,27 +125,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Halaman Ganti Email
-    Route::get('/ganti-email', \App\Livewire\Global\GantiEmail::class)->name('ganti-email');
-
-    // Aksi Klik Link dari Email
+    // Aksi Klik Link dari Email (Tetap di luar prefix karena diklik via email dan butuh proses background saja)
     Route::get('/verify-email-change/{id}/{hash}', function (\Illuminate\Http\Request $request, $id, $hash) {
-        if (! $request->hasValidSignature()) {
+        if (!$request->hasValidSignature()) {
             abort(403, 'Tautan verifikasi tidak valid atau sudah kedaluwarsa.');
         }
-        
+
         $user = \App\Models\User::findOrFail($id);
-        
+
         if (sha1($user->email_sementara) !== $hash) {
             abort(403, 'Email tidak sesuai atau tautan sudah usang.');
         }
-        
+
         // Proses ganti email
         $user->update([
             'email' => $user->email_sementara,
             'email_sementara' => null,
         ]);
-        
+
         return redirect()->route('dashboard')->with('success', 'Alamat email berhasil diperbarui!');
     })->name('verify.email.change');
 });
@@ -174,7 +174,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
 
     // ROUTE LOG AKTIVITAS - DIPERBAIKI (tanpa duplikat /admin)
     Route::get('/log-aktivitas', LogAktivitasAdmin::class)->name('log-aktivitas');
+
     Route::get('/ganti-password', AdminGantiPassword::class)->name('ganti-password');
+    Route::get('/ganti-email', \App\Livewire\Admin\GantiEmail::class)->name('ganti-email'); // Tambah Route Ini
+
     Route::get('/laporan-hafalan', AdminLaporanHafalan::class)->name('laporan-hafalan');
 
 });
@@ -191,7 +194,9 @@ Route::prefix('guru')->name('guru.')->middleware(['auth', 'verified'])->group(fu
     Route::get('/laporan-hafalan', LaporanHafalan::class)->name('laporan-hafalan');
     Route::get('kelompok', ManajemenKelompok::class)->name('kelompok.index');
     Route::get('kelompok/{id}', DetailKelompok::class)->name('kelompok.detail');
+
     Route::get('/ganti-password', GantiPassword::class)->name('ganti-password');
+    Route::get('/ganti-email', \App\Livewire\Guru\GantiEmail::class)->name('ganti-email'); // Tambah Route Ini
 });
 
 /*
@@ -203,6 +208,8 @@ Route::prefix('ortu')->name('ortu.')->middleware(['auth', 'verified'])->group(fu
 
     Route::get('/dashboard', OrtuDashboard::class)->name('dashboard');
     Route::get('/laporan', OrtuLaporanHafalan::class)->name('laporan');
+
     Route::get('/ganti-password', OrtuGantiPassword::class)->name('ganti-password');
+    Route::get('/ganti-email', \App\Livewire\OrangTua\GantiEmail::class)->name('ganti-email'); // Tambah Route Ini
 
 });

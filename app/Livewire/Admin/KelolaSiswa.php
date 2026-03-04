@@ -182,13 +182,22 @@ class KelolaSiswa extends Component
             Excel::import(new SiswaImport, $this->importFile);
             session()->flash('message', '✅ Berhasil import data siswa!');
 
-            // TAMBAHKAN INI:
-            $this->showImportModal = false;  // Tutup modal
-            $this->importFile = null;         // Reset file
-            $this->dispatch('import-success'); // Trigger event
+            $this->showImportModal = false;
+            $this->importFile = null;
+            $this->dispatch('import-success');
 
             $this->resetPage();
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            // MENANGKAP ERROR VALIDASI BARIS DARI EXCEL
+            $failures = $e->failures();
+            $errorMsg = "❌ Gagal Import, periksa file Anda: <br>";
+            foreach ($failures as $failure) {
+                // Menampilkan baris berapa yang salah dan apa kesalahannya
+                $errorMsg .= "- Baris ke-{$failure->row()}: {$failure->errors()[0]} <br>";
+            }
+            session()->flash('error', $errorMsg);
         } catch (\Exception $e) {
+            // Menangkap error umum (misal: Kelas tidak ditemukan)
             session()->flash('error', '❌ Gagal import: ' . $e->getMessage());
         }
     }
