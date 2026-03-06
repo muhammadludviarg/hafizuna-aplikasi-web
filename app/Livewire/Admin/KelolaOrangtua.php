@@ -163,6 +163,21 @@ class KelolaOrangTua extends Component
         }
     }
 
+    public function resetPassword($id)
+    {
+        try {
+            $ortu = OrangTua::findOrFail($id);
+            if ($ortu->id_akun) {
+                User::where('id_akun', $ortu->id_akun)->update([
+                    'sandi_hash' => bcrypt('password123')
+                ]);
+                session()->flash('message', '✅ Password orang tua ' . $ortu->akun->nama_lengkap . ' berhasil di-reset ke: password123');
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'Gagal reset password: ' . $e->getMessage());
+        }
+    }
+
     public function edit($id)
     {
         $this->modalError = '';

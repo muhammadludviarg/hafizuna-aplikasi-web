@@ -50,6 +50,21 @@ class KelolaGuru extends Component
         return $rules;
     }
 
+    public function resetPassword($id)
+    {
+        try {
+            $guru = Guru::findOrFail($id);
+            if ($guru->id_akun) {
+                User::where('id_akun', $guru->id_akun)->update([
+                    'sandi_hash' => bcrypt('password123')
+                ]);
+                session()->flash('message', '✅ Password guru ' . $guru->akun->nama_lengkap . ' berhasil di-reset ke: password123');
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'Gagal reset password: ' . $e->getMessage());
+        }
+    }
+
     public function updatingSearch()
     {
         $this->resetPage();
