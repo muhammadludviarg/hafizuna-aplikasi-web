@@ -290,7 +290,7 @@
                                         <a href="https://www.google.com/maps/search/SD+Islam+Al-Azhar+27+Cibinong"
                                             target="_blank" rel="noopener noreferrer"
                                             class="hover:text-white hover:underline transition-colors block mt-1 flex items-center gap-1">
-                                            Jl. Raya Jakarta - Bogor Km. 44, Pakansari, Cibinong, Bogor 16915
+                                            Jl. Raya Pomad Karadenan, Kel. Pakansari, Kec. Cibinong, Kab. Bogor 16913
                                         </a>
                                     </div>
 
@@ -302,7 +302,7 @@
                                                     d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z">
                                                 </path>
                                             </svg>
-                                            (021) 87915527
+                                            (02151) 8660584
                                         </div>
                                         <a href="mailto:sdia27@al-azhar.sch.id"
                                             class="flex items-center gap-2 hover:text-white hover:underline transition-colors group">
